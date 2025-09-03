@@ -34,6 +34,48 @@ const GameState = (function() {
         }
     }
 
+    // Blocks
+    function createBlock(x, y, width = 80, height = 30, type = "normal") {
+        const gameArea = document.getElementById("gameArea");
+        const block = document.createElement("div");
+        block.classList.add("block", type);
+        block.style.left = x + "px";
+        block.style.top = y + "px";
+        block.style.width = width + "px";
+        block.style.height = height + "px";
+        gameArea.appendChild(block);
+        return block;
+    }
+
+    // Level load
+    function loadLevel(levelIndex) {
+        const gameArea = document.getElementById("gameArea");
+        gameArea.querySelectorAll(".block").forEach(b => b.remove());
+
+        const grid = levels[levelIndex];
+        const blockWidth = 80;
+        const blockHeight = 30;
+        const offsetX = 50;
+        const offsetY = 50;
+
+        grid.forEach((row, rowIndex) => {
+            row.forEach((cell, colIndex) => {
+                if (cell != 0) {
+                    let type = "normal";
+                    if (cell == 2) type = "strong";
+                    if (cell == 3) type = "unbreakable";
+                    createBlock(
+                        offsetX + colIndex + blockWidth,
+                        offsetY + rowIndex + blockHeight,
+                        blockWidth,
+                        blockHeight,
+                        type
+                    );
+                }
+            });
+        });
+    }
+
     // FPS
     function updateFPS(now) {
         if (state.lastTime !== 0) {
@@ -82,14 +124,15 @@ const GameState = (function() {
 window.addEventListener('load', () => {
     console.log('Initializing game...');
     GameState.init();
-    
+
+
     if (typeof Movement !== 'undefined' && Movement.init) {
         console.log('Initializing Movement module...');
         Movement.init(GameState);
     } else {
         console.error('Movement module not found or not properly defined');
     }
-    
+
     GameState.startGameLoop();
 
     // this prevents the arrow keys from scrolling
