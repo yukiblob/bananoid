@@ -12,6 +12,12 @@ const GameState = (function() {
     // Create background grid
     function createGrid() {
         const gameArea = document.getElementById('gameArea');
+        if (!gameArea) return;
+
+        // clears old grid lines
+        gameArea.querySelectorAll('.grid-line').forEach(el => el.remove());
+
+
         const containerWidth = gameArea.offsetWidth;
         const containerHeight = gameArea.offsetHeight;
 
@@ -47,26 +53,39 @@ const GameState = (function() {
         return block;
     }
 
-    // Level load
-    function loadLevel(levelIndex) {
+    function loadLevel(levelIndex = 0) {
         const gameArea = document.getElementById("gameArea");
+        if (!gameArea) return;
+
+        // clear old blocks
         gameArea.querySelectorAll(".block").forEach(b => b.remove());
 
-        const grid = levels[levelIndex];
-        const blockWidth = 80;
-        const blockHeight = 30;
+        const defaultLevels = [
+            [
+                [1,1,1,1,1,1,1,1,1,1],
+                [0,0,1,1,1,1,1,1,0,0],
+                [2,2,0,0,0,0,0,0,2,2],
+            ]
+        ];
+        const source = 
+            (typeof levels !== "undefined" && Array.isArray(levels)) ? levels :
+            (typeof window !== "undefined" && Array.isArray(window.levels)) ? window.levels :
+            defaultLevels;
+
+        const grid = source[levelIndex] || source[0];
+
+        const blockWidth = 90;
+        const blockHeight = 40;
         const offsetX = 50;
         const offsetY = 50;
 
         grid.forEach((row, rowIndex) => {
             row.forEach((cell, colIndex) => {
                 if (cell != 0) {
-                    let type = "normal";
-                    if (cell == 2) type = "strong";
-                    if (cell == 3) type = "unbreakable";
+                    const type = cell === 2 ? "strong" : cell === 3 ? "unbreakable" : "normal";
                     createBlock(
-                        offsetX + colIndex + blockWidth,
-                        offsetY + rowIndex + blockHeight,
+                        Math.round(offsetX + colIndex * blockWidth),
+                        Math.round(offsetY + rowIndex * blockHeight),
                         blockWidth,
                         blockHeight,
                         type
@@ -87,24 +106,13 @@ const GameState = (function() {
     }
 
     return {
-        init: function() {
+         init() {
             createGrid();
             return { ...state };
         },
-
-        getState: function() {
-            return { ...state };
-        },
-
-        setState: function(newState) {
-            for (let key in newState) {
-                if (state.hasOwnProperty(key)) {
-                    state[key] = newState[key];
-                }
-            }
-        },
-
-        startGameLoop: function() {
+        getState() { return { ...state }; },
+        setState(newState) { for (let k in newState) if (k in state) state[k] = newState[k]; },
+        startGameLoop() {
             function gameLoop(timestamp) {
                 if (!state.isPaused) {
                     if (typeof Movement !== 'undefined' && Movement.update) {
@@ -116,29 +124,35 @@ const GameState = (function() {
             }
 
             requestAnimationFrame(gameLoop);
-        }
+        },
+        loadLevel,
+        createBlock,
+        createGrid
     };
 })();
 
 // Initialize the game
 window.addEventListener('load', () => {
-    console.log('Initializing game...');
-    GameState.init();
+    try {
+        console.log('Initializing game...');
+        GameState.init();
 
+        GameState.loadLevel(0);
 
-    if (typeof Movement !== 'undefined' && Movement.init) {
-        console.log('Initializing Movement module...');
-        Movement.init(GameState);
-    } else {
-        console.error('Movement module not found or not properly defined');
-    }
-
-    GameState.startGameLoop();
-
-    // this prevents the arrow keys from scrolling
-    window.addEventListener('keydown', (e) => {
-        if (['ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
-            e.preventDefault();
+        if (typeof Movement !== 'undefined' && Movement.init) {
+            console.log('Initializing Movement module...');
+            Movement.init(GameState);
+        } else {
+            console.error('Movement module not found or not properly defined');
         }
-    });
+
+        GameState.startGameLoop();
+
+        // this prevents the arrow keys from scrolling
+        window.addEventListener('keydown', (e) => {
+            if (['ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); 
+            });
+    } catch (err) {
+        console.error('Init error:', err);
+    }
 });
