@@ -62,9 +62,9 @@ const GameState = (function() {
 
         const defaultLevels = [
             [
-                [1,1,1,1,1,1,1,1,1,1],
-                [0,0,1,1,1,1,1,1,0,0],
-                [2,2,0,0,0,0,0,0,2,2],
+                [1,1,1,1,1,1,1,1,1,1,1],
+                [0,0,1,1,1,1,1,1,3,0,0],
+                [2,2,2,0,0,3,,0,2,2,2],
             ]
         ];
         const source = 
@@ -74,18 +74,27 @@ const GameState = (function() {
 
         const grid = source[levelIndex] || source[0];
 
-        const blockWidth = 90;
-        const blockHeight = 40;
-        const offsetX = 50;
-        const offsetY = 50;
+        const blockWidth = 80;
+        const blockHeight = 30;
+        const gap = 2;
+
+        const cols = grid[0].length;
+        const rows = grid.length;
+
+        const totalWidth = cols * blockWidth + (cols - 1) * gap;
+        const totalHeight = rows * blockHeight + (rows - 1) * gap;
+
+        // center horizontally and keep a bit of padding from the top
+        const offsetX = (gameArea.clientWidth - totalWidth) / 2;
+        const offsetY = 40; // small top margin
 
         grid.forEach((row, rowIndex) => {
             row.forEach((cell, colIndex) => {
                 if (cell != 0) {
                     const type = cell === 2 ? "strong" : cell === 3 ? "unbreakable" : "normal";
                     createBlock(
-                        Math.round(offsetX + colIndex * blockWidth),
-                        Math.round(offsetY + rowIndex * blockHeight),
+                        offsetX + colIndex * (blockWidth + gap),
+                        offsetY + rowIndex * (blockHeight + gap),
                         blockWidth,
                         blockHeight,
                         type
