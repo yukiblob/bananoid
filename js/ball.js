@@ -76,4 +76,36 @@ const Ball = (function() {
 
         return false; // ball still in play
     }
+
+    function checkPaddleCollision() {
+        if (!isBallLaunched) return false;
+
+        const paddle = document.getElementById('paddle');
+        const paddleRect = paddle.getBoundingClientRect();
+        const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
+
+        const paddleTop = paddleRect.top - gameAreaRect.top;
+        const paddleLeft = paddleRect.left - gameAreaRect.left;
+        const paddleRight = paddleLeft + paddleRect.width;
+        const paddleBottom = paddleTop + paddleRect.height;
+
+        if (ballY + ballRadius >= paddleTop &&
+            ballY - ballRadius <= paddleBottom &&
+            ballX + ballRadius >= paddleLeft &&
+            ballX - ballRadius <= paddleRight) {
+            
+                const hitPosition = (ballX - (paddleLeft + paddleRect.width / 2)) / (paddleRect.width / 2);
+                const maxBounceAngle = 75 * Math.PI / 180; // 75 degrees max bounce
+
+                const angle = hitPosition * maxBounceAngle;
+                const speed = Math.sqrt(ballSpeedX * ballSpeedX + ballSpeedY * ballSpeedY);
+                ballSpeedX = speed * Math.sin(angle) * accelerationFactor;
+                ballSpeedY = -speed * Math.cos(angle) * accelerationFactor;
+
+                ballY = paddleTop - ballRadius;
+
+                return true;
+        }
+        return false;
+    }
 })
