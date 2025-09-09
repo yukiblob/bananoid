@@ -23,7 +23,7 @@ const Ball = (function() {
         const paddle = document.getElementById('paddle');
         const paddleRect = paddle.getBoundingClientRect();
         const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
-        
+
         const paddleCenterX = paddleRect.left - gameAreaRect.left + paddleRect.width / 2;
         const paddleTop = paddleRect.top - gameAreaRect.top;
 
@@ -128,6 +128,74 @@ const Ball = (function() {
         return false;
     }
 
+    function checkBlockCollisions() {
+        const blocks = document.querySelectorAll('.block');
+        const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
+
+        for (let block of blocks) {
+            const rect = block.getBoundingClientRect();
+
+            // Block position relative to gameArea
+            const blockLeft = rect.left - gameAreaRect.left;
+            const blockTop = rect.top - gameAreaRect.top;
+            const blockRight = blockLeft + rect.width;
+            const blockBottom = blockTop + rect.height;
+
+            // Check overlap
+            if (ballX + ballRadius > blockLeft &&
+                ballX - ballRadius < blockRight &&
+                ballY + ballRadius > blockTop &&
+                ballY - ballRadius < blockBottom) {
+
+                // Collision detected
+                const blockType = block.classList.contains("unbreakable") ? "unbreakable"
+                                 : block.classList.contains("strong") ? "strong"
+                                 : "normal";
+
+                if (blockType !== "unbreakable") {
+                    if (blockType === "strong") {
+                        // Turn strong into normal on first hit
+                        block.classList.remove("strong");
+                        block.classList.add("normal");
+                    } else {
+                        // Remove block
+                        block.remove();
+                    }
+                }
+
+                // Adjust ball direction
+                const overlapLeft = ballX + ballRadius - blockLeft;
+                const overlapRight = blockRight - (ballX - ballRadius);
+                const overlapTop = ballY + ballRadius - blockTop;
+                const overlapBottom = blockBottom - (ballY - ballRadius);
+
+                const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+
+                if (minOverlap === overlapLeft) {
+                    // hit from left
+                    ballX = blockLeft - ballRadius;
+                    ballSpeedX = -Math.abs(ballSpeedX);
+                } else if (minOverlap === overlapRight) {
+                    // hit from right
+                    ballX = blockRight + ballRadius;
+                    ballSpeedX = Math.abs(ballSpeedX);
+                } else if (minOverlap === overlapTop) {
+                    // hit from top
+                    ballY = blockTop - ballRadius;
+                    ballSpeedY = -Math.abs(ballSpeedY);
+                } else if (minOverlap === overlapBottom) {
+                    // hit from bottom
+                    ballY = blockBottom + ballRadius;
+                    ballSpeedY = Math.abs(ballSpeedY);
+                }
+
+                applyAcceleration();
+                return true; // stop after first hit (one block per frame)
+            }
+        }
+        return false;
+    }
+
     function update() {
         if (!isBallLaunched) {
             // ball should follow paddle
@@ -148,8 +216,7 @@ const Ball = (function() {
             // check collisions
             checkWallCollision();
             checkPaddleCollision();
-
-            // TODO: check block collisions
+            checkBlockCollisions();
         }
         updateBallPosition();
     }
