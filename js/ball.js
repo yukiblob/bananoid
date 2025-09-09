@@ -5,7 +5,7 @@ const Ball = (function() {
     let ballX, ballY;
     let ballSpeedX = 0, ballSpeedY = 0;
     let isBallLaunched = false;
-    const baseSpeed = 10;
+    const baseSpeed = 8;
     let accelerationFactor = 1.0;
     const accelerationRate = 1.05;
 
@@ -22,15 +22,14 @@ const Ball = (function() {
     function resetBall() {
         const state = gameState.getState();
         const paddle = document.getElementById('paddle');
-        const paddleWidth = parseInt(getComputedStyle(paddle).width);
-
+        const paddleRect = paddle.getBoundingClientRect();
+        const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
+        
         ballX = state.paddleX;
-        ballY = state.paddleY - ballRadius;
-
+        ballY = paddleRect.top - ballRadius - gameAreaRect.top;
         ballSpeedX = 0;
         ballSpeedY = 0;
         isBallLaunched = false;
-        accelerationFactor = 1.0;
 
         updateBallPosition();
     }
@@ -95,43 +94,29 @@ const Ball = (function() {
         if (!isBallLaunched) return false;
 
         const paddle = document.getElementById('paddle');
-        const paddleWidth = parseInt(getComputedStyle(paddle).width);
-        const paddleHeight = parseInt(getComputedStyle(paddle).height);
-        const state = gameState.getState();
+        const paddleRect = paddle.getBoundingClientRect();
+        const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
         
-
-        const paddleTop = state.paddleY - paddleHeight;
-        const paddleLeft = state.paddleX - paddleWidth / 2;
-        const paddleRight = state.paddleX + paddleWidth / 2;
-        const paddleBottom = state.paddleY;
+        const paddleTop = paddleRect.top - gameAreaRect.top;
+        const paddleLeft = paddleRect.left - gameAreaRect.left;
+        const paddleRight = paddleLeft + paddleRect.width;
+        const paddleBottom = paddleTop + paddleRect.height;
 
         if (ballY + ballRadius >= paddleTop &&
             ballY - ballRadius <= paddleBottom &&
             ballX + ballRadius >= paddleLeft &&
             ballX - ballRadius <= paddleRight) {
             
-                const hitPosition = (ballX - state.paddleX) / (paddleWidth / 2);
-                const maxBounceAngle = 75 * Math.PI / 180; // 75 degrees max bounce
-
-                const currentAngle = Math.atan2(ballSpeedY, ballSpeedX);
-                let newAngle;
-
-                if (ballSpeedX > 0) {
-                    newAngle = Math.PI - hitPosition * maxBounceAngle;
-                } else {
-                    newAngle = hitPosition * maxBounceAngle;
-                }
-
-                if (Math.abs(newAngle) > Math.PI / 2) {
-                    newAngle = Math.PI - newAngle;
-                }
-
-                const speed = Math.sqrt(ballSpeedX * ballSpeedX + ballSpeedY * ballSpeedY);
-
-                ballSpeedX = speed * Math.sin(newAngle) * accelerationFactor;
-                ballSpeedY = -speed * Math.cos(newAngle) * accelerationFactor;
-
-                ballY = paddleTop - ballRadius;
+                const hitPosition = (ballX - (paddleLeft + paddleRect.width / 2)) / (paddleRect.width / 2);
+            const maxBounceAngle = 75 * Math.PI / 180; // 75 degrees max bounce
+            
+            const angle = hitPosition * maxBounceAngle;
+            const speed = Math.sqrt(ballSpeedX * ballSpeedX + ballSpeedY * ballSpeedY);
+            
+            ballSpeedX = speed * Math.sin(angle) * accelerationFactor;
+            ballSpeedY = -speed * Math.cos(angle) * accelerationFactor;
+            
+            ballY = paddleTop - ballRadius;
 
                 applyAcceleration();
                 return true;
@@ -143,8 +128,12 @@ const Ball = (function() {
         if (!isBallLaunched) {
             // ball should follow paddle
             const state = gameState.getState();
+            const paddle = document.getElementById('paddle');
+            const paddleRect = paddle.getBoundingClientRect();
+            const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
+
             ballX = state.paddleX;
-            ballY = state.paddleY - ballRadius;
+            ballY = paddleRect.top - ballRadius - gameAreaRect.top;
         } else {
             // move
             ballX += ballSpeedX;
