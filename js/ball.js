@@ -7,7 +7,7 @@ const Ball = (function() {
     let isBallLaunched = false;
     const baseSpeed = 8;
     let accelerationFactor = 1.0;
-    const accelerationRate = 1.05;
+    const accelerationRate = 1.01;
 
     function createBall() {
         const gameArea = document.getElementById('gameArea');
@@ -20,16 +20,19 @@ const Ball = (function() {
     }
 
     function resetBall() {
-        const state = gameState.getState();
         const paddle = document.getElementById('paddle');
         const paddleRect = paddle.getBoundingClientRect();
         const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
         
-        ballX = state.paddleX;
-        ballY = paddleRect.top - ballRadius - gameAreaRect.top;
+        const paddleCenterX = paddleRect.left - gameAreaRect.left + paddleRect.width / 2;
+        const paddleTop = paddleRect.top - gameAreaRect.top;
+
+        ballX = paddleCenterX;
+        ballY = paddleTop - ballRadius;
         ballSpeedX = 0;
         ballSpeedY = 0;
         isBallLaunched = false;
+        accelerationFactor = 1.0;
 
         updateBallPosition();
     }
@@ -101,13 +104,14 @@ const Ball = (function() {
         const paddleLeft = paddleRect.left - gameAreaRect.left;
         const paddleRight = paddleLeft + paddleRect.width;
         const paddleBottom = paddleTop + paddleRect.height;
+        const paddleCenterX = paddleLeft + (paddleRect.width/2);
 
         if (ballY + ballRadius >= paddleTop &&
             ballY - ballRadius <= paddleBottom &&
             ballX + ballRadius >= paddleLeft &&
             ballX - ballRadius <= paddleRight) {
             
-                const hitPosition = (ballX - (paddleLeft + paddleRect.width / 2)) / (paddleRect.width / 2);
+            const hitPosition = (ballX - paddleCenterX) / (paddleRect.width / 2);
             const maxBounceAngle = 75 * Math.PI / 180; // 75 degrees max bounce
             
             const angle = hitPosition * maxBounceAngle;
@@ -127,13 +131,15 @@ const Ball = (function() {
     function update() {
         if (!isBallLaunched) {
             // ball should follow paddle
-            const state = gameState.getState();
             const paddle = document.getElementById('paddle');
             const paddleRect = paddle.getBoundingClientRect();
             const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
 
-            ballX = state.paddleX;
-            ballY = paddleRect.top - ballRadius - gameAreaRect.top;
+            const paddleCenterX = paddleRect.left - gameAreaRect.left + paddleRect.width / 2;
+            const paddleTop = paddleRect.top - gameAreaRect.top;
+
+            ballX = paddleCenterX;
+            ballY = paddleTop - ballRadius;
         } else {
             // move
             ballX += ballSpeedX;
