@@ -1,6 +1,7 @@
 const GameState = (function() {
     const state = {
         paddleX: 400, // center position 
+        paddleY: 550,
         paddleSpeed: 0,
         maxPaddleSpeed: 10,
         keys: {},

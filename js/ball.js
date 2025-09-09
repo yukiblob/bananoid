@@ -5,8 +5,9 @@ const Ball = (function() {
     let ballX, ballY;
     let ballSpeedX = 0, ballSpeedY = 0;
     let isBallLaunched = false;
-    const baseSpeed = 5;
+    const baseSpeed = 10;
     let accelerationFactor = 1.0;
+    const accelerationRate = 1.05;
 
     function createBall() {
         const gameArea = document.getElementById('gameArea');
@@ -21,14 +22,15 @@ const Ball = (function() {
     function resetBall() {
         const state = gameState.getState();
         const paddle = document.getElementById('paddle');
-        const paddleRect = paddle.getBoundingClientRect();
-        const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
+        const paddleWidth = parseInt(getComputedStyle(paddle).width);
 
         ballX = state.paddleX;
-        ballY = paddleRect.top - ballRadius - gameAreaRect.top;
+        ballY = state.paddleY - ballRadius;
+
         ballSpeedX = 0;
         ballSpeedY = 0;
         isBallLaunched = false;
+        accelerationFactor = 1.0;
 
         updateBallPosition();
     }
@@ -47,6 +49,15 @@ const Ball = (function() {
         }
     }
 
+    function applyAcceleration() {
+        accelerationFactor *= accelerationRate;
+        const currentSpeed = Math.sqrt(ballSpeedX * ballSpeedX + ballSpeedY * ballSpeedY);
+        const angle = Math.atan2(ballSpeedY, ballSpeedX);
+
+        ballSpeedX = baseSpeed * Math.cos(angle) * accelerationFactor;
+        ballSpeedY = baseSpeed * Math.sin(angle) * accelerationFactor;
+    }
+
     function checkWallCollision() {
         const gameArea = document.getElementById('gameArea');
         const gameAreaWidth = gameArea.offsetWidth;
@@ -56,15 +67,18 @@ const Ball = (function() {
         if (ballX - ballRadius <= 0) {
             ballX = ballRadius;
             ballSpeedX = Math.abs(ballSpeedX);
+            applyAcceleration();
         } else if (ballX + ballRadius >= gameAreaWidth) {
             ballX = gameAreaWidth - ballRadius;
             ballSpeedX = -Math.abs(ballSpeedX);
+            applyAcceleration();
         }
 
         // top wall
         if (ballY - ballRadius <= 0) {
             ballY = ballRadius;
             ballSpeedY = Math.abs(ballSpeedY);
+            applyAcceleration();
         }
 
         // bottom wall (lose a life)
@@ -81,29 +95,45 @@ const Ball = (function() {
         if (!isBallLaunched) return false;
 
         const paddle = document.getElementById('paddle');
-        const paddleRect = paddle.getBoundingClientRect();
-        const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
+        const paddleWidth = parseInt(getComputedStyle(paddle).width);
+        const paddleHeight = parseInt(getComputedStyle(paddle).height);
+        const state = gameState.getState();
+        
 
-        const paddleTop = paddleRect.top - gameAreaRect.top;
-        const paddleLeft = paddleRect.left - gameAreaRect.left;
-        const paddleRight = paddleLeft + paddleRect.width;
-        const paddleBottom = paddleTop + paddleRect.height;
+        const paddleTop = state.paddleY - paddleHeight;
+        const paddleLeft = state.paddleX - paddleWidth / 2;
+        const paddleRight = state.paddleX + paddleWidth / 2;
+        const paddleBottom = state.paddleY;
 
         if (ballY + ballRadius >= paddleTop &&
             ballY - ballRadius <= paddleBottom &&
             ballX + ballRadius >= paddleLeft &&
             ballX - ballRadius <= paddleRight) {
             
-                const hitPosition = (ballX - (paddleLeft + paddleRect.width / 2)) / (paddleRect.width / 2);
+                const hitPosition = (ballX - state.paddleX) / (paddleWidth / 2);
                 const maxBounceAngle = 75 * Math.PI / 180; // 75 degrees max bounce
 
-                const angle = hitPosition * maxBounceAngle;
+                const currentAngle = Math.atan2(ballSpeedY, ballSpeedX);
+                let newAngle;
+
+                if (ballSpeedX > 0) {
+                    newAngle = Math.PI - hitPosition * maxBounceAngle;
+                } else {
+                    newAngle = hitPosition * maxBounceAngle;
+                }
+
+                if (Math.abs(newAngle) > Math.PI / 2) {
+                    newAngle = Math.PI - newAngle;
+                }
+
                 const speed = Math.sqrt(ballSpeedX * ballSpeedX + ballSpeedY * ballSpeedY);
-                ballSpeedX = speed * Math.sin(angle) * accelerationFactor;
-                ballSpeedY = -speed * Math.cos(angle) * accelerationFactor;
+
+                ballSpeedX = speed * Math.sin(newAngle) * accelerationFactor;
+                ballSpeedY = -speed * Math.cos(newAngle) * accelerationFactor;
 
                 ballY = paddleTop - ballRadius;
 
+                applyAcceleration();
                 return true;
         }
         return false;
@@ -113,12 +143,8 @@ const Ball = (function() {
         if (!isBallLaunched) {
             // ball should follow paddle
             const state = gameState.getState();
-            const paddle = document.getElementById('paddle');
-            const paddleRect = paddle.getBoundingClientRect();
-            const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
-
             ballX = state.paddleX;
-            ballY = paddleRect.top - ballRadius - gameAreaRect.top;
+            ballY = state.paddleY - ballRadius;
         } else {
             // move
             ballX += ballSpeedX;
