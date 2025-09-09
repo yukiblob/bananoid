@@ -33,8 +33,7 @@ body {
 .paddle {
     position: absolute;
     bottom: 20px;
-    left: 0%;
-    transform: translateX(50%);
+    left: 0;
     width: 140px;
     height: 25px;
     background: linear-gradient(to right, #00bcd4, #2196f3);

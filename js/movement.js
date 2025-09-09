@@ -31,13 +31,25 @@ const Movement = (function() {
     function updatePaddle() {
         const state = gameState.getState();
         const paddle = document.getElementById('paddle');
-        const paddleWidth = parseInt(getComputedStyle(paddle).width);
+        const gameArea = document.getElementById('gameArea');
 
+        const paddleWidth = paddle.offsetWidth;
+        const gameWidth = gameArea.clientWidth;
+
+        // update center position
         let newPaddleX = state.paddleX + state.paddleSpeed;
 
-        newPaddleX = Math.max(paddleWidth/2, Math.min(newPaddleX, 800 - paddleWidth/2));
+        // clamp center so paddle never leaves walls
+        if (newPaddleX < paddleWidth / 2) {
+            newPaddleX = paddleWidth / 2;
+        } else if (newPaddleX > gameWidth - paddleWidth / 2) {
+            newPaddleX = gameWidth - paddleWidth / 2;
+        }
+
         gameState.setState({ paddleX: newPaddleX });
-        paddle.style.left = `${newPaddleX - paddleWidth/2}px`;
+
+        // position paddle with left offset
+        paddle.style.left = `${newPaddleX - paddleWidth / 2}px`;
     }
 
     return {
