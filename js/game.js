@@ -127,6 +127,9 @@ const GameState = (function() {
                     if (typeof Movement !== 'undefined' && Movement.update) {
                         Movement.update();
                     }
+                    if (typeof Ball !== 'undefined' && Ball.update) {
+                        Ball.update();
+                    }
                     updateFPS(timestamp);
                 }
                 requestAnimationFrame(gameLoop);
@@ -153,6 +156,13 @@ window.addEventListener('load', () => {
             Movement.init(GameState);
         } else {
             console.error('Movement module not found or not properly defined');
+        }
+
+        if (typeof Ball !== 'undefined' && Ball.init) {
+            console.log('Initializing Ball module...');
+            Ball.init(GameState);
+        } else {
+            console.error('Ball module not found or not properly defined');
         }
 
         GameState.startGameLoop();

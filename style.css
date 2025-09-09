@@ -42,6 +42,14 @@ body {
     box-shadow: 0 0 10px rgba(33, 150, 243, 0.7);
 }
 
+.ball {
+    position: absolute;
+    background-color: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+    z-index: 10;
+}
+
 .controls {
     position: absolute;
     bottom: 0px;

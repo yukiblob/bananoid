@@ -108,4 +108,79 @@ const Ball = (function() {
         }
         return false;
     }
-})
+
+    function update() {
+        if (!isBallLaunched) {
+            // ball should follow paddle
+            const state = gameState.getState();
+            const paddle = document.getElementById('paddle');
+            const paddleRect = paddle.getBoundingClientRect();
+            const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
+
+            ballX = state.paddleX;
+            ballY = paddleRect.top - ballRadius - gameAreaRect.top;
+        } else {
+            // move
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+
+            // check collisions
+            checkWallCollision();
+            checkPaddleCollision();
+
+            // TODO: check block collisions
+        }
+        updateBallPosition();
+    }
+
+    function setAcceleration(factor) {
+        accelerationFactor = factor;
+        if (isBallLaunched) {
+            const currentSpeed = Math.sqrt(ballSpeedX * ballSpeedX + ballSpeedY * ballSpeedY);
+            const angle = Math.atan2(ballSpeedY, ballSpeedX);
+
+            ballSpeedX = baseSpeed * Math.cos(angle) * accelerationFactor;
+            ballSpeedY = baseSpeed * Math.sin(angle) * accelerationFactor;
+        }
+    }
+
+    return {
+        init: function(GameState) {
+            gameState = GameState;
+            createBall();
+            resetBall();
+
+            // key listener for launching
+            window.addEventListener('keydown', (e) => {
+                if (e.key === ' ' && !gameState.getState().isPaused) {
+                    launchBall();
+                    e.preventDefault();
+                }
+            });
+        },
+
+        update: function() {
+            if (!gameState.getState().isPaused) {
+                update();
+            }
+        },
+
+        reset: function() {
+            resetBall();
+        },
+
+        setAcceleration: setAcceleration,
+
+        getPosition: function() {
+            return { x: ballX, y: ballY, radius: ballRadius };
+        },
+
+        getVelocity: function() {
+            return { x: ballSpeedX, y: ballSpeedY };
+        },
+
+        isLaunched: function() {
+            return isBallLaunched;
+        }
+    };
+})();
