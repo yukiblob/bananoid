@@ -1,4 +1,5 @@
 // FIX: weird bug occurs when hitting the edge of the block sometimes it doesn't bounce back.
+// FIX: paddle corners weird ball behaviour.
 const GameState = (function() {
     const state = {
         paddleX: 400, // center position
@@ -6,8 +7,10 @@ const GameState = (function() {
         maxPaddleSpeed: 10,
         keys: {},
         lastTime: 0,
+        isPaused: false,
         fps: 60,
-        isPaused: false
+        frameCount: 0,
+        lastFPSUpdate: 0
     };
 
     // Create background grid
@@ -105,12 +108,15 @@ const GameState = (function() {
 
     // FPS
     function updateFPS(now) {
-        if (state.lastTime !== 0) {
-            const deltaTime = now - state.lastTime;
-            state.fps = Math.round(1000 / deltaTime);
+        if (!state.lastFPSUpdate) state.lastFPSUpdate = now;
+        state.frameCount++
+
+        if (now - state.lastFPSUpdate >= 1000) {
+            state.fps = Math.round((state.frameCount * 1000) / (now - state.lastFPSUpdate));
+            document.getElementById('fpsCounter').textContent = `FPS: ${state.fps}`;
+            state.frameCount = 0;
+            state.lastFPSUpdate = now;
         }
-        state.lastTime = now;
-        document.getElementById('fpsCounter').textContent = `FPS: ${state.fps}`;
     }
 
     return {
