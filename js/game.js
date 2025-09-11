@@ -1,3 +1,4 @@
+// FIX: weird bug occurs when hitting the edge of the block sometimes it doesn't bounce back.
 const GameState = (function() {
     const state = {
         paddleX: 400, // center position

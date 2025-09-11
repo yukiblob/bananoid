@@ -3,29 +3,18 @@ const Movement = (function() {
 
     function handleInput() {
         const state = gameState.getState();
+        let newSpeed = 0;
 
         if (state.keys['ArrowRight']) {
-            gameState.setState({
-                paddleSpeed: Math.min(state.paddleSpeed + 0.5, state.maxPaddleSpeed)
-            });
+            newSpeed = state.maxPaddleSpeed;
         }
         else if (state.keys['ArrowLeft']) {
-            gameState.setState({
-                paddleSpeed: Math.max(state.paddleSpeed - 0.5, -state.maxPaddleSpeed)
-            });
+            newSpeed = -state.maxPaddleSpeed;
+        } else {
+            newSpeed = 0;
         }
-        // this slows the paddle down when no key is pressed
-        else {
-            if (state.paddleSpeed > 0) {
-                gameState.setState({
-                    paddleSpeed: Math.max(state.paddleSpeed - 0.3, 0)
-                });
-            } else if (state.paddleSpeed < 0) {
-                gameState.setState({
-                    paddleSpeed: Math.min(state.paddleSpeed + 0.3, 0)
-                });
-            }
-        }
+
+        gameState.setState({ paddleSpeed: newSpeed });
     }
 
     function updatePaddle() {
