@@ -1,6 +1,6 @@
 const GameState = (function() {
     const state = {
-        paddleX: 400, // center position 
+        paddleX: 400, // center position
         paddleSpeed: 0,
         maxPaddleSpeed: 10,
         keys: {},
@@ -62,15 +62,15 @@ const GameState = (function() {
 
         const defaultLevels = [
             [
-                [1,1,1,1,1,1,1,1,1,1,1],
-                [0,0,1,1,1,1,1,1,3,0,0],
-                [2,2,2,0,0,3,,0,2,2,2],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [0, 0, 1, 1, 1, 1, 1, 1, 3, 0, 0],
+                [2, 2, 2, 0, 0, 3, 3, 0, 2, 2, 2],
             ]
         ];
-        const source = 
+        const source =
             (typeof levels !== "undefined" && Array.isArray(levels)) ? levels :
-            (typeof window !== "undefined" && Array.isArray(window.levels)) ? window.levels :
-            defaultLevels;
+                (typeof window !== "undefined" && Array.isArray(window.levels)) ? window.levels :
+                    defaultLevels;
 
         const grid = source[levelIndex] || source[0];
 
@@ -79,10 +79,8 @@ const GameState = (function() {
         const gap = 2;
 
         const cols = grid[0].length;
-        const rows = grid.length;
 
         const totalWidth = cols * blockWidth + (cols - 1) * gap;
-        const totalHeight = rows * blockHeight + (rows - 1) * gap;
 
         // center horizontally and keep a bit of padding from the top
         const offsetX = (gameArea.clientWidth - totalWidth) / 2;
@@ -115,7 +113,7 @@ const GameState = (function() {
     }
 
     return {
-         init() {
+        init() {
             createGrid();
             return { ...state };
         },
@@ -169,8 +167,8 @@ window.addEventListener('load', () => {
 
         // this prevents the arrow keys from scrolling
         window.addEventListener('keydown', (e) => {
-            if (['ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault(); 
-            });
+            if (['ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
+        });
     } catch (err) {
         console.error('Init error:', err);
     }
