@@ -99,31 +99,31 @@ const Ball = (function() {
         const paddle = document.getElementById('paddle');
         const paddleRect = paddle.getBoundingClientRect();
         const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
-        
+
         const paddleTop = paddleRect.top - gameAreaRect.top;
         const paddleLeft = paddleRect.left - gameAreaRect.left;
         const paddleRight = paddleLeft + paddleRect.width;
         const paddleBottom = paddleTop + paddleRect.height;
-        const paddleCenterX = paddleLeft + (paddleRect.width/2);
+        const paddleCenterX = paddleLeft + (paddleRect.width / 2);
 
         if (ballY + ballRadius >= paddleTop &&
             ballY - ballRadius <= paddleBottom &&
             ballX + ballRadius >= paddleLeft &&
             ballX - ballRadius <= paddleRight) {
-            
+
             const hitPosition = (ballX - paddleCenterX) / (paddleRect.width / 2);
             const maxBounceAngle = 75 * Math.PI / 180; // 75 degrees max bounce
-            
+
             const angle = hitPosition * maxBounceAngle;
             const speed = Math.sqrt(ballSpeedX * ballSpeedX + ballSpeedY * ballSpeedY);
-            
+
             ballSpeedX = speed * Math.sin(angle) * accelerationFactor;
             ballSpeedY = -speed * Math.cos(angle) * accelerationFactor;
-            
+
             ballY = paddleTop - ballRadius;
 
-                applyAcceleration();
-                return true;
+            applyAcceleration();
+            return true;
         }
         return false;
     }
@@ -149,17 +149,19 @@ const Ball = (function() {
 
                 // Collision detected
                 const blockType = block.classList.contains("unbreakable") ? "unbreakable"
-                                 : block.classList.contains("strong") ? "strong"
-                                 : "normal";
+                    : block.classList.contains("strong") ? "strong"
+                        : "normal";
 
                 if (blockType !== "unbreakable") {
                     if (blockType === "strong") {
                         // Turn strong into normal on first hit
                         block.classList.remove("strong");
                         block.classList.add("normal");
+                        Score.add(50);
                     } else {
                         // Remove block
                         block.remove();
+                        Score.add(100);
                     }
                 }
 

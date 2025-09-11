@@ -89,6 +89,15 @@ body {
     font-family: monospace;
 }
 
+.score {
+    position:absolute;
+    top: 10px;
+    left: 10px;
+    color: #fff;
+    font-size: 18px;
+    font-family: monospace;
+}
+
 .grid-line {
     position: absolute;
     background: rgba(255, 255, 255, 0.05);

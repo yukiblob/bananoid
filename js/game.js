@@ -170,6 +170,13 @@ window.addEventListener('load', () => {
             console.error('Ball module not found or not properly defined');
         }
 
+        if (typeof Score !== 'undefined') {
+            console.log('Initializing Score module...');
+            Score.init();
+        } else {
+            console.error('Score module not found');
+        }
+
         GameState.startGameLoop();
 
         // this prevents the arrow keys from scrolling
