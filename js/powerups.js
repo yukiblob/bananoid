@@ -188,7 +188,7 @@ const Powerups = (function() {
             gameState = GameState;
         },
         createPill,
-        upate: function() {
+        update: function() {
             checkPaddleCollision();
         }
     };
