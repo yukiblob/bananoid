@@ -159,9 +159,19 @@ const Ball = (function() {
                         block.classList.add("normal");
                         Score.add(50);
                     } else {
+                        const blockRect = block.getBoundingClientRect();
+                        const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
+
+                        const blockCenterX = blockRect.left - gameAreaRect.left + blockRect.width / 2;
+                        const blockCenterY = blockRect.top - gameAreaRect.top + blockRect.height / 2;
+
                         // Remove block
                         block.remove();
                         Score.add(100);
+
+                        if (typeof Powerups !== 'undefined' && Powerups.createPill) {
+                            Powerups.createPill(blockCenterX, blockCenterY);
+                        }
                     }
                 }
 

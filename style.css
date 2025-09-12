@@ -49,6 +49,39 @@ body {
     z-index: 10;
 }
 
+/* Powerup Pills */
+.powerup-pill {
+    position: absolute;
+    width: 20px;
+    height: 10px;
+    border-radius: 5px;
+    z-index: 5;
+    /* Fall animation is handled by JS */
+}
+.powerup-pill.longPaddle { background-color: cyan; }
+.powerup-pill.shortPaddle { background-color: orange; }
+.powerup-pill.guns { background-color: red; }
+
+/* Paddle Powerup States */
+#paddle.powerup-long {
+    width: 120px !important; /* Override the default width */
+}
+#paddle.powerup-short {
+    width: 60px !important;
+}
+#paddle.powerup-guns {
+    /* Visual indicator for guns, maybe little protrusions */
+    background-color: #ff5555;
+}
+
+.bullet {
+    position: absolute;
+    width: 4px;
+    height: 10px;
+    background-color: yellow;
+    z-index: 10;
+}
+
 .controls {
     position: absolute;
     bottom: 0px;

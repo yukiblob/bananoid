@@ -4,7 +4,7 @@ const GameState = (function() {
     const state = {
         paddleX: 400, // center position
         paddleSpeed: 0,
-        maxPaddleSpeed: 10,
+        maxPaddleSpeed: 12,
         keys: {},
         lastTime: 0,
         isPaused: false,
@@ -135,6 +135,9 @@ const GameState = (function() {
                     if (typeof Ball !== 'undefined' && Ball.update) {
                         Ball.update();
                     }
+                    if (typeof Powerups !== 'undefined' && Powerups.update) {
+                        Powerups.update();
+                    }
                     updateFPS(timestamp);
                 }
                 requestAnimationFrame(gameLoop);
@@ -168,6 +171,13 @@ window.addEventListener('load', () => {
             Ball.init(GameState);
         } else {
             console.error('Ball module not found or not properly defined');
+        }
+
+        if (typeof Powerups !== 'undefined' && Powerups.init) {
+            console.log('Initializing Powerups module...');
+            Powerups.init(GameState);
+        } else {
+            console.error('Powerups module not found or not properly defined');
         }
 
         if (typeof Score !== 'undefined') {
