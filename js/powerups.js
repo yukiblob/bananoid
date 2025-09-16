@@ -93,11 +93,11 @@ const Powerups = (function() {
             pillRect.top <= paddleRect.bottom &&
             pillRect.right >= paddleRect.left &&
             pillRect.left <= paddleRect.right) {
-                const powerupType = pill.dataset.type;
-                activePowerup(powerupType);
-                pill.remove();
-                powerupElement = null;
-            }
+            const powerupType = pill.dataset.type;
+            activatePowerup(powerupType);
+            pill.remove();
+            powerupElement = null;
+        }
     }
 
     function activatePowerup(typeName) {
@@ -175,11 +175,11 @@ const Powerups = (function() {
                 bulletRect.top <= blockRect.bottom &&
                 bulletRect.right >= blockRect.right &&
                 bulletRect.left <= blockRect.right) {
-                    
-                    block.classList.add('hit');
-                    bullet.remove();
-                    break;
-                }
+
+                block.classList.add('hit');
+                bullet.remove();
+                break;
+            }
         }
     }
 
