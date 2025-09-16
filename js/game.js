@@ -159,6 +159,15 @@ window.addEventListener('load', () => {
 
         GameState.loadLevel(0);
 
+        if (typeof Menu !== 'undefined' && Menu.init) {
+            console.log('Initializing Menu module...');
+            Menu.init(GameState);
+        } else {
+            console.error('Menu module not found or not properly defined');
+        }
+
+        GameState.setState({ isPaused: true });
+
         if (typeof Movement !== 'undefined' && Movement.init) {
             console.log('Initializing Movement module...');
             Movement.init(GameState);
