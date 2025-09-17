@@ -21,10 +21,24 @@ const Menu = (function() {
 
     function createMenuButton(text, onClick, index) {
         const button = document.createElement('div');
-        button.textContent = text;
         button.className = 'menu-button';
         button.dataset.index = index;
         button.addEventListener('click', onClick);
+
+        // Create arrow indicator
+        const arrow = document.createElement('span');
+        arrow.className = 'arrow-indicator';
+        arrow.innerHTML = '▶';
+
+        // Create text span
+        const textSpan = document.createElement('span');
+        textSpan.textContent = text;
+        textSpan.className = 'button-text';
+
+        // Append both to button
+        button.appendChild(arrow);
+        button.appendChild(textSpan);
+
         return button;
     }
 
@@ -32,11 +46,15 @@ const Menu = (function() {
         // Remove highlight from all buttons
         menuButtons.forEach(button => {
             button.classList.remove('selected');
+            const arrow = button.querySelector('.arrow-indicator');
+            if (arrow) arrow.style.visibility = 'hidden';
         });
 
         // Add highlight to selected button
         if (menuButtons[selectedButtonIndex]) {
             menuButtons[selectedButtonIndex].classList.add('selected');
+            const arrow = menuButtons[selectedButtonIndex].querySelector('.arrow-indicator');
+            if (arrow) arrow.style.visibility = 'visible';
         }
     }
 
