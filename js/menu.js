@@ -147,10 +147,20 @@ const Menu = (function() {
             menuElement.removeChild(menuElement.firstChild);
         }
 
+        const titleWrapper = document.createElement('div');
+        titleWrapper.className = 'title-wrapper';
+
         const title = document.createElement('h1');
         title.innerHTML = '<span class="logo-red">BANA</span><span class="logo-blue">NOID</span>';
         title.className = 'menu-title';
-        menuElement.appendChild(title);
+
+        const subtitle = document.createElement('h2');
+        subtitle.textContent = 'REVENGE OF BANANA';
+        subtitle.className = 'menu-subtitle';
+
+        titleWrapper.appendChild(title);
+        titleWrapper.appendChild(subtitle);
+        menuElement.appendChild(titleWrapper);
 
         const buttonsContainer = document.createElement('div');
         buttonsContainer.className = 'menu-buttons';
@@ -175,8 +185,7 @@ const Menu = (function() {
         buttonsContainer.appendChild(levelSelectButton);
         buttonsContainer.appendChild(controlsButton);
 
-        // Add elements to menu
-        menuElement.appendChild(title);
+        // Add button containers to menu
         menuElement.appendChild(buttonsContainer);
 
         // Store buttons for navigation
