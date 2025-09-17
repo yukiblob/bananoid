@@ -20,7 +20,7 @@ const Menu = (function() {
     }
 
     function createMenuButton(text, onClick, index) {
-        const button = document.createElement('button');
+        const button = document.createElement('div');
         button.textContent = text;
         button.className = 'menu-button';
         button.dataset.index = index;
@@ -148,7 +148,7 @@ const Menu = (function() {
         }
 
         const title = document.createElement('h1');
-        title.textContent = 'BANANOID';
+        title.innerHTML = '<span class="logo-red">BANA</span><span class="logo-blue">NOID</span>';
         title.className = 'menu-title';
         menuElement.appendChild(title);
 
@@ -181,6 +181,14 @@ const Menu = (function() {
 
         // Store buttons for navigation
         menuButtons = [startButton, levelSelectButton, controlsButton];
+
+        const credits = document.createElement('div');
+        credits.className = 'credits';
+        credits.innerHTML = `
+        <p>© BANANO CORP 2025</p>
+        <p>ALL RIGHTS RESERVED</p>
+        `;
+        menuElement.appendChild(credits);
 
         updateButtonSelection();
     }

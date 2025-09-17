@@ -9,8 +9,9 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: linear-gradient(to bottom, #1a237e, #283593, #303f9f);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: black;
+    font-family: 'Press Start 2P', monospace;
+    color: white;
     overflow: hidden;
 }
 
@@ -47,10 +48,18 @@ body {
 }
 
 .menu-title {
+    font-family: 'Press Start 2P', monospace;
     font-size: 48px;
     margin-bottom: 40px;
-    text-shadow: 0 0 10px #00bcd4, 0 0 20px #00bcd4;
-    color: #fff;
+    text-transform: uppercase;
+    color: white;
+
+    text-shadow:
+        2px 2px 0 #ff0000,
+        -2px -2px 0 #00bcd4,
+        0 0 10px #ffffff,
+        0 0 20px #00bcd4,
+        0 0 30px #ff0000;
 }
 
 .menu-subtitle {
@@ -63,30 +72,33 @@ body {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    width: 200px;
+    align-items: center;
 }
 
 .menu-button {
-    padding: 12px 20px;
-    background: linear-gradient(to right, #00bcd4, #2196f3);
+    background: none;
     border: none;
-    border-radius: 4px;
     color: white;
-    font-size: 16px;
+    font-size: 20px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+    text-transform: uppercase;
+    transition: color 0.2s;
 }
 
 .menu-button.selected {
-    background: linear-gradient(to right, #2196f3, #00bcd4);
-    transform: scale(1.05);
-    box-shadow: 0 0 15px rgba(33, 150, 243, 0.8);
+    color: yellow;
 }
 
 .menu-button:focus {
     outline: 2px solid #ffeb3b;
     outline-offset: 2px;
+}
+
+.logo-red {
+    color: #ff3b3b;
+}
+.logo-blue {
+    color: #00bcd4;
 }
 
 .levels-grid {
@@ -100,6 +112,18 @@ body {
     text-align: center;
     margin-bottom: 30px;
     line-height: 1.8;
+}
+
+.credits {
+    position: absolute;
+    bottom: 40px;
+    text-align: center;
+    width: 100%;
+    font-size: 12px;
+    color: white;
+}
+.credits p:last-child {
+    color: red;
 }
 
 .paddle {
