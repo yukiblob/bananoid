@@ -23,7 +23,7 @@ const Menu = (function() {
         const button = document.createElement('div');
         button.className = 'menu-button';
         button.dataset.index = index;
-        button.addEventListener('click', onClick);
+        button.style.cursor = 'default'; // Remove pointer cursor
 
         // Create arrow indicator
         const arrow = document.createElement('span');
@@ -43,14 +43,14 @@ const Menu = (function() {
     }
 
     function updateButtonSelection() {
-        // Remove highlight from all buttons
+        // Remove highlight from all buttons and hide arrows
         menuButtons.forEach(button => {
             button.classList.remove('selected');
             const arrow = button.querySelector('.arrow-indicator');
             if (arrow) arrow.style.visibility = 'hidden';
         });
 
-        // Add highlight to selected button
+        // Add highlight to selected button and show arrow
         if (menuButtons[selectedButtonIndex]) {
             menuButtons[selectedButtonIndex].classList.add('selected');
             const arrow = menuButtons[selectedButtonIndex].querySelector('.arrow-indicator');
@@ -72,7 +72,11 @@ const Menu = (function() {
 
     function activateSelectedButton() {
         if (menuButtons[selectedButtonIndex]) {
-            menuButtons[selectedButtonIndex].click();
+            // Get the onClick function from the button's data attribute
+            const onClickFunc = menuButtons[selectedButtonIndex].onClickFunction;
+            if (onClickFunc) {
+                onClickFunc();
+            }
         }
     }
 
@@ -98,20 +102,26 @@ const Menu = (function() {
         menuButtons = [];
 
         for (let i = 0; i < levelCount; i++) {
-            const levelButton = createMenuButton(`Level ${i + 1}`, () => {
+            const onClick = () => {
                 hideMenu();
                 GameState.loadLevel(i);
                 if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
                 if (typeof Score !== 'undefined' && Score.init) Score.init();
-            }, i);
+            };
+
+            const levelButton = createMenuButton(`Level ${i + 1}`, onClick, i);
+            levelButton.onClickFunction = onClick; // Store function reference
 
             levelsContainer.appendChild(levelButton);
             menuButtons.push(levelButton);
         }
 
-        const backButton = createMenuButton('Back', () => {
+        const onClickBack = () => {
             showMainMenu();
-        }, levelCount);
+        };
+
+        const backButton = createMenuButton('Back', onClickBack, levelCount);
+        backButton.onClickFunction = onClickBack; // Store function reference
 
         levelsContainer.appendChild(backButton);
         menuButtons.push(backButton);
@@ -146,9 +156,12 @@ const Menu = (function() {
         `;
         menuElement.appendChild(controlsInfo);
 
-        const backButton = createMenuButton('Back', () => {
+        const onClickBack = () => {
             showMainMenu();
-        }, 0);
+        };
+
+        const backButton = createMenuButton('Back', onClickBack, 0);
+        backButton.onClickFunction = onClickBack; // Store function reference
 
         menuElement.appendChild(backButton);
         menuButtons = [backButton];
@@ -183,20 +196,29 @@ const Menu = (function() {
         const buttonsContainer = document.createElement('div');
         buttonsContainer.className = 'menu-buttons';
 
-        const startButton = createMenuButton('Start Game', () => {
+        const onClickStart = () => {
             hideMenu();
             GameState.loadLevel(0);
             if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
             if (typeof Score !== 'undefined' && Score.init) Score.init();
-        }, 0);
+        };
 
-        const levelSelectButton = createMenuButton('Level Select', () => {
+        const startButton = createMenuButton('Start Game', onClickStart, 0);
+        startButton.onClickFunction = onClickStart; // Store function reference
+
+        const onClickLevelSelect = () => {
             showLevelSelect();
-        }, 1);
+        };
 
-        const controlsButton = createMenuButton('Controls', () => {
+        const levelSelectButton = createMenuButton('Level Select', onClickLevelSelect, 1);
+        levelSelectButton.onClickFunction = onClickLevelSelect; // Store function reference
+
+        const onClickControls = () => {
             showControls();
-        }, 2);
+        };
+
+        const controlsButton = createMenuButton('Controls', onClickControls, 2);
+        controlsButton.onClickFunction = onClickControls; // Store function reference
 
         // Add buttons to container
         buttonsContainer.appendChild(startButton);
