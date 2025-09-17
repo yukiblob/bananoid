@@ -234,7 +234,7 @@ const Menu = (function() {
         const credits = document.createElement('div');
         credits.className = 'credits';
         credits.innerHTML = `
-        <p>© BANANO CORP 2025</p>
+        <p>© BANANA CORP 2025</p>
         <p>ALL RIGHTS RESERVED</p>
         `;
         menuElement.appendChild(credits);
