@@ -1,0 +1,10 @@
+- high scores 1
+- powerups 10
+- pause menu 7
+- level editor 9
+- more maps 8
+- boss fight 2
+- cutscenes 1
+- timer 7
+- lives 8
+- win/loss screen 7
