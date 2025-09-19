@@ -165,6 +165,15 @@ body {
     color: red;
 }
 
+.timer {
+    position: absolute;
+    top: 10px;
+    right: 400px;
+    color: #ffff00;
+    font-size: 18px;
+    font-family: 'Press Start 2P', monospace;
+}
+
 .paddle {
     position: absolute;
     bottom: 20px;
@@ -252,18 +261,18 @@ body {
     position: absolute;
     top: 10px;
     right: 10px;
-    color: #00bcd4;
+    color: #ffff00;
     font-size: 14px;
-    font-family: monospace;
+    font-family: 'Press Start 2P', monospace;
 }
 
 .score {
     position:absolute;
     top: 10px;
     left: 10px;
-    color: #fff;
+    color: #ffff00;
     font-size: 18px;
-    font-family: monospace;
+    font-family: 'Press Start 2P', monospace;
 }
 
 .grid-line {

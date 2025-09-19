@@ -49,6 +49,10 @@ const Ball = (function() {
             ballSpeedY = -baseSpeed * Math.cos(angle) * accelerationFactor;
             isBallLaunched = true;
         }
+
+        if (typeof GameState !== 'undefined' && GameState.startGame && !GameState.hasGameStarted()) {
+            GameState.startGame();
+        }
     }
 
     function applyAcceleration() {

@@ -19,7 +19,7 @@ const Menu = (function() {
         showMainMenu();
     }
 
-    function createMenuButton(text, onClick, index) {
+    function createMenuButton(text, index) {
         const button = document.createElement('div');
         button.className = 'menu-button';
         button.dataset.index = index;
@@ -246,12 +246,20 @@ const Menu = (function() {
         menuElement.style.display = 'none';
         isMenuVisible = false;
         GameState.setState({ isPaused: false });
+
+        if (typeof Timer !== 'undefined' && Timer.start) {
+            Timer.start();
+        }
     }
 
     function showMenu() {
         menuElement.style.display = 'flex';
         isMenuVisible = true;
         GameState.setState({ isPaused: true });
+
+        if (typeof Timer !== 'undefined' && Timer.pause) {
+            Timer.pause();
+        }
 
         // Show appropriate menu based on current state
         if (currentMenu === 'levelSelect') {
@@ -266,6 +274,10 @@ const Menu = (function() {
     function init(GameState) {
         gameState = GameState;
         createMenu();
+
+        if (typeof Timer !== 'undefined' && Timer.init) {
+            Timer.init();
+        }
 
         window.addEventListener('keydown', (e) => {
             if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
