@@ -89,8 +89,15 @@ const Ball = (function() {
 
         // bottom wall (lose a life)
         if (ballY + ballRadius >= gameAreaHeight) {
-            // TODO: Implement losing a life
-            resetBall();
+            if (typeof Lives !== 'undefined' && Lives.loseLife) {
+                const isGameOver = Lives.loseLife();
+                if (!isGameOver) {
+                    resetBall();
+                }
+            } else {
+                resetBall();
+            }
+
             return true; // ball lost
         }
 

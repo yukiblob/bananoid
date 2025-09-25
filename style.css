@@ -316,6 +316,85 @@ body {
     font-family: 'Press Start 2P', monospace;
 }
 
+.lives-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+    z-index: 10;
+}
+
+.heart {
+    font-size: 24px;
+    transition: all 0.3s ease;
+    animation: pulse 1s ease-in-out;
+}
+
+.heart.empty {
+    opacity: 0.5;
+}
+
+.life-lost .heart:last-child:not(.empty) {
+    animation: shake 0.5s ease-in-out;
+}
+
+.life-gained .heart:first-child.empty {
+    animation: celebrate 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes celebrate {
+    0% { transform: scale(0); }
+    50% { transform: scale(1.5); }
+    100% { transform: scale(1); }
+}
+
+/* Game Over Message */
+.game-over-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    z-index: 100;
+}
+
+.game-over-message h2 {
+    margin: 0 0 15px 0;
+    color: #ff6b6b;
+}
+
+.game-over-message button {
+    background: #4ecdc4;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 15px;
+}
+
+.game-over-message button:hover {
+    background: #45b7af;
+}
+
 .grid-line {
     position: absolute;
     background: rgba(255, 255, 255, 0.05);
