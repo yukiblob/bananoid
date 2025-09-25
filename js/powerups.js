@@ -31,7 +31,7 @@ const Powerups = (function() {
         },
         {
             name: 'guns',
-            duration: 15000,
+            duration: 10000,
             effect: function() {
                 const paddle = document.getElementById('paddle');
                 paddle.classList.add('powerup-guns');
@@ -65,7 +65,7 @@ const Powerups = (function() {
         gameArea.appendChild(pill);
 
         // animate the pill fall
-        let fallSpeed = 2;
+        let fallSpeed = 4;
         function fall() {
             const currentY = parseFloat(pill.style.top);
             if (currentY > gameArea.clientHeight) {
@@ -85,14 +85,25 @@ const Powerups = (function() {
 
         const paddle = document.getElementById('paddle');
         const pill = powerupElement;
+        const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
 
         const paddleRect = paddle.getBoundingClientRect();
         const pillRect = pill.getBoundingClientRect();
 
-        if (pillRect.bottom >= paddleRect.top &&
-            pillRect.top <= paddleRect.bottom &&
-            pillRect.right >= paddleRect.left &&
-            pillRect.left <= paddleRect.right) {
+        const paddleLeft = paddleRect.left - gameAreaRect.left;
+        const paddleTop = paddleRect.top - gameAreaRect.top;
+        const paddleRight = paddleLeft + paddleRect.width;
+        const paddleBottom = paddleTop + paddleRect.height;
+
+        const pillLeft = pillRect.left - gameAreaRect.left;
+        const pillTop = pillRect.top - gameAreaRect.top;
+        const pillRight = pillLeft + pillRect.width;
+        const pillBottom = pillTop + pillRect.height;
+
+        if (pillBottom >= paddleTop &&
+            pillTop <= paddleBottom &&
+            pillRight >= paddleLeft &&
+            pillLeft <= paddleRight) {
             const powerupType = pill.dataset.type;
             activatePowerup(powerupType);
             pill.remove();
@@ -145,20 +156,30 @@ const Powerups = (function() {
     }
 
     function createBullet() {
-        const paddle = document.getElementById('paddle');
+        if (!gameState) {
+            console.error('Powerups not properly initialized with GameState');
+            return;
+        }
+        const state = gameState.getState();
         const gameArea = document.getElementById('gameArea');
+        const paddle = document.getElementById('paddle');
+        const gameAreaRect = gameArea.getBoundingClientRect();
         const paddleRect = paddle.getBoundingClientRect();
+
+        const paddleWidth = paddle.offsetWidth;
+        const paddleLeft = state.paddleX - paddleWidth / 2;
+        const paddleTop = paddleRect.top - gameAreaRect.top;
 
         const leftBullet = document.createElement('div');
         leftBullet.className = 'bullet';
-        leftBullet.style.left = `${paddleRect.right - 10}px`;
-        leftBullet.style.top = `${paddleRect.top}px`;
+        leftBullet.style.left = `${paddleLeft + 5}px`;
+        leftBullet.style.top = `${paddleTop - 10}px`;
         gameArea.appendChild(leftBullet);
 
         const rightBullet = document.createElement('div');
         rightBullet.className = 'bullet';
-        rightBullet.style.left = `${paddleRect.right - 10}px`;
-        rightBullet.style.top = `${paddleRect.top}px`;
+        rightBullet.style.left = `${paddleLeft + paddleWidth - 15}px`;
+        rightBullet.style.top = `${paddleTop - 10}px`;
         gameArea.appendChild(rightBullet);
 
         animateBullet(leftBullet);
@@ -166,21 +187,99 @@ const Powerups = (function() {
     }
 
     function checkBulletCollision(bullet) {
-        const blocks = document.querySelectorAll('.block:not(.unbreakable)');
+        const blocks = document.querySelectorAll('.block');
         const bulletRect = bullet.getBoundingClientRect();
+        const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
 
         for (let block of blocks) {
             const blockRect = block.getBoundingClientRect();
-            if (bulletRect.bottom >= blockRect.top &&
-                bulletRect.top <= blockRect.bottom &&
-                bulletRect.right >= blockRect.right &&
-                bulletRect.left <= blockRect.right) {
 
-                block.classList.add('hit');
+            const blockLeft = blockRect.left - gameAreaRect.left;
+            const blockTop = blockRect.top - gameAreaRect.top;
+            const blockRight = blockLeft + blockRect.width;
+            const blockBottom = blockTop + blockRect.height;
+
+            const bulletLeft = bulletRect.left - gameAreaRect.left;
+            const bulletTop = bulletRect.top - gameAreaRect.top;
+            const bulletRight = bulletLeft + bulletRect.width;
+            const bulletBottom = bulletTop + bulletRect.height;
+
+            if (bulletBottom >= blockTop &&
+                bulletTop <= blockBottom &&
+                bulletRight >= blockLeft &&
+                bulletLeft <= blockRight) {
+
+                const blockType = block.classList.contains("unbreakable") ? "unbreakable" :
+                                    block.classList.contains("strong") ? "strong" : "normal";
+
+                if (blockType === "unbreakable") {
+                    createSparks(bulletLeft, bulletTop);
+                    bullet.remove();
+                    return true;
+                }
+                
+                else if (blockType === "strong") {
+                    block.classList.remove("strong");
+                    block.classList.add("normal");
+                    Score.add(50);
+                } else {
+                    block.remove();
+                    Score.add(100);
+
+                    const blockCenterX = blockLeft + blockRect.width / 2;
+                    const blockCenterY = blockTop + blockRect.height / 2;
+
+                    if (typeof Powerups !== 'undefined' && Powerups.createPill) {
+                        Powerups.createPill(blockCenterX, blockCenterY);
+                    }
+                }
+
                 bullet.remove();
-                break;
+                return true;
             }
         }
+        return false;
+    }
+
+    function animateBullet(bullet) {
+        const bulletSpeed = 12;
+
+        function move() {
+            if (!bullet.parentElement) return;
+
+            const currentTop = parseFloat(bullet.style.top);
+            const newTop = currentTop - bulletSpeed;
+
+            if (newTop < -20) {
+                bullet.remove();
+                return;
+            }
+
+            bullet.style.top = `${newTop}px`;
+
+            if (checkBulletCollision(bullet)) {
+                return;
+            }
+
+            requestAnimationFrame(move);
+        }
+        requestAnimationFrame(move);
+    }
+
+    function createSparks(x, y) {
+        const spark = document.createElement('div');
+        spark.style.position = 'absolute';
+        spark.style.left = `${x}px`;
+        spark.style.top = `${y}px`;
+        spark.style.width = '10px';
+        spark.style.height = '10px';
+        spark.style.background = 'radial-gradient(circle, yellow, orange, red)';
+        spark.style.borderRadius = '50%';
+        spark.style.boxShadow = '0 0 8px yellow';
+        spark.style.zIndex = '10';
+
+        document.getElementById('gameArea').appendChild(spark);
+        setTimeout(() => spark.remove(), 100);
     }
 
     return {

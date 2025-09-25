@@ -39,6 +39,9 @@ const Movement = (function() {
 
         // position paddle with left offset
         paddle.style.left = `${newPaddleX - paddleWidth / 2}px`;
+
+        paddle.style.bottom = '20px';
+        paddle.style.top = 'auto';
     }
 
     return {

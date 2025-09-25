@@ -196,8 +196,8 @@ body {
 /* Powerup Pills */
 .powerup-pill {
     position: absolute;
-    width: 20px;
-    height: 10px;
+    width: 40px;
+    height: 40px;
     border-radius: 5px;
     z-index: 5;
     /* Fall animation is handled by JS */
@@ -208,22 +208,63 @@ body {
 
 /* Paddle Powerup States */
 #paddle.powerup-long {
-    width: 120px !important; /* Override the default width */
+    width: 200px !important; /* Override the default width */
 }
 #paddle.powerup-short {
-    width: 60px !important;
+    width: 70px !important;
 }
 #paddle.powerup-guns {
-    /* Visual indicator for guns, maybe little protrusions */
-    background-color: #ff5555;
+    background: linear-gradient(to right, #f44336, #e91e63);
+    box-shadow: 0 0 15px red;
+}
+
+/* Left gun protrusion */
+#paddle.powerup-guns::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 5px;
+    width: 12px;
+    height: 8px;
+    background: linear-gradient(to bottom, #ff9800, #ff5722);
+    border-radius: 3px 3px 0 0;
+    box-shadow: 0 0 5px orange;
+}
+
+/* Right gun protrusion */
+#paddle.powerup-guns::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 5px;
+    width: 12px;
+    height: 8px;
+    background: linear-gradient(to bottom, #ff9800, #ff5722);
+    border-radius: 3px 3px 0 0;
+    box-shadow: 0 0 5px orange;
+}
+
+.powerup-pill.longPaddle { 
+    background-color: cyan;
+    box-shadow: 0 0 8px cyan;
+}
+.powerup-pill.shortPaddle { 
+    background-color: orange;
+    box-shadow: 0 0 8px orange;
+}
+.powerup-pill.guns { 
+    background-color: red;
+    box-shadow: 0 0 8px red;
 }
 
 .bullet {
     position: absolute;
-    width: 4px;
-    height: 10px;
-    background-color: yellow;
+    width: 6px;
+    height: 12px;
+    background: linear-gradient(to bottom, yellow, orange);
+    border-radius: 2px;
     z-index: 10;
+    box-shadow: 0 0 3px yellow;
 }
 
 .controls {
