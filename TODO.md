@@ -1,5 +1,5 @@
 - high scores 1
-- powerups 10
+- powerups 10 ✅
 - pause menu 7
 - level editor 9
 - more maps 8

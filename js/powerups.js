@@ -31,7 +31,7 @@ const Powerups = (function() {
         },
         {
             name: 'guns',
-            duration: 10000,
+            duration: 5000,
             effect: function() {
                 const paddle = document.getElementById('paddle');
                 paddle.classList.add('powerup-guns');
@@ -227,14 +227,14 @@ const Powerups = (function() {
                 bulletLeft <= blockRight) {
 
                 const blockType = block.classList.contains("unbreakable") ? "unbreakable" :
-                                    block.classList.contains("strong") ? "strong" : "normal";
+                    block.classList.contains("strong") ? "strong" : "normal";
 
                 if (blockType === "unbreakable") {
                     createSparks(bulletLeft, bulletTop);
                     bullet.remove();
                     return true;
                 }
-                
+
                 else if (blockType === "strong") {
                     block.classList.remove("strong");
                     block.classList.add("normal");

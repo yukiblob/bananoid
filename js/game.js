@@ -1,5 +1,3 @@
-// FIX: weird bug occurs when hitting the edge of the block sometimes it doesn't bounce back.
-// FIX: paddle corners weird ball behaviour.
 const GameState = (function() {
     const state = {
         paddleX: 400, // center position
@@ -156,6 +154,13 @@ window.addEventListener('load', () => {
     try {
         console.log('Initializing game...');
         GameState.init();
+
+        if (typeof Lives !== 'undefined' && Lives.init) {
+            console.log('Initializing Lives module...');
+            Lives.init(GameState);
+        } else {
+            console.error('Lives module not found or not properly defined');
+        }
 
         GameState.loadLevel(0);
 
