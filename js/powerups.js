@@ -1,7 +1,7 @@
 const Powerups = (function() {
     let gameState;
     let activePowerup = null;
-    let powerupElement = null;
+    let powerupElements = [];
     let powerupInterval = null;
 
     const types = [
@@ -44,6 +44,19 @@ const Powerups = (function() {
                 // stop firing logic
                 stopFiring();
             }
+        },
+        {
+            name: 'multiball',
+            duration: 0,
+            effect: function() {
+                const currentBalls = Array.from(document.querySelectorAll('.ball'));
+
+                currentBalls.forEach(ball => {
+                    createMultiBalls(ball);
+                });
+            },
+                cleanup: function() {
+            }
         }
     ];
 
@@ -69,6 +82,7 @@ const Powerups = (function() {
         function fall() {
             const currentY = parseFloat(pill.style.top);
             if (currentY > gameArea.clientHeight) {
+                powerupElements = powerupElements.filter(p => p !== pill);
                 pill.remove();
                 return;
             }
@@ -77,38 +91,41 @@ const Powerups = (function() {
         }
         requestAnimationFrame(fall);
 
-        powerupElement = pill;
+        powerupElements.push(pill);
     }
 
     function checkPaddleCollision() {
-        if (!powerupElement) return;
+        if (powerupElements.length === 0) return;
 
         const paddle = document.getElementById('paddle');
-        const pill = powerupElement;
         const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
 
         const paddleRect = paddle.getBoundingClientRect();
-        const pillRect = pill.getBoundingClientRect();
 
         const paddleLeft = paddleRect.left - gameAreaRect.left;
         const paddleTop = paddleRect.top - gameAreaRect.top;
         const paddleRight = paddleLeft + paddleRect.width;
         const paddleBottom = paddleTop + paddleRect.height;
 
-        const pillLeft = pillRect.left - gameAreaRect.left;
-        const pillTop = pillRect.top - gameAreaRect.top;
-        const pillRight = pillLeft + pillRect.width;
-        const pillBottom = pillTop + pillRect.height;
+        powerupElements.forEach((pill, index) => {
+            const pillRect = pill.getBoundingClientRect();
 
-        if (pillBottom >= paddleTop &&
-            pillTop <= paddleBottom &&
-            pillRight >= paddleLeft &&
-            pillLeft <= paddleRight) {
-            const powerupType = pill.dataset.type;
-            activatePowerup(powerupType);
-            pill.remove();
-            powerupElement = null;
-        }
+            const pillLeft = pillRect.left - gameAreaRect.left;
+            const pillTop = pillRect.top - gameAreaRect.top;
+            const pillRight = pillLeft + pillRect.width;
+            const pillBottom = pillTop + pillRect.height;
+
+            if (pillBottom >= paddleTop &&
+                pillTop <= paddleBottom &&
+                pillRight >= paddleLeft &&
+                pillLeft <= paddleRight) {
+                const powerupType = pill.dataset.type;
+                activatePowerup(powerupType);
+                pill.remove();
+                
+                powerupElements.splice(index, 1);
+                }
+        });
     }
 
     function activatePowerup(typeName) {
@@ -280,6 +297,24 @@ const Powerups = (function() {
 
         document.getElementById('gameArea').appendChild(spark);
         setTimeout(() => spark.remove(), 100);
+    }
+
+    function createMultiBalls(originalBall) {
+        const ballID = originalBall.id;
+        const ballState = Ball.getBallState(ballID);
+
+        if (!ballState) return;
+
+        const ballX = ballState.x;
+        const ballY = ballState.y;
+        const originalVelocity = { x: ballState.speedX, y: ballState.speedY };
+
+        Ball.createBonusBall(ballX, ballY, originalVelocity, 30);
+        Ball.createBonusBall(ballX, ballY, originalVelocity, -30);
+
+        if (typeof Score !== 'undefined') {
+            Score.add(500);
+        }
     }
 
     return {

@@ -205,6 +205,10 @@ body {
 .powerup-pill.longPaddle { background-color: cyan; }
 .powerup-pill.shortPaddle { background-color: orange; }
 .powerup-pill.guns { background-color: red; }
+.powerup-pill.multiball { 
+    background: radial-gradient(circle, white, #cccccc);
+    box-shadow: 0 0 8px white;
+}
 
 /* Paddle Powerup States */
 #paddle.powerup-long {
