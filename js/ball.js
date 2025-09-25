@@ -328,8 +328,14 @@ const Ball = (function() {
         });
 
         if (balls.size === 0) {
-            // implement life loss logic
-            resetAllBalls();
+            if (typeof Lives !== 'undefined' && Lives.loseLife) {
+                const isGameOver = Lives.loseLife();
+                if (!isGameOver) {
+                    resetAllBalls();
+                }
+            } else {
+                resetAllBalls();
+            }
         }
     }
 

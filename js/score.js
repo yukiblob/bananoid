@@ -6,6 +6,11 @@ const Score = (function() {
         updateUI();
     }
 
+    function reset() {
+        score = 0;
+        updateUI();
+    }
+
     function add(points) {
         score += points;
         updateUI();
@@ -24,6 +29,7 @@ const Score = (function() {
 
     return {
         init,
+        reset,
         add,
         getScore
     };

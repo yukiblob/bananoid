@@ -74,8 +74,8 @@ const Lives = (function() {
 
     function gameOver() {
         // Trigger game over logic
-        if (typeof GameState !== 'undefined') {
-            GameState.setState({ isPaused: true });
+        if (typeof gameState !== 'undefined') {
+            gameState.setState({ isPaused: true });
         }
 
         // Show game over message
@@ -103,8 +103,8 @@ const Lives = (function() {
         updateLivesDisplay();
 
         // Reset game state
-        if (typeof GameState !== 'undefined') {
-            GameState.setState({ isPaused: false });
+        if (typeof gameState !== 'undefined') {
+            gameState.setState({ isPaused: false });
         }
 
         // Reset ball and other game elements
@@ -113,8 +113,8 @@ const Lives = (function() {
         }
 
         // Reload level
-        if (typeof GameState !== 'undefined' && GameState.loadLevel) {
-            GameState.loadLevel(0);
+        if (typeof gameState !== 'undefined' && gameState.loadLevel) {
+            gameState.loadLevel(0);
         }
 
         // Reset score if needed
@@ -125,6 +125,10 @@ const Lives = (function() {
         // Reset timer if needed
         if (typeof Timer !== 'undefined' && Timer.reset) {
             Timer.reset();
+        }
+
+        if (typeof Powerups !== 'undefined') {
+            // add powerup clear logic so they don't carry over to the next game
         }
     }
 
