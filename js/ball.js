@@ -156,8 +156,8 @@ const Ball = (function() {
 
         stuckBalls.set(ballID, {
             offsetX: offsetX,
-            originalSpeedX: ballData.speedX,
-            originalSpeedY: ballData.speedY,
+            paddleCenterX: paddleCenterX,
+            paddleWidth: paddleRect.width,
             originalAcceleration: accelerationFactor
         });
 
@@ -184,6 +184,8 @@ const Ball = (function() {
             if (ballData) {
                 ballData.x = paddleCenterX + stuckData.offsetX;
                 ballData.y = paddleTop - ballRadius;
+                stuckData.paddleCenterX = paddleCenterX;
+                stuckData.paddleWidth = paddleRect.width;
                 updateBallPosition(ballData);
             }
         });
@@ -195,9 +197,13 @@ const Ball = (function() {
 
         if (!stuckData || !ballData) return;
 
-        ballData.speedX = stuckData.originalSpeedX;
-        ballData.speedY = stuckData.originalSpeedY;
-        accelerationFactor = stuckData.originalAcceleration;
+        const hitPosition = (ballData.x - stuckData.paddleCenterX) / (stuckData.paddleWidth / 2);
+        const maxBounceAngle = 75 * Math.PI / 180;
+
+        const angle = hitPosition * maxBounceAngle;
+
+        ballData.speedX = baseSpeed * Math.sin(angle) * stuckData.originalAcceleration;
+        ballData.speedY = baseSpeed * Math.cos(angle) * stuckData.originalAcceleration;
         ballData.isLaunched = true;
 
         setGracePeriod(ballID);
