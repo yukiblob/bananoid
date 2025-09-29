@@ -96,8 +96,10 @@ const Ball = (function() {
             for (let i = 1; i < ballIDs.length; i++) {
                 removeBall(ballIDs[i]);
             }
+            accelerationFactor = 1.00;
             resetBall(ballIDs[0]);
         } else {
+            accelerationFactor = 1.00;
             createBall();
         }
     }
@@ -331,6 +333,7 @@ const Ball = (function() {
             if (typeof Lives !== 'undefined' && Lives.loseLife) {
                 const isGameOver = Lives.loseLife();
                 if (!isGameOver) {
+
                     resetAllBalls();
                 }
             } else {
@@ -341,7 +344,7 @@ const Ball = (function() {
 
     function setAcceleration(factor) {
         accelerationFactor = factor;
-        
+
         balls.forEach((ballData) => {
             if (ballData.isLaunched) {
                 const currentSpeed = Math.sqrt(ballData.speedX * ballData.speedX + ballData.speedY * ballData.speedY);

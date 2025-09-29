@@ -23,7 +23,7 @@ const Lives = (function() {
         for (let i = 0; i < currentLives; i++) {
             const heart = document.createElement('div');
             heart.className = 'heart';
-            heart.innerHTML = '❤️';
+            heart.innerHTML = '🍌';
             heart.style.animationDelay = `${i * 0.1}s`; // Stagger animation
             livesContainer.appendChild(heart);
         }
@@ -32,7 +32,7 @@ const Lives = (function() {
         for (let i = currentLives; i < maxLives; i++) {
             const emptyHeart = document.createElement('div');
             emptyHeart.className = 'heart empty';
-            emptyHeart.innerHTML = '🤍';
+            emptyHeart.innerHTML = '💀';
             livesContainer.appendChild(emptyHeart);
         }
     }
