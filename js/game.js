@@ -139,27 +139,127 @@ const GameState = (function() {
 
         winScreen.innerHTML = `
              <div class="win-content">
-                <h2>Level Complete!</h2>
+                <div class="title-wrapper">
+                    <h1 class="menu-title">LEVEL COMPLETE!</h1>
+                    <h2 class="menu-subtitle">CONGRATULATIONS</h2>
+                </div>
                 <div class="win-stats">
                     <p>Final Score: <span class="score-value">${finalScore}</span></p>
                     <p>Time: <span class="time-value">${minutes}:${seconds.toString().padStart(2, '0')}</span></p>
                     <p>Lives Remaining: <span class="lives-value">${livesLeft}</span></p>
                 </div>
-                <div class="win-buttons">
+                <div class="menu-buttons">
                     ${state.currentLevel < state.totalLevels - 1 ?
-                '<button onclick="GameState.nextLevel()" class="next-level-btn">Next Level</button>' :
+                '<div class="menu-button" data-action="nextLevel"><span class="arrow-indicator">▶</span><span class="button-text">Next Level</span></div>' :
                 ''
             }
-                    <button onclick="GameState.restartGame()" class="restart-btn">Restart</button>
-                    <button onclick="GameState.returnToMenu()" class="menu-btn">Main Menu</button>
-                </div>
+                <div class="menu-button" data-action="restart"><span class="arrow-indicator">▶</span><span class="button-text">Play Again</span></div>
+                <div class="menu-button" data-action="menu"><span class="arrow-indicator">▶</span><span class="button-text">Main Menu</span></div>
             </div>
-        `;
+        </div>
+    `;
 
         document.getElementById('gameArea').appendChild(winScreen);
 
+        // Initialize win screen navigation
+        initWinScreenNavigation();
+
         // Add celebration effect
         createCelebrationEffects();
+    }
+
+    function initWinScreenNavigation() {
+        const winScreen = document.getElementById('winScreen');
+        if (!winScreen) return;
+
+        let selectedButtonIndex = 0;
+        let winButtons = [];
+
+        function updateButtonSelection() {
+            // Remove highlight from all buttons and hide arrows
+            winButtons.forEach(button => {
+                button.classList.remove('selected');
+                const arrow = button.querySelector('.arrow-indicator');
+                if (arrow) arrow.style.visibility = 'hidden';
+            });
+
+            // Add highlight to selected button and show arrow
+            if (winButtons[selectedButtonIndex]) {
+                winButtons[selectedButtonIndex].classList.add('selected');
+                const arrow = winButtons[selectedButtonIndex].querySelector('.arrow-indicator');
+                if (arrow) arrow.style.visibility = 'visible';
+            }
+        }
+
+        function handleWinScreenNavigation(direction) {
+            if (direction === 'up') {
+                selectedButtonIndex = (selectedButtonIndex - 1 + winButtons.length) % winButtons.length;
+            } else if (direction === 'down') {
+                selectedButtonIndex = (selectedButtonIndex + 1) % winButtons.length;
+            }
+
+            updateButtonSelection();
+        }
+
+        function activateSelectedButton() {
+            if (winButtons[selectedButtonIndex]) {
+                const action = winButtons[selectedButtonIndex].getAttribute('data-action');
+                handleWinScreenAction(action);
+            }
+        }
+
+        function handleWinScreenAction(action) {
+            switch (action) {
+                case 'nextLevel':
+                    GameState.nextLevel();
+                    break;
+                case 'restart':
+                    GameState.restartGame();
+                    break;
+                case 'menu':
+                    GameState.returnToMenu();
+                    break;
+            }
+        }
+
+        // Get all win screen buttons
+        winButtons = Array.from(winScreen.querySelectorAll('.menu-button'));
+
+        // Set up initial selection
+        updateButtonSelection();
+
+        // Add keyboard event listener for win screen
+        function handleWinScreenKeydown(e) {
+            if (!document.getElementById('winScreen')) {
+                // Win screen is gone, remove listener
+                window.removeEventListener('keydown', handleWinScreenKeydown);
+                return;
+            }
+
+            switch (e.key) {
+                case 'ArrowUp':
+                    handleWinScreenNavigation('up');
+                    e.preventDefault();
+                    break;
+                case 'ArrowDown':
+                    handleWinScreenNavigation('down');
+                    e.preventDefault();
+                    break;
+                case 'Enter':
+                case ' ':
+                    activateSelectedButton();
+                    e.preventDefault();
+                    break;
+                case 'Escape':
+                    // Escape goes to main menu
+                    GameState.returnToMenu();
+                    e.preventDefault();
+                    break;
+            }
+        }
+
+        // Add event listener
+        window.addEventListener('keydown', handleWinScreenKeydown);
     }
 
     function createCelebrationEffects() {
@@ -229,6 +329,9 @@ const GameState = (function() {
         }
 
         // Reset Lives
+        if (typeof Lives !== 'undefined' && Lives.setLives) {
+            Lives.setLives(3);
+        }
 
         // Unpause game
         state.isPaused = false;

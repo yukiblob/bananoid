@@ -418,90 +418,125 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.9);
+    background: linear-gradient(rgba(12, 16, 39, 0.85), rgba(12, 16, 39, 0.95)),
+                url('/media/banana-tree-beach.jpg');
+    background-size: cover;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    color: white;
+    font-family: 'Press Start 2P', monospace;
 }
 
 .win-content {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: none;
     padding: 40px;
-    border-radius: 15px;
     text-align: center;
     color: white;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     animation: slideIn 0.5s ease-out;
+    min-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.win-content h2 {
-    font-size: 2.5em;
+.win-content .title-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 40px;
+}
+
+.win-content .menu-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 48px;
     margin-bottom: 20px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    text-transform: uppercase;
+    color: white;
+    text-shadow:
+        2px 2px 0 #ff0000,
+        -2px -2px 0 #00bcd4,
+        0 0 10px #ffffff,
+        0 0 20px #00bcd4,
+        0 0 30px #ff0000;
+}
+
+.win-content .menu-subtitle {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 22px;
+    color: #ffcc00;
+    text-transform: uppercase;
+    text-shadow: 
+        0 0 5px #ffcc00,
+        0 0 10px #ff6600;
 }
 
 .win-stats {
     margin: 25px 0;
-    font-size: 1.2em;
+    font-size: 18px;
+    line-height: 2;
+    text-align: center;
 }
 
 .win-stats p {
-    margin: 10px 0;
+    margin: 15px 0;
 }
 
 .score-value, .time-value, .lives-value {
     font-weight: bold;
-    color: #ffe66d;
-    font-size: 1.3em;
+    color: #ffcc00;
+    font-size: 1.2em;
+    text-shadow: 0 0 5px #ffcc00;
 }
 
-.win-buttons {
+.win-content .menu-buttons {
     display: flex;
+    flex-direction: column;
     gap: 15px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 25px;
+    align-items: center;
+    margin-top: 30px;
 }
 
-.win-buttons button {
-    padding: 12px 25px;
+.win-content .menu-button {
+    background: none;
     border: none;
-    border-radius: 8px;
-    font-size: 1.1em;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: bold;
-}
-
-.next-level-btn {
-    background: #4ecdc4;
     color: white;
+    font-size: 22px;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    position: relative;
+    justify-content: center;
+    width: 280px;
+    padding: 10px 0;
+    cursor: default;
 }
 
-.next-level-btn:hover {
-    background: #45b7af;
-    transform: translateY(-2px);
+.win-content .menu-button.selected {
+    color: #ffcc00;
+    text-shadow: 0 0 5px #ffcc00, 0 0 10px #ff6600;
 }
 
-.restart-btn {
-    background: #ffe66d;
-    color: #333;
+.win-content .arrow-indicator {
+    position: absolute;
+    left: -30px;
+    font-size: 20px;
+    color: #ffcc00;
+    animation: blink 0.8s infinite;
+    text-shadow: 0 0 5px #ffcc00, 0 0 10px #ff6600;
+    visibility: hidden;
 }
 
-.restart-btn:hover {
-    background: #ffdc4d;
-    transform: translateY(-2px);
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
 }
 
-.menu-btn {
-    background: #ff6b6b;
-    color: white;
-}
-
-.menu-btn:hover {
-    background: #ff5252;
-    transform: translateY(-2px);
+.win-content .button-text {
+    /* This ensures the text is properly centered */
 }
 
 /* Celebration Animations */

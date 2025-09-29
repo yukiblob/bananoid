@@ -7,4 +7,4 @@
 - cutscenes 1
 - timer 7 ✅
 - lives 8 ✅
-- win/loss screen 7
+- win/loss screen 7 ✅
