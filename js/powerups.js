@@ -1,6 +1,6 @@
 const Powerups = (function() {
     let gameState;
-    let activePowerup = null;
+    let activePowerups = new Map();
     let powerupElements = [];
     let powerupInterval = null;
 
@@ -163,11 +163,24 @@ const Powerups = (function() {
         const type = types.find(t => t.name === typeName);
         if (!type) return;
 
-        const shouldStack = activePowerup && canPowerupsStack(activePowerup.type, typeName);
+        const existingPowerup = activePowerups.get(typeName);
 
-        if (activePowerup && shouldStack) {
-            clearTimeout(activePowerup.timeoutId);
-            activePowerup.cleanup();
+        const incompatiblePowerups = getIncompatiblePowerups(typeName);
+
+        incompatiblePowerups.forEach(incompatibleType => {
+            const incompatiblePowerup = activePowerups.get(incompatibleType);
+            if (incompatiblePowerup) {
+                console.log(`Powerup ${typeName} cancels incompatible powerup ${incompatibleType}`);
+                clearTimeout(incompatiblePowerup.timeoutId);
+                incompatiblePowerup.cleanup();
+                activePowerups.delete(incompatibleType);
+            }
+        });
+        
+        if (existingPowerup) {
+            console.log(`Refreshing powerup ${typeName}`);
+            clearTimeout(existingPowerup.timeoutId);
+            existingPowerup.cleanup();
         }
 
         type.effect();
@@ -180,31 +193,24 @@ const Powerups = (function() {
 
         const timeoutId = setTimeout(() => {
             type.cleanup();
-            if (activePowerup && activePowerup.type === typeName) {
-                activePowerup = null;
-            }
+            activePowerups.delete(typeName);
         }, type.duration);
 
-        if (shouldStack) {
-            console.log(`Powerup ${typeName} stacked with ${activatePowerup.type}`);
-        } else {
-            activePowerup = {
-                type: typeName,
-                timeoutId: timeoutId,
-                cleanup: type.cleanup
-            };
-        }
+        activePowerups.set(typeName, {
+            type: typeName,
+            timeoutId: timeoutId,
+            cleanup: type.cleanup
+        });
+
+        console.log(`Powerup ${typeName} activated${existingPowerup ? ' (refreshed)' : ''}`);
     }
 
-    function canPowerupsStack(currentType, newType) {
-        const stackablePowerups = {
-            'multiball': ['guns', 'stickyball', 'longPaddle', 'shortPaddle'],
-            'guns': ['multiball', 'stickyball', 'longPaddle', 'shortPaddle'],
-            'stickyball': ['multiball', 'guns', 'longPaddle', 'shortPaddle'],
-            'longPaddle': ['multiball', 'guns', 'stickyball'],
-            'shortPaddle': ['multiball', 'guns', 'stickyball']
+    function getIncompatiblePowerups(typeName) {
+        const incompatibilities = {
+            'longPaddle': ['shortPaddle'],
+            'shortPaddle': ['longPaddle'],
         };
-        return stackablePowerups[newType] && stackablePowerups[newType].includes(currentType);
+        return incompatibilities[typeName] || [];
     }
 
     function startFiring() {
@@ -212,7 +218,10 @@ const Powerups = (function() {
         const fireRate = 500; // ms per shot
 
         function fireBullets(timestamp) {
-            if (!activePowerup || activePowerup.type !== 'guns') return;
+            if (!activePowerups.has('guns')) {
+                stopFiring();
+                return;
+            }
 
             if (timestamp - lastFired > fireRate) {
                 createBullet();
@@ -220,11 +229,17 @@ const Powerups = (function() {
             }
             requestAnimationFrame(fireBullets);
         }
+        if (powerupInterval) {
+            cancelAnimationFrame(powerupInterval);
+        }
         powerupInterval = requestAnimationFrame(fireBullets);
     }
 
     function stopFiring() {
-        cancelAnimationFrame(powerupInterval);
+        if (powerupInterval) {
+            cancelAnimationFrame(powerupInterval);
+            powerupInterval = null;
+        }
     }
 
     function createBullet() {
@@ -372,6 +387,16 @@ const Powerups = (function() {
         }
     }
 
+    function cleanAllPowerups() {
+        activePowerups.forEach((powerup, typeName) => {
+            clearTimeout(powerup.timeoutId);
+            powerup.cleanup();
+        });
+        activePowerups.clear();
+
+        stopFiring();
+    }
+
     return {
         init: function(GameState) {
             gameState = GameState;
@@ -379,6 +404,7 @@ const Powerups = (function() {
         createPill,
         update: function() {
             checkPaddleCollision();
-        }
+        },
+        cleanAllPowerups
     };
 })();

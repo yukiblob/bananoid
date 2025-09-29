@@ -203,7 +203,7 @@ const Ball = (function() {
         const angle = hitPosition * maxBounceAngle;
 
         ballData.speedX = baseSpeed * Math.sin(angle) * stuckData.originalAcceleration;
-        ballData.speedY = baseSpeed * Math.cos(angle) * stuckData.originalAcceleration;
+        ballData.speedY = -baseSpeed * Math.cos(angle) * stuckData.originalAcceleration;
         ballData.isLaunched = true;
 
         setGracePeriod(ballID);
