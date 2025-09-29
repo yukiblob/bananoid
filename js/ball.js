@@ -381,6 +381,13 @@ const Ball = (function() {
                             Powerups.createPill(blockCenterX, blockCenterY);
                         }
                     }
+
+                    // Check win condition after breaking a block
+                    setTimeout(() => {
+                        if (typeof GameState !== 'undefined' && GameState.checkWinCondition) {
+                            GameState.checkWinCondition();
+                        }
+                    }, 0);
                 }
 
                 // Adjust ball direction
