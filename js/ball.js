@@ -6,6 +6,10 @@ const Ball = (function() {
     let accelerationFactor = 1.0;
     const accelerationRate = 1.01;
     let nextBallID = 1;
+    let stickyPowerupActive = false;
+    let stuckBalls = new Map();
+    let ballGracePeriods = new Map();
+    const STICKY_GRACE_PERIOD = 150;
 
     function createBall() {
         const gameArea = document.getElementById('gameArea');
@@ -113,10 +117,17 @@ const Ball = (function() {
         const ballData = balls.get(ballID);
         if (!ballData || ballData.isLaunched) return;
 
+        if (stuckBalls.has(ballID)) {
+            launchStuckBall(ballID);
+            return;
+        }
+
         const angle = (Math.random() * 120 - 60) * Math.PI / 180;
         ballData.speedX = baseSpeed * Math.sin(angle) * accelerationFactor;
         ballData.speedY = -baseSpeed * Math.cos(angle) * accelerationFactor;
         ballData.isLaunched = true;
+
+        setGracePeriod(ballID);
 
         if (typeof gameState !== 'undefined' && gameState.startGame && !gameState.hasGameStarted()) {
             gameState.startGame();
@@ -125,10 +136,86 @@ const Ball = (function() {
 
     function launchAllBalls() {
         balls.forEach((ballData, ballID) => {
-            if (!ballData.isLaunched) {
+            if (!ballData.isLaunched || stuckBalls.has(ballID)) {
                 launchBall(ballID);
             }
         });
+    }
+
+    function stickBall(ballID, ballData) {
+        if (!stickyPowerupActive) return false;
+
+        const paddle = document.getElementById('paddle');
+        const paddleRect = paddle.getBoundingClientRect();
+        const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
+
+        const paddleLeft = paddleRect.left - gameAreaRect.left;
+        const paddleCenterX = paddleLeft + (paddleRect.width / 2);
+
+        const offsetX = ballData.x - paddleCenterX;
+
+        stuckBalls.set(ballID, {
+            offsetX: offsetX,
+            originalSpeedX: ballData.speedX,
+            originalSpeedY: ballData.speedY,
+            originalAcceleration: accelerationFactor
+        });
+
+        ballData.speedX = 0;
+        ballData.speedY = 0;
+        ballData.isLaunched = false;
+
+        return true;
+    }
+
+    function updateStuckBalls() {
+        if (stuckBalls.size === 0) return;
+
+        const paddle = document.getElementById('paddle');
+        const paddleRect = paddle.getBoundingClientRect();
+        const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
+
+        const paddleLeft = paddleRect.left - gameAreaRect.left;
+        const paddleTop = paddleRect.top - gameAreaRect.top;
+        const paddleCenterX = paddleLeft + (paddleRect.width / 2);
+
+        stuckBalls.forEach((stuckData, ballID) => {
+            const ballData = balls.get(ballID);
+            if (ballData) {
+                ballData.x = paddleCenterX + stuckData.offsetX;
+                ballData.y = paddleTop - ballRadius;
+                updateBallPosition(ballData);
+            }
+        });
+    }
+
+    function launchStuckBall(ballID) {
+        const stuckData = stuckBalls.get(ballID);
+        const ballData = balls.get(ballID);
+
+        if (!stuckData || !ballData) return;
+
+        ballData.speedX = stuckData.originalSpeedX;
+        ballData.speedY = stuckData.originalSpeedY;
+        accelerationFactor = stuckData.originalAcceleration;
+        ballData.isLaunched = true;
+
+        setGracePeriod(ballID);
+
+        stuckBalls.delete(ballID);
+    }
+
+    function launchAllStuckBalls() {
+        const ballIDs = Array.from(stuckBalls.keys());
+        ballIDs.forEach(ballID => launchStuckBall(ballID));
+    }
+
+    function setStickyPowerup(active) {
+        stickyPowerupActive = active;
+
+        if (!active) {
+            launchAllStuckBalls();
+        }
     }
 
     function applyAcceleration(ballData) {
@@ -174,6 +261,11 @@ const Ball = (function() {
     function checkPaddleCollision(ballData) {
         if (!ballData.isLaunched) return false;
 
+        const ballID = Array.from(balls.keys()).find(id => balls.get(id) === ballData);
+        if (ballID && isInGrace(ballID)) {
+            return false;
+        }
+
         const paddle = document.getElementById('paddle');
         const paddleRect = paddle.getBoundingClientRect();
         const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
@@ -184,26 +276,64 @@ const Ball = (function() {
         const paddleBottom = paddleTop + paddleRect.height;
         const paddleCenterX = paddleLeft + (paddleRect.width / 2);
 
-        if (ballData.y + ballRadius >= paddleTop &&
-            ballData.y - ballRadius <= paddleBottom &&
-            ballData.x + ballRadius >= paddleLeft &&
-            ballData.x - ballRadius <= paddleRight) {
+        const ballLeft = ballData.x - ballRadius;
+        const ballRight = ballData.x + ballRadius;
+        const ballTop = ballData.y - ballRadius;
+        const ballBottom = ballData.y + ballRadius;
 
-            const hitPosition = (ballData.x - paddleCenterX) / (paddleRect.width / 2);
-            const maxBounceAngle = 75 * Math.PI / 180; // 75 degrees max bounce
+        if (ballBottom >= paddleTop &&
+            ballTop <= paddleBottom &&
+            ballRight >= paddleLeft &&
+            ballLeft <= paddleRight) {
+                const overlapLeft = ballRight - paddleLeft;
+                const overlapRight = paddleRight - ballLeft;
+                const overlapTop = ballBottom - paddleTop;
+                const overlapBottom = paddleBottom - ballTop;
 
-            const angle = hitPosition * maxBounceAngle;
-            const speed = Math.sqrt(ballData.speedX * ballData.speedX + ballData.speedY * ballData.speedY);
+                const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
 
-            ballData.speedX = speed * Math.sin(angle) * accelerationFactor;
-            ballData.speedY = -speed * Math.cos(angle) * accelerationFactor;
+                if (minOverlap === overlapTop) {
+                    if (stickyPowerupActive && !stuckBalls.has(ballID)) {
+                        if (stickBall(ballID, ballData)) {
+                            return true;
+                        }
+                    }
 
-            ballData.y = paddleTop - ballRadius;
+                    const hitPosition = (ballData.x - paddleCenterX) / (paddleRect.width / 2);
+                    const maxBounceAngle = 75 * Math.PI / 180;
 
-            applyAcceleration(ballData);
-            return true;
-        }
-        return false;
+                    const angle = hitPosition * maxBounceAngle;
+                    const speed = Math.sqrt(ballData.speedX * ballData.speedX + ballData.speedY * ballData.speedY);
+
+                    ballData.speedX = speed * Math.sin(angle) * accelerationFactor;
+                    ballData.speedY = -speed * Math.cos(angle) * accelerationFactor;
+
+                    ballData.y = paddleTop - ballRadius;
+
+                    applyAcceleration(ballData);
+                }
+
+                else if (minOverlap === overlapLeft || minOverlap === overlapRight) {
+                    ballData.speedX = -ballData.speedX;
+
+                    if (minOverlap === overlapLeft) {
+                        ballData.x = paddleLeft - ballRadius;
+                    } else {
+                        ballData.x = paddleRight + ballRadius;
+                    }
+                    applyAcceleration(ballData);
+                }
+                return true;
+            }
+            return false;
+    }
+
+    function setGracePeriod(ballID) {
+        ballGracePeriods.set(ballID, Date.now() + STICKY_GRACE_PERIOD);
+    }
+    function isInGrace(ballID) {
+        const graceEnd = ballGracePeriods.get(ballID);
+        return graceEnd && Date.now() < graceEnd;
     }
 
     function checkBlockCollisions(ballData) {
@@ -297,7 +427,19 @@ const Ball = (function() {
     function update() {
         const ballsToRemove = [];
 
+        updateStuckBalls();
+
+        const currentTime = Date.now();
+        ballGracePeriods.forEach((graceEnd, ballID) => {
+            if (currentTime >= graceEnd) {
+                ballGracePeriods.delete(ballID);
+            }
+        });
+
         balls.forEach((ballData, ballID) => {
+            
+            if (stuckBalls.has(ballID)) return;
+
             if (!ballData.isLaunched) {
                 if (ballID === Array.from(balls.keys())[0]) {
                     const paddle = document.getElementById('paddle');
@@ -327,13 +469,14 @@ const Ball = (function() {
 
         ballsToRemove.forEach(ballID => {
             removeBall(ballID);
+            stuckBalls.delete(ballID);
+            ballGracePeriods.delete(ballID);
         });
 
         if (balls.size === 0) {
             if (typeof Lives !== 'undefined' && Lives.loseLife) {
                 const isGameOver = Lives.loseLife();
                 if (!isGameOver) {
-
                     resetAllBalls();
                 }
             } else {
@@ -378,6 +521,9 @@ const Ball = (function() {
         getBallCount: function() { return balls.size; },
         removeBall: removeBall,
         setAcceleration: setAcceleration,
+        setStickyPowerup: setStickyPowerup,
+        launchAllStuckBalls: launchAllStuckBalls,
+        launchStuckBall: launchStuckBall,
 
         getPosition: function() {
             const firstBall = balls.values().next().value;

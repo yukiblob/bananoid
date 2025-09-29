@@ -209,6 +209,10 @@ body {
     background: radial-gradient(circle, white, #cccccc);
     box-shadow: 0 0 8px white;
 }
+.powerup-pill.stickyball { 
+    background-color: magenta;
+    box-shadow: 0 0 8px magenta;
+}
 
 /* Paddle Powerup States */
 #paddle.powerup-long {
@@ -221,7 +225,14 @@ body {
     background: linear-gradient(to right, #f44336, #e91e63);
     box-shadow: 0 0 15px red;
 }
+#paddle.powerup-sticky {
+    background: linear-gradient(to right, magenta, purple);
+    box-shadow: 0 0 15px purple;
+}
 
+.stuck-ball {
+    opacity: 0.8;
+}
 /* Left gun protrusion */
 #paddle.powerup-guns::before {
     content: '';

@@ -57,6 +57,37 @@ const Powerups = (function() {
             },
                 cleanup: function() {
             }
+        },
+        {
+            name: 'stickyball',
+            duration: 15000,
+            effect: function() {
+                const paddle = document.getElementById('paddle');
+                paddle.classList.add('powerup-sticky');
+
+                if (!paddle.dataset.originalColor) {
+                    paddle.dataset.originalColor = paddle.style.backgroundColor || '';
+                }
+
+                paddle.style.backgroundColor = 'magenta';
+
+                if (typeof Ball !== 'undefined' && Ball.setStickyPowerup) {
+                    Ball.setStickyPowerup(true);
+                }
+            },
+            cleanup: function() {
+                const paddle = document.getElementById('paddle');
+                paddle.classList.remove('powerup-sticky');
+
+                if (paddle.dataset.originalColor) {
+                    paddle.style.backgroundColor = paddle.dataset.originalColor;
+                    delete paddle.dataset.originalColor;
+                }
+
+                if (typeof Ball !== 'undefined' && Ball.setStickyPowerup) {
+                    Ball.setStickyPowerup(false);
+                }
+            }
         }
     ];
 
@@ -129,27 +160,51 @@ const Powerups = (function() {
     }
 
     function activatePowerup(typeName) {
-        if (activePowerup) {
+        const type = types.find(t => t.name === typeName);
+        if (!type) return;
+
+        const shouldStack = activePowerup && canPowerupsStack(activePowerup.type, typeName);
+
+        if (activePowerup && shouldStack) {
             clearTimeout(activePowerup.timeoutId);
             activePowerup.cleanup();
         }
 
-        const type = types.find(t => t.name === typeName);
-        if (!type) return;
-
         type.effect();
-        Score.add(500);
+
+        if (typeName === 'shortPaddle') {
+            Score.add(1500);
+        } else {
+            Score.add(500);
+        }
 
         const timeoutId = setTimeout(() => {
             type.cleanup();
-            activePowerup = null;
+            if (activePowerup && activePowerup.type === typeName) {
+                activePowerup = null;
+            }
         }, type.duration);
 
-        activePowerup = {
-            type: typeName,
-            timeoutId: timeoutId,
-            cleanup: type.cleanup
+        if (shouldStack) {
+            console.log(`Powerup ${typeName} stacked with ${activatePowerup.type}`);
+        } else {
+            activePowerup = {
+                type: typeName,
+                timeoutId: timeoutId,
+                cleanup: type.cleanup
+            };
+        }
+    }
+
+    function canPowerupsStack(currentType, newType) {
+        const stackablePowerups = {
+            'multiball': ['guns', 'stickyball', 'longPaddle', 'shortPaddle'],
+            'guns': ['multiball', 'stickyball', 'longPaddle', 'shortPaddle'],
+            'stickyball': ['multiball', 'guns', 'longPaddle', 'shortPaddle'],
+            'longPaddle': ['multiball', 'guns', 'stickyball'],
+            'shortPaddle': ['multiball', 'guns', 'stickyball']
         };
+        return stackablePowerups[newType] && stackablePowerups[newType].includes(currentType);
     }
 
     function startFiring() {
