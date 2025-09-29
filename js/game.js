@@ -153,7 +153,7 @@ const GameState = (function() {
                 '<div class="menu-button" data-action="nextLevel"><span class="arrow-indicator">▶</span><span class="button-text">Next Level</span></div>' :
                 ''
             }
-                <div class="menu-button" data-action="restart"><span class="arrow-indicator">▶</span><span class="button-text">Play Again</span></div>
+                <div class="menu-button" data-action="restart"><span class="arrow-indicator">▶</span><span class="button-text">Restart</span></div>
                 <div class="menu-button" data-action="menu"><span class="arrow-indicator">▶</span><span class="button-text">Main Menu</span></div>
             </div>
         </div>
@@ -211,13 +211,13 @@ const GameState = (function() {
         function handleWinScreenAction(action) {
             switch (action) {
                 case 'nextLevel':
-                    GameState.nextLevel();
+                    nextLevel();
                     break;
                 case 'restart':
-                    GameState.restartGame();
+                    restartGame();
                     break;
                 case 'menu':
-                    GameState.returnToMenu();
+                    returnToMenu();
                     break;
             }
         }
@@ -252,7 +252,7 @@ const GameState = (function() {
                     break;
                 case 'Escape':
                     // Escape goes to main menu
-                    GameState.returnToMenu();
+                    returnToMenu();
                     e.preventDefault();
                     break;
             }
@@ -286,7 +286,11 @@ const GameState = (function() {
 
     function nextLevel() {
         // Remove win screen and particles
-        document.querySelectorAll('#winscreen, .celebration-particle').forEach(el => el.remove());
+        const winScreen = document.getElementById('winScreen');
+        const particles = document.querySelectorAll('.celebration-particle');
+
+        if (winScreen) winScreen.remove();
+        particles.forEach(particle => particle.remove());
 
         // Load next level
         const nextLevelIndex = state.currentLevel + 1;
@@ -307,7 +311,11 @@ const GameState = (function() {
     //NOTE: this exists in Lives.js, will fix it
     function restartGame() {
         // Remove win screen and particles
-        document.querySelectorAll('#winscreen, .celebration-particle').forEach(el => el.remove());
+        const winScreen = document.getElementById('winScreen');
+        const particles = document.querySelectorAll('.celebration-particle');
+
+        if (winScreen) winScreen.remove();
+        particles.forEach(particle => particle.remove());
 
         // Reset to current level
         loadLevel(state.currentLevel);
@@ -339,11 +347,14 @@ const GameState = (function() {
 
     function returnToMenu() {
         // Remove win screen and particles
-        document.querySelectorAll('#winscreen, .celebration-particle').forEach(el => el.remove());
+        const winScreen = document.getElementById('winScreen');
+        const particles = document.querySelectorAll('.celebration-particle');
+
+        if (winScreen) winScreen.remove();
+        particles.forEach(particle => particle.remove());
 
         // Reset to first level
         state.currentLevel = 0;
-        loadLevel(0);
 
         // Reset game elements
         if (typeof Ball !== 'undefined' && Ball.reset) {
@@ -354,12 +365,29 @@ const GameState = (function() {
             Lives.setLives(3);
         }
 
-        // Show menu
-        if (typeof Menu !== 'undefined' && Menu.showGameMenu) {
-            Menu.showGameMenu();
+        if (typeof Score !== 'undefined' && Score.reset) {
+            Score.reset();
         }
 
-        state.isPaused = true;
+        if (typeof Timer !== 'undefined' && Timer.reset) {
+            Timer.reset();
+        }
+
+        // Show menu
+        setTimeout(() => {
+            if (typeof Menu !== 'undefined' && Menu.show) {
+                // Make sure the menu element exists and is visible
+                const menuElement = document.getElementById('mainMenu');
+                if (menuElement) {
+                    menuElement.style.display = 'flex';
+                }
+                Menu.show();
+            } else {
+                // Fallback: if Menu module isn't available, just pause the game
+                state.isPaused = true;
+                console.warn('Menu module not available');
+            }
+        }, 20);
     }
 
     // FPS
@@ -386,6 +414,7 @@ const GameState = (function() {
         nextLevel,
         restartGame,
         returnToMenu,
+        showWinScreen,
         startGameLoop() {
             function gameLoop(timestamp) {
                 if (!state.isPaused) {
