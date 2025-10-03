@@ -198,9 +198,11 @@ const Menu = (function() {
 
         const onClickStart = () => {
             hideMenu();
-            GameState.loadLevel(0);
-            if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
-            if (typeof Score !== 'undefined' && Score.init) Score.init();
+            setTimeout(() => {
+                GameState.loadLevel(0);
+                if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
+                if (typeof Score !== 'undefined' && Score.init) Score.init();
+            }, 10);
         };
 
         const startButton = createMenuButton('Start Game', onClickStart, 0);
@@ -249,6 +251,11 @@ const Menu = (function() {
 
         if (typeof Timer !== 'undefined' && Timer.start) {
             Timer.start();
+        }
+
+        if (typeof Ball !== 'undefined') {
+            setTimeout(() => {
+            }, 100);
         }
     }
 

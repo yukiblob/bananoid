@@ -291,47 +291,47 @@ const Ball = (function() {
             ballTop <= paddleBottom &&
             ballRight >= paddleLeft &&
             ballLeft <= paddleRight) {
-                const overlapLeft = ballRight - paddleLeft;
-                const overlapRight = paddleRight - ballLeft;
-                const overlapTop = ballBottom - paddleTop;
-                const overlapBottom = paddleBottom - ballTop;
+            const overlapLeft = ballRight - paddleLeft;
+            const overlapRight = paddleRight - ballLeft;
+            const overlapTop = ballBottom - paddleTop;
+            const overlapBottom = paddleBottom - ballTop;
 
-                const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+            const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
 
-                if (minOverlap === overlapTop) {
-                    if (stickyPowerupActive && !stuckBalls.has(ballID)) {
-                        if (stickBall(ballID, ballData)) {
-                            return true;
-                        }
+            if (minOverlap === overlapTop) {
+                if (stickyPowerupActive && !stuckBalls.has(ballID)) {
+                    if (stickBall(ballID, ballData)) {
+                        return true;
                     }
-
-                    const hitPosition = (ballData.x - paddleCenterX) / (paddleRect.width / 2);
-                    const maxBounceAngle = 75 * Math.PI / 180;
-
-                    const angle = hitPosition * maxBounceAngle;
-                    const speed = Math.sqrt(ballData.speedX * ballData.speedX + ballData.speedY * ballData.speedY);
-
-                    ballData.speedX = speed * Math.sin(angle) * accelerationFactor;
-                    ballData.speedY = -speed * Math.cos(angle) * accelerationFactor;
-
-                    ballData.y = paddleTop - ballRadius;
-
-                    applyAcceleration(ballData);
                 }
 
-                else if (minOverlap === overlapLeft || minOverlap === overlapRight) {
-                    ballData.speedX = -ballData.speedX;
+                const hitPosition = (ballData.x - paddleCenterX) / (paddleRect.width / 2);
+                const maxBounceAngle = 75 * Math.PI / 180;
 
-                    if (minOverlap === overlapLeft) {
-                        ballData.x = paddleLeft - ballRadius;
-                    } else {
-                        ballData.x = paddleRight + ballRadius;
-                    }
-                    applyAcceleration(ballData);
-                }
-                return true;
+                const angle = hitPosition * maxBounceAngle;
+                const speed = Math.sqrt(ballData.speedX * ballData.speedX + ballData.speedY * ballData.speedY);
+
+                ballData.speedX = speed * Math.sin(angle) * accelerationFactor;
+                ballData.speedY = -speed * Math.cos(angle) * accelerationFactor;
+
+                ballData.y = paddleTop - ballRadius;
+
+                applyAcceleration(ballData);
             }
-            return false;
+
+            else if (minOverlap === overlapLeft || minOverlap === overlapRight) {
+                ballData.speedX = -ballData.speedX;
+
+                if (minOverlap === overlapLeft) {
+                    ballData.x = paddleLeft - ballRadius;
+                } else {
+                    ballData.x = paddleRight + ballRadius;
+                }
+                applyAcceleration(ballData);
+            }
+            return true;
+        }
+        return false;
     }
 
     function setGracePeriod(ballID) {
@@ -450,7 +450,7 @@ const Ball = (function() {
         });
 
         balls.forEach((ballData, ballID) => {
-            
+
             if (stuckBalls.has(ballID)) return;
 
             if (!ballData.isLaunched) {
@@ -503,7 +503,6 @@ const Ball = (function() {
 
         balls.forEach((ballData) => {
             if (ballData.isLaunched) {
-                const currentSpeed = Math.sqrt(ballData.speedX * ballData.speedX + ballData.speedY * ballData.speedY);
                 const angle = Math.atan2(ballData.speedY, ballData.speedX);
 
                 ballData.speedX = baseSpeed * Math.cos(angle) * accelerationFactor;
@@ -516,10 +515,12 @@ const Ball = (function() {
         init: function(GameState) {
             gameState = GameState;
             createBall();
+            resetBall();
 
             // key listener for launching
             window.addEventListener('keydown', (e) => {
-                if (e.key === ' ' && !gameState.getState().isPaused) {
+                const isMenuVisible = typeof Menu !== 'undefined' && Menu.isVisible ? Menu.isVisible() : false;
+                if (e.key === ' ' && !gameState.getState().isPaused && !isMenuVisible) {
                     launchAllBalls();
                     e.preventDefault();
                 }
