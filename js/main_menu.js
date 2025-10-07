@@ -233,6 +233,12 @@ const Menu = (function() {
         // Store buttons for navigation
         menuButtons = [startButton, levelSelectButton, controlsButton];
 
+        // Add Insert Coin message
+        const insertCoin = document.createElement('div');
+        insertCoin.className = 'insert-coin';
+        insertCoin.innerHTML = 'INSERT COIN';
+        menuElement.appendChild(insertCoin);
+
         const credits = document.createElement('div');
         credits.className = 'credits';
         credits.innerHTML = `

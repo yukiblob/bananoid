@@ -87,7 +87,7 @@ const Lives = (function() {
             <div class="game-over-content">
                 <div class="title-wrapper">
                     <h1 class="menu-title">YOU DIED</h1>
-                    <h2 class="menu-subtitle">Failed to restore your banana form.</h2>
+                    <h2 class="menu-subtitle">Failed to restore your banana form</h2>
                 </div>
                 <div class="menu-buttons">
                     <div class="menu-button" data-action="restart"><span class="arrow-indicator">▶</span><span class="button-text">Restart</span></div>
