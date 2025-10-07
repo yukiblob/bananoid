@@ -7,7 +7,7 @@ window.addEventListener('load', () => {
             controls.style.opacity = "0";
             setTimeout(() => controls.style.display = "none", 1000);
         }
-    }, 7000);
+    }, 10000);
 });
 
 const Timer = (function() {

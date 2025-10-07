@@ -28,7 +28,7 @@ const Lives = (function() {
             livesContainer.appendChild(heart);
         }
 
-        // Add empty hearts for lost lives (optional visual feedback)
+        // Add empty hearts for lost lives
         for (let i = currentLives; i < maxLives; i++) {
             const emptyHeart = document.createElement('div');
             emptyHeart.className = 'heart empty';
@@ -51,12 +51,12 @@ const Lives = (function() {
             // Check for game over
             if (currentLives === 0) {
                 gameOver();
-                return true; // Game over
+                return true;
             }
 
-            return false; // Still has lives
+            return false;
         }
-        return true; // Game over
+        return true;
     }
 
     function gainLife() {
@@ -79,57 +79,127 @@ const Lives = (function() {
         }
 
         // Show game over message
-        const gameOverMsg = document.createElement('div');
-        gameOverMsg.id = 'gameOverMessage';
-        gameOverMsg.className = 'game-over-message';
-        gameOverMsg.innerHTML = `
-            <h2>Game Over</h2>
-            <p>You ran out of lives!</p>
-            <button onclick="Lives.restartGame()">Play Again</button>
+        const gameOverScreen = document.createElement('div');
+        gameOverScreen.id = 'gameOverScreen';
+        gameOverScreen.className = 'game-over-screen';
+
+        gameOverScreen.innerHTML = `
+            <div class="game-over-content">
+                <div class="title-wrapper">
+                    <h1 class="menu-title">YOU DIED</h1>
+                    <h2 class="menu-subtitle">Failed to restore your banana form.</h2>
+                </div>
+                <div class="menu-buttons">
+                    <div class="menu-button" data-action="restart"><span class="arrow-indicator">▶</span><span class="button-text">Restart</span></div>
+                    <div class="menu-button" data-action="menu"><span class="arrow-indicator">▶</span><span class="button-text">Main Menu</span></div>
+                </div>
+            </div>
         `;
 
-        document.getElementById('gameArea').appendChild(gameOverMsg);
+        document.getElementById('gameArea').appendChild(gameOverScreen);
+
+        initGameOverNavigation();
     }
 
-    function restartGame() {
-        // Remove game over message
-        const gameOverMsg = document.getElementById('gameOverMessage');
-        if (gameOverMsg) {
-            gameOverMsg.remove();
+    function initGameOverNavigation() {
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        if (!gameOverScreen) return;
+
+        let selectedButtonIndex = 0;
+        let gameOverButtons = [];
+
+        function updateButtonSelection() {
+            // Remove highlight from all buttons and hide arrows
+            gameOverButtons.forEach(button => {
+                button.classList.remove('selected');
+                const arrow = button.querySelector('.arrow-indicator');
+                if (arrow) arrow.style.visibility = 'hidden';
+            });
+
+            // Add highlight to selected button to show arrow
+            if (gameOverButtons[selectedButtonIndex]) {
+                gameOverButtons[selectedButtonIndex].classList.add('selected');
+                const arrow = gameOverButtons[selectedButtonIndex].querySelector('.arrow-indicator');
+                if (arrow) arrow.style.visibility = 'visible';
+            }
         }
 
-        // Reset lives
-        currentLives = 3;
-        updateLivesDisplay();
+        function handleGameOverNavigation(direction) {
+            if (direction === 'up') {
+                selectedButtonIndex = (selectedButtonIndex - 1 + gameOverButtons.length) % gameOverButtons.length;
+            } else if (direction === 'down') {
+                selectedButtonIndex = (selectedButtonIndex + 1) % gameOverButtons.length;
+            }
 
-        // Reset game state
-        if (typeof gameState !== 'undefined') {
-            gameState.setState({ isPaused: false });
+            updateButtonSelection();
         }
 
-        // Reset ball and other game elements
-        if (typeof Ball !== 'undefined' && Ball.reset) {
-            Ball.reset();
+        function activateSelectedButton() {
+            if (gameOverButtons[selectedButtonIndex]) {
+                const action = gameOverButtons[selectedButtonIndex].getAttribute('data-action');
+                handleGameOverAction(action);
+            }
         }
 
-        // Reload level
-        if (typeof gameState !== 'undefined' && gameState.loadLevel) {
-            gameState.loadLevel(0);
+        function handleGameOverAction(action) {
+            // Remove game over screen first
+            const gameOverScreen = document.getElementById('gameOverScreen');
+            if (gameOverScreen) {
+                gameOverScreen.remove();
+            }
+
+            switch (action) {
+                case 'restart':
+                    if (typeof GameState !== 'undefined' && GameState.restartGame) {
+                        GameState.restartGame();
+                    }
+                    break;
+                case 'menu':
+                    if (typeof GameState !== 'undefined' && GameState.returnToMenu) {
+                        GameState.returnToMenu();
+                    }
+                    break;
+            }
         }
 
-        // Reset score if needed
-        if (typeof Score !== 'undefined' && Score.reset) {
-            Score.reset();
+        // Get all game over screen buttons
+        gameOverButtons = Array.from(gameOverScreen.querySelectorAll('.menu-button'));
+
+        // Set up initial selection
+        updateButtonSelection();
+
+        // Add keyboard event listener for game over screen
+        function handleGameOverKeydown(e) {
+            if (!document.getElementById('gameOverScreen')) {
+                // Game over screen is gone, remove listener
+                window.removeEventListener('keydown', handleGameOverKeydown);
+                return;
+            }
+
+            switch (e.key) {
+                case 'ArrowUp':
+                    handleGameOverNavigation('up');
+                    e.preventDefault();
+                    break;
+                case 'ArrowDown':
+                    handleGameOverNavigation('down');
+                    e.preventDefault();
+                    break;
+                case 'Enter':
+                case ' ':
+                    activateSelectedButton();
+                    e.preventDefault();
+                    break;
+                case 'Escape':
+                    // Escape goes to main menu
+                    handleGameOverAction('menu');
+                    e.preventDefault();
+                    break;
+            }
         }
 
-        // Reset timer if needed
-        if (typeof Timer !== 'undefined' && Timer.reset) {
-            Timer.reset();
-        }
-
-        if (typeof Powerups !== 'undefined') {
-            // add powerup clear logic so they don't carry over to the next game
-        }
+        // Add event listener
+        window.addEventListener('keydown', handleGameOverKeydown);
     }
 
     function getCurrentLives() {
@@ -151,6 +221,5 @@ const Lives = (function() {
         gainLife: gainLife,
         getCurrentLives: getCurrentLives,
         setLives: setLives,
-        restartGame: restartGame
     };
 })();

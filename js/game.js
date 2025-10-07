@@ -308,13 +308,14 @@ const GameState = (function() {
         }
     }
 
-    //NOTE: this exists in Lives.js, will fix it
     function restartGame() {
-        // Remove win screen and particles
+        // Remove win screen, game over screen, and particles
         const winScreen = document.getElementById('winScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
         const particles = document.querySelectorAll('.celebration-particle');
 
         if (winScreen) winScreen.remove();
+        if (gameOverScreen) gameOverScreen.remove();
         particles.forEach(particle => particle.remove());
 
         // Reset to current level
@@ -346,11 +347,13 @@ const GameState = (function() {
     }
 
     function returnToMenu() {
-        // Remove win screen and particles
+        // Remove win screen, game over screen, and particles
         const winScreen = document.getElementById('winScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
         const particles = document.querySelectorAll('.celebration-particle');
 
         if (winScreen) winScreen.remove();
+        if (gameOverScreen) gameOverScreen.remove();
         particles.forEach(particle => particle.remove());
 
         // Reset to first level
@@ -387,7 +390,7 @@ const GameState = (function() {
                 state.isPaused = true;
                 console.warn('Menu module not available');
             }
-        }, 20);
+        }, 10);
     }
 
     // FPS
