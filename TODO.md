@@ -1,6 +1,7 @@
-- high scores 1
+- when a bullet breaks the last tile the game doesn't end
+- high scores 1 (it must be a GO API service)
 - powerups 10 ✅
-- pause menu 7
+- pause menu 7 ✅
 - level editor 9
 - more maps 8
 - boss fight 2

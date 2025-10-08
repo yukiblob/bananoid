@@ -50,6 +50,7 @@ body {
     z-index: 100;
     color: white;
     font-family: 'Press Start 2P', monospace;
+    cursor: none;
 }
 
 .title-wrapper {
@@ -89,6 +90,7 @@ body {
     flex-direction: column;
     gap: 15px;
     align-items: center;
+    cursor: none;
 }
 
 .menu-button {
@@ -104,15 +106,18 @@ body {
     justify-content: center;
     width: 280px;
     padding: 10px 0;
+    cursor: none;
 }
 
 .menu-button.selected {
     color: yellow;
+    cursor: none;
 }
 
 .menu-button:focus {
     outline: 2px solid #ffeb3b;
     outline-offset: 2px;
+    cursor: none;
 }
 
 .arrow-indicator {
@@ -123,6 +128,7 @@ body {
     animation: blink 0.8s infinite;
     text-shadow: 0 0 5px #ffcc00, 0 0 10px #ff6600;
     visibility: hidden;
+    cursor: none;
 }
 
 @keyframes blink {
@@ -523,6 +529,7 @@ body {
     z-index: 1000;
     color: white;
     font-family: 'Press Start 2P', monospace;
+    cursor: none;
 }
 
 .win-content {
@@ -535,6 +542,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    cursor: none;
 }
 
 .win-content .title-wrapper {

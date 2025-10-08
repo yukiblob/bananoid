@@ -23,7 +23,7 @@ const Menu = (function() {
         const button = document.createElement('div');
         button.className = 'menu-button';
         button.dataset.index = index;
-        button.style.cursor = 'default'; // Remove pointer cursor
+        button.style.cursor = 'none';
 
         // Create arrow indicator
         const arrow = document.createElement('span');
@@ -78,6 +78,67 @@ const Menu = (function() {
                 onClickFunc();
             }
         }
+    }
+
+    function showPauseMenu() {
+        currentMenu = 'pause';
+        selectedButtonIndex = 0;
+
+        // Clear current menu content
+        while (menuElement.firstChild) {
+            menuElement.removeChild(menuElement.firstChild);
+        }
+
+        const titleWrapper = document.createElement('div');
+        titleWrapper.className = 'title-wrapper';
+
+        const title = document.createElement('h1');
+        title.innerHTML = '<span class="logo-red">BANA</span><span class="logo-blue">NOID</span>';
+        title.className = 'menu-title';
+
+        const subtitle = document.createElement('h2');
+        subtitle.textContent = 'GAME PAUSED';
+        subtitle.className = 'menu-subtitle';
+
+        titleWrapper.appendChild(title);
+        titleWrapper.appendChild(subtitle);
+        menuElement.appendChild(titleWrapper);
+
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.className = 'menu-buttons';
+
+        // Continue button
+        const onClickContinue = () => {
+            setTimeout(() => {
+                hideMenu();
+            }, 10);
+        };
+
+        const continueButton = createMenuButton('Continue', onClickContinue, 0);
+        continueButton.onClickFunction = onClickContinue;
+
+        // Restart button
+        const onClickRestart = () => {
+            hideMenu();
+            setTimeout(() => {
+                GameState.restartGame();
+            }, 10);
+        };
+
+        const restartButton = createMenuButton('Restart', onClickRestart, 1);
+        restartButton.onClickFunction = onClickRestart;
+
+        // Add buttons to container
+        buttonsContainer.appendChild(continueButton);
+        buttonsContainer.appendChild(restartButton);
+
+        // Add button containers to menu
+        menuElement.appendChild(buttonsContainer);
+
+        // Store buttons for navigation
+        menuButtons = [continueButton, restartButton];
+
+        updateButtonSelection();
     }
 
     function showLevelSelect() {
@@ -279,9 +340,19 @@ const Menu = (function() {
             showLevelSelect();
         } else if (currentMenu === 'controls') {
             showControls();
+        } else if (currentMenu === 'pause') {
+            showPauseMenu();
         } else {
             showMainMenu();
         }
+    }
+
+    function isInActiveGame() {
+        const isPaused = gameState.getState().isPaused;
+        const winScreen = document.getElementById('winScreen');
+        const gameOverScreen = document.getElementById('gameOverMessage');
+
+        return !isPaused && !isMenuVisible && !winScreen && !gameOverScreen;
     }
 
     function init(GameState) {
@@ -297,7 +368,16 @@ const Menu = (function() {
                 if (isMenuVisible) {
                     hideMenu();
                 } else {
-                    showMenu();
+                    // Use our improved detection to determine which menu to show
+                    if (isInActiveGame()) {
+                        // We're in an active game, show pause menu
+                        currentMenu = 'pause';
+                        showMenu();
+                    } else {
+                        // We're not in an active game, show main menu
+                        currentMenu = 'main';
+                        showMenu();
+                    }
                 }
                 e.preventDefault();
             }
@@ -327,6 +407,8 @@ const Menu = (function() {
         init,
         show: showMenu,
         hide: hideMenu,
-        isVisible: function() { return isMenuVisible; }
+        showPause: showPauseMenu,
+        isVisible: function() { return isMenuVisible; },
+        isInActiveGame: isInActiveGame
     };
 })();
