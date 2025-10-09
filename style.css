@@ -160,6 +160,141 @@ body {
     line-height: 1.8;
 }
 
+/* Level Editor Styles */
+.level-editor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(12, 16, 39, 0.95), rgba(12, 16, 39, 0.98));
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+    padding: 20px;
+}
+
+.editor-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.editor-grid-container {
+    position: relative;
+    margin: 20px 0;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.editor-grid {
+    position: relative;
+}
+
+.editor-cell {
+    position: absolute;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.editor-block {
+    border-radius: 4px;
+    border: 1px solid black;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.editor-block.normal {
+    background: linear-gradient(to bottom, #4caf50, #2e7d32);
+}
+
+.editor-block.strong {
+    background: linear-gradient(to bottom, #f44336, #b71c1c);
+}
+
+.editor-block.unbreakable {
+    background: linear-gradient(to bottom, #9e9e9e, #424242);
+}
+
+.editor-cursor {
+    position: absolute;
+    border: 3px solid #ffcc00;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 10;
+    box-shadow: 0 0 10px #ffcc00;
+    animation: pulse 1s infinite;
+}
+
+.editor-controls {
+    display: flex;
+    gap: 40px;
+    margin: 20px 0;
+    max-width: 800px;
+}
+
+.control-group, .block-preview {
+    background: rgba(0, 0, 0, 0.6);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.control-group h3, .block-preview h3 {
+    color: #ffcc00;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.control-group p {
+    margin: 8px 0;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.preview-item {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    gap: 10px;
+}
+
+.preview-block {
+    width: 30px;
+    height: 20px;
+    border-radius: 3px;
+    border: 1px solid black;
+}
+
+.preview-block.normal {
+    background: linear-gradient(to bottom, #4caf50, #2e7d32);
+}
+
+.preview-block.strong {
+    background: linear-gradient(to bottom, #f44336, #b71c1c);
+}
+
+.preview-block.unbreakable {
+    background: linear-gradient(to bottom, #9e9e9e, #424242);
+}
+
+.preview-block.empty {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+}
+
+.editor-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
 .insert-coin {
     font-family: 'Press Start 2P', monospace;
     font-size: 18px;

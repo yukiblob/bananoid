@@ -275,32 +275,45 @@ const Menu = (function() {
         };
 
         const startButton = createMenuButton('Start Game', onClickStart, 0);
-        startButton.onClickFunction = onClickStart; // Store function reference
+        startButton.onClickFunction = onClickStart;
 
         const onClickLevelSelect = () => {
             showLevelSelect();
         };
 
         const levelSelectButton = createMenuButton('Level Select', onClickLevelSelect, 1);
-        levelSelectButton.onClickFunction = onClickLevelSelect; // Store function reference
+        levelSelectButton.onClickFunction = onClickLevelSelect;
+
+        const onClickLevelEditor = () => {
+            hideMenu();
+            setTimeout(() => {
+                if (typeof LevelEditor !== 'undefined' && LevelEditor.show) {
+                    LevelEditor.show();
+                }
+            }, 10);
+        };
+
+        const levelEditorButton = createMenuButton('Level Editor', onClickLevelEditor, 2);
+        levelEditorButton.onClickFunction = onClickLevelEditor;
 
         const onClickControls = () => {
             showControls();
         };
 
-        const controlsButton = createMenuButton('Controls', onClickControls, 2);
-        controlsButton.onClickFunction = onClickControls; // Store function reference
+        const controlsButton = createMenuButton('Controls', onClickControls, 3);
+        controlsButton.onClickFunction = onClickControls;
 
         // Add buttons to container
         buttonsContainer.appendChild(startButton);
         buttonsContainer.appendChild(levelSelectButton);
+        buttonsContainer.appendChild(levelEditorButton);
         buttonsContainer.appendChild(controlsButton);
 
         // Add button containers to menu
         menuElement.appendChild(buttonsContainer);
 
         // Store buttons for navigation
-        menuButtons = [startButton, levelSelectButton, controlsButton];
+        menuButtons = [startButton, levelSelectButton, levelEditorButton, controlsButton];
 
         // Add Insert Coin message
         const insertCoin = document.createElement('div');
@@ -311,9 +324,9 @@ const Menu = (function() {
         const credits = document.createElement('div');
         credits.className = 'credits';
         credits.innerHTML = `
-        <p>© BANANA CORP 2025</p>
-        <p>ALL RIGHTS RESERVED</p>
-        `;
+            <p>© BANANA CORP 2025</p>
+            <p>ALL RIGHTS RESERVED</p>
+            `;
         menuElement.appendChild(credits);
 
         updateButtonSelection();

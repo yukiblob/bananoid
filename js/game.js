@@ -463,6 +463,14 @@ window.addEventListener('load', () => {
             console.error('Lives module not found or not properly defined');
         }
 
+        // Initialize Level Editor
+        if (typeof LevelEditor !== 'undefined' && LevelEditor.init) {
+            console.log('Initializing Level Editor module...');
+            LevelEditor.init(GameState);
+        } else {
+            console.error('Level Editor module not found or not properly defined');
+        }
+
         GameState.loadLevel(0);
 
         if (typeof Menu !== 'undefined' && Menu.init) {
