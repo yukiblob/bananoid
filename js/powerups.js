@@ -55,7 +55,7 @@ const Powerups = (function() {
                     createMultiBalls(ball);
                 });
             },
-                cleanup: function() {
+            cleanup: function() {
             }
         },
         {
@@ -153,9 +153,9 @@ const Powerups = (function() {
                 const powerupType = pill.dataset.type;
                 activatePowerup(powerupType);
                 pill.remove();
-                
+
                 powerupElements.splice(index, 1);
-                }
+            }
         });
     }
 
@@ -176,7 +176,7 @@ const Powerups = (function() {
                 activePowerups.delete(incompatibleType);
             }
         });
-        
+
         if (existingPowerup) {
             console.log(`Refreshing powerup ${typeName}`);
             clearTimeout(existingPowerup.timeoutId);
@@ -322,6 +322,14 @@ const Powerups = (function() {
                 }
 
                 bullet.remove();
+
+                // Check win condition after breaking a block
+                setTimeout(() => {
+                    if (typeof GameState !== 'undefined' && GameState.checkWinCondition) {
+                        GameState.checkWinCondition();
+                    }
+                }, 0);
+
                 return true;
             }
         }

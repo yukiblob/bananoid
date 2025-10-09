@@ -1,4 +1,5 @@
-- when a bullet breaks the last tile the game doesn't end
+- when a bullet breaks the last tile the game doesn't end (bug)
+- powerups need to disappear after game has ended loss/win (bug)
 - high scores 1 (it must be a GO API service)
 - powerups 10 ✅
 - pause menu 7 ✅
@@ -9,3 +10,4 @@
 - timer 7 ✅
 - lives 8 ✅
 - win/loss screen 7 ✅
+- music/ sound effects

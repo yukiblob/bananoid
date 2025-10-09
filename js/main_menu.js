@@ -364,7 +364,16 @@ const Menu = (function() {
         }
 
         window.addEventListener('keydown', (e) => {
+            const winScreen = document.getElementById('winScreen');
+            const gameOverScreen = document.getElementById('gameOverMessage');
+            const isInDisabledState = isMenuVisible || winScreen || gameOverScreen;
+
             if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+                if (isInDisabledState) {
+                    e.preventDefault();
+                    return;
+                }
+
                 if (isMenuVisible) {
                     hideMenu();
                 } else {
