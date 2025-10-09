@@ -447,6 +447,13 @@ const GameState = (function() {
 window.addEventListener('load', () => {
     try {
         console.log('Initializing game...');
+        if (typeof SoundManager !== 'undefined' && SoundManager.init) {
+            console.log('Initializing Sound Manager...');
+            SoundManager.init();
+        } else {
+            console.warn('Sound Manager not found or not properly defined');
+        }
+        
         GameState.init();
 
         if (typeof Lives !== 'undefined' && Lives.init) {

@@ -80,6 +80,12 @@ const Menu = (function() {
         }
     }
 
+    function playGameStartSound() {
+        if (typeof SoundManager !== 'undefined' && SoundManager.playGameStart) {
+            SoundManager.playGameStart();
+        }
+    }
+
     function showPauseMenu() {
         currentMenu = 'pause';
         selectedButtonIndex = 0;
@@ -122,6 +128,7 @@ const Menu = (function() {
             hideMenu();
             setTimeout(() => {
                 GameState.restartGame();
+                playGameStartSound();
             }, 10);
         };
 
@@ -263,6 +270,7 @@ const Menu = (function() {
                 GameState.loadLevel(0);
                 if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
                 if (typeof Score !== 'undefined' && Score.init) Score.init();
+                playGameStartSound();
             }, 10);
         };
 

@@ -185,6 +185,10 @@ const Powerups = (function() {
 
         type.effect();
 
+        if (typeof SoundManager !== 'undefined') {
+            SoundManager.playPowerup();
+        }
+
         if (typeName === 'shortPaddle') {
             Score.add(1500);
         } else {

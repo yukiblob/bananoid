@@ -238,15 +238,19 @@ const Ball = (function() {
         const gameAreaWidth = gameArea.offsetWidth;
         const gameAreaHeight = gameArea.offsetHeight;
 
+        let collision = false;
+
         // left and right walls
         if (ballData.x - ballRadius <= 0) {
             ballData.x = ballRadius;
             ballData.speedX = Math.abs(ballData.speedX);
             applyAcceleration(ballData);
+            collision = true;
         } else if (ballData.x + ballRadius >= gameAreaWidth) {
             ballData.x = gameAreaWidth - ballRadius;
             ballData.speedX = -Math.abs(ballData.speedX);
             applyAcceleration(ballData);
+            collision = true;
         }
 
         // top wall
@@ -254,6 +258,11 @@ const Ball = (function() {
             ballData.y = ballRadius;
             ballData.speedY = Math.abs(ballData.speedY);
             applyAcceleration(ballData);
+            collision = true;
+        }
+
+        if (collision && typeof SoundManager !== 'undefined') {
+            SoundManager.playWallHit();
         }
 
         // bottom wall (lose a life)
@@ -329,6 +338,10 @@ const Ball = (function() {
                 }
                 applyAcceleration(ballData);
             }
+
+            if (typeof SoundManager !== 'undefined') {
+                SoundManager.playPaddleHit();
+            }
             return true;
         }
         return false;
@@ -360,6 +373,10 @@ const Ball = (function() {
                 ballData.x - ballRadius < blockRight &&
                 ballData.y + ballRadius > blockTop &&
                 ballData.y - ballRadius < blockBottom) {
+
+                if (typeof SoundManager !== 'undefined') {
+                    SoundManager.playBrickHit();
+                }
 
                 // Collision detected
                 const blockType = block.classList.contains("unbreakable") ? "unbreakable"

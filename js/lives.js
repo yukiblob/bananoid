@@ -42,6 +42,10 @@ const Lives = (function() {
             currentLives--;
             updateLivesDisplay();
 
+            if (typeof SoundManager !== 'undefined') {
+                SoundManager.playLifeLost();
+            }
+
             // Visual feedback for losing a life
             livesContainer.classList.add('life-lost');
             setTimeout(() => {
