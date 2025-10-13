@@ -176,6 +176,48 @@ const SoundManager = (function() {
         Beep(600, 0.06, 0.1, 'sawtooth');
     }
 
+    function playMenuNavigate() {
+        Beep(600, 0.06, 0.08, 'sine');
+    }
+
+    function playMenuSelect() {
+        Tone(800, 0.1, 0.12);
+    }
+
+    function playBulletFire() {
+        if (!canPlaySound()) {
+            pendingSounds.push(playBulletFire);
+            return;
+        }
+
+        try {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.08);
+
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.08);
+
+            oscillator.onended = () => {
+                oscillator.disconnect();
+                gainNode.disconnect();
+            };
+        } catch (error) {
+            console.warn('Error playing bullet fire sound:', error);
+            Beep(800, 0.05, 0.1, 'square');
+        }
+    }
+
     function playPowerup() {
         if (!canPlaySound()) {
             pendingSounds.push(playPowerup);
@@ -269,6 +311,9 @@ const SoundManager = (function() {
         playPowerup: playPowerup,
         playLifeLost: playLifeLost,
         playGameStart: playGameStart,
+        playMenuNavigate: playMenuNavigate,
+        playMenuSelect: playMenuSelect,
+        playBulletFire: playBulletFire,
         setEnabled: function(enabled) {
             isAudioEnabled = enabled;
         },

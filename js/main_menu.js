@@ -67,11 +67,18 @@ const Menu = (function() {
             selectedButtonIndex = (selectedButtonIndex + 1) % menuButtons.length;
         }
 
+        if (typeof SoundManager !== 'undefined' && SoundManager.playMenuNavigate) {
+            SoundManager.playMenuNavigate();
+        }
+
         updateButtonSelection();
     }
 
     function activateSelectedButton() {
         if (menuButtons[selectedButtonIndex]) {
+            if (typeof SoundManager !== 'undefined' && SoundManager.playMenuSelect) {
+                SoundManager.playMenuSelect();
+            }
             // Get the onClick function from the button's data attribute
             const onClickFunc = menuButtons[selectedButtonIndex].onClickFunction;
             if (onClickFunc) {

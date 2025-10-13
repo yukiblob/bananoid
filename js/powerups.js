@@ -251,6 +251,11 @@ const Powerups = (function() {
             console.error('Powerups not properly initialized with GameState');
             return;
         }
+
+        if (typeof SoundManager !== 'undefined' && SoundManager.playBulletFire) {
+            SoundManager.playBulletFire();
+        }
+
         const state = gameState.getState();
         const gameArea = document.getElementById('gameArea');
         const paddle = document.getElementById('paddle');
