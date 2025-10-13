@@ -396,6 +396,10 @@ const Menu = (function() {
             const gameOverScreen = document.getElementById('gameOverMessage');
             const isInDisabledState = isMenuVisible || winScreen || gameOverScreen;
 
+            if (isMenuVisible && typeof SoundManager !== 'undefined' && SoundManager.resume) {
+                SoundManager.resume();
+            }
+
             if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
                 if (isInDisabledState) {
                     e.preventDefault();

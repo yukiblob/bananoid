@@ -3,7 +3,6 @@ const SoundManager = (function() {
     let isAudioEnabled = true;
     let isInitialized = false;
     let isAudioResumed = false;
-    let pendingSounds = [];
 
     function init() {
         if (isInitialized) return;
@@ -25,13 +24,6 @@ const SoundManager = (function() {
                     audioContext.resume().then(() => {
                         console.log('Audio context resumed successfuly');
                         isAudioResumed = true;
-
-                        if (pendingSounds.length > 0) {
-                            console.log('Playing pending sounds:', pendingSounds.length);
-
-                            pendingSounds.forEach(sound => sound());
-                            pendingSounds = [];
-                        }
                     }).catch(error => {
                         console.warn('Failed to resume audio:', error);
                     });
@@ -40,7 +32,7 @@ const SoundManager = (function() {
 
             const interactionEvents = ['click', 'keydown', 'touchstart', 'mousedown'];
             interactionEvents.forEach(event => {
-                document.addEventListener(event, handleUserInteraction, { once: false }); // Only need one interaction
+                window.addEventListener(event, handleUserInteraction, { once: false, capture: true });
             });
 
             if (typeof Menu !== 'undefined') {
@@ -59,38 +51,7 @@ const SoundManager = (function() {
         }
     }
 
-    function ensureAudioContext() {
-        if (!isAudioEnabled) return false;
-        if (!audioContext) return false;
-
-        if (audioContext.state === 'closed') {
-            try {
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                audioContext = new AudioContextClass();
-            } catch (error) {
-                console.warn('Failed to recreate audio context:', error);
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-        function canPlaySound() {
-        if (!ensureAudioContext()) return false;
-
-        if (audioContext.state === 'suspended') {
-            return false;
-        }
-
-        return true;
-    }
-
     function Beep(frequency, duration, volume = 0.1, type = 'sine') {
-        if (!canPlaySound()) {
-            pendingSounds.push(() => Beep(frequency, duration, volume, type));
-            return;
-        }
 
         try {
             const oscillator = audioContext.createOscillator();
@@ -121,10 +82,6 @@ const SoundManager = (function() {
     }
 
     function Tone(frequency, duration, volume = 0.1) {
-        if (!canPlaySound()) {
-            pendingSounds.push(() => Tone(frequency, duration, volume));
-            return;
-        }
 
         try {
             const osc1 = audioContext.createOscillator();
@@ -185,10 +142,6 @@ const SoundManager = (function() {
     }
 
     function playBulletFire() {
-        if (!canPlaySound()) {
-            pendingSounds.push(playBulletFire);
-            return;
-        }
 
         try {
             const oscillator = audioContext.createOscillator();
@@ -219,10 +172,6 @@ const SoundManager = (function() {
     }
 
     function playPowerup() {
-        if (!canPlaySound()) {
-            pendingSounds.push(playPowerup);
-            return;
-        }
 
         try {
             const osc1 = audioContext.createOscillator();
@@ -265,10 +214,6 @@ const SoundManager = (function() {
     }
 
     function playLifeLost() {
-        if (!canPlaySound()) {
-            pendingSounds.push(playLifeLost);
-            return;
-        }
 
         try {
             const oscillator = audioContext.createOscillator();
@@ -297,10 +242,6 @@ const SoundManager = (function() {
     }
 
     function playGameStart() {
-        if (!canPlaySound()) {
-            pendingSounds.push(playGameStart);
-            return;
-        }
         Tone(400, 0.1, 0.1);
         setTimeout(() => Tone(500, 0.1, 0.1), 120);
         setTimeout(() => Tone(600, 0.2, 0.1), 240);
