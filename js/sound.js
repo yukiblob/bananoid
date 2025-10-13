@@ -225,29 +225,42 @@ const SoundManager = (function() {
         }
 
         try {
-            const oscillator = audioContext.createOscillator();
+            const osc1 = audioContext.createOscillator();
+            const osc2 = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
-
-            oscillator.connect(gainNode);
+        
+            osc1.connect(gainNode);
+            osc2.connect(gainNode);
             gainNode.connect(audioContext.destination);
 
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
-            oscillator.frequency.linearRampToValueAtTime(800, audioContext.currentTime + 0.3);
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(400, audioContext.currentTime);
+            osc1.frequency.linearRampToValueAtTime(1000, audioContext.currentTime + 0.3);
 
+            osc2.type = 'square';
+            osc2.frequency.setValueAtTime(600, audioContext.currentTime);
+            osc2.frequency.linearRampToValueAtTime(1200, audioContext.currentTime + 0.3);
+            
             gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.05);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+            gainNode.gain.linearRampToValueAtTime(0.25, audioContext.currentTime + 0.05);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
 
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.3);
+            osc1.start();
+            osc2.start();
+            osc1.stop(audioContext.currentTime + 0.4);
+            osc2.stop(audioContext.currentTime + 0.4);
 
-            oscillator.onended = () => {
-                oscillator.disconnect();
+            const cleanUp = () => {
+                osc1.disconnect();
+                osc2.disconnect();
                 gainNode.disconnect();
             };
+        
+            osc1.onended = cleanUp;
+            osc2.onended = cleanUp;
         } catch (error) {
             console.warn('Error playing powerup sound:', error);
+            Beep(600, 0.2, 0.2, 'sine');
         }
     }
 
