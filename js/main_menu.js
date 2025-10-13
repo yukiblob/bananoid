@@ -59,33 +59,34 @@ const Menu = (function() {
     }
 
     function handleMenuNavigation(direction) {
-        if (!isMenuVisible) return;
+    if (!isMenuVisible) return;
 
         if (direction === 'up') {
             selectedButtonIndex = (selectedButtonIndex - 1 + menuButtons.length) % menuButtons.length;
         } else if (direction === 'down') {
             selectedButtonIndex = (selectedButtonIndex + 1) % menuButtons.length;
         }
-
-        if (typeof SoundManager !== 'undefined' && SoundManager.playMenuNavigate) {
-            SoundManager.playMenuNavigate();
-        }
-
         updateButtonSelection();
+        
+        if (typeof SoundManager !== 'undefined' && SoundManager.playMenuNavigate) {
+            if (SoundManager.getState && SoundManager.getState() === 'running') {
+                SoundManager.playMenuNavigate();
+            }
+        }
     }
 
     function activateSelectedButton() {
-        if (menuButtons[selectedButtonIndex]) {
-            if (typeof SoundManager !== 'undefined' && SoundManager.playMenuSelect) {
+    if (menuButtons[selectedButtonIndex]) {
+        const onClickFunc = menuButtons[selectedButtonIndex].onClickFunction;
+        if (onClickFunc) {
+            if (typeof SoundManager !== 'undefined' && SoundManager.playMenuSelect && 
+                SoundManager.getState && SoundManager.getState() === 'running') {
                 SoundManager.playMenuSelect();
             }
-            // Get the onClick function from the button's data attribute
-            const onClickFunc = menuButtons[selectedButtonIndex].onClickFunction;
-            if (onClickFunc) {
-                onClickFunc();
-            }
+            onClickFunc();
         }
     }
+}
 
     function playGameStartSound() {
         if (typeof SoundManager !== 'undefined' && SoundManager.playGameStart) {
@@ -391,14 +392,48 @@ const Menu = (function() {
             Timer.init();
         }
 
+        let audioContextResumed = false;
+
+        const resumeAudioOnFirstInteraction = (e) => {
+            if (audioContextResumed) return;
+            
+            if (e.type === 'keydown') {
+                audioContextResumed = true;
+                if (typeof SoundManager !== 'undefined' && SoundManager.resume) {
+                    SoundManager.resume().then(() => {
+                        console.log('Audio context resumed via first keypress');
+                    }).catch(error => {
+                        console.warn('Failed to resume audio:', error);
+                    });
+                }
+            } 
+            else if (e.type === 'click' || e.type === 'touchstart') {
+                audioContextResumed = true;
+                if (typeof SoundManager !== 'undefined' && SoundManager.resume) {
+                    SoundManager.resume().then(() => {
+                        console.log('Audio context resumed via first click/touch');
+                    });
+                }
+            }
+        };
+
+        window.addEventListener('keydown', resumeAudioOnFirstInteraction, { 
+            once: false, 
+            capture: true  // Important: capture before other handlers
+        });
+        window.addEventListener('click', resumeAudioOnFirstInteraction, { 
+            once: false, 
+            capture: true 
+        });
+        window.addEventListener('touchstart', resumeAudioOnFirstInteraction, { 
+            once: false, 
+            capture: true 
+        });
+
         window.addEventListener('keydown', (e) => {
             const winScreen = document.getElementById('winScreen');
             const gameOverScreen = document.getElementById('gameOverMessage');
             const isInDisabledState = isMenuVisible || winScreen || gameOverScreen;
-
-            if (isMenuVisible && typeof SoundManager !== 'undefined' && SoundManager.resume) {
-                SoundManager.resume();
-            }
 
             if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
                 if (isInDisabledState) {

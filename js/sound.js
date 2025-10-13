@@ -18,27 +18,15 @@ const SoundManager = (function() {
                 return;
             }
 
-            // this handles browser autoplay policies
-            const handleUserInteraction = () => {
-                if (audioContext && audioContext.state === 'suspended') {
-                    audioContext.resume().then(() => {
-                        console.log('Audio context resumed successfuly');
-                        isAudioResumed = true;
-                    }).catch(error => {
-                        console.warn('Failed to resume audio:', error);
-                    });
-                }
-            };
-
-            const interactionEvents = ['click', 'keydown', 'touchstart', 'mousedown'];
-            interactionEvents.forEach(event => {
-                window.addEventListener(event, handleUserInteraction, { once: false, capture: true });
-            });
-
             if (typeof Menu !== 'undefined') {
                 const originalShow = Menu.show;
                 Menu.show = function() {
-                    handleUserInteraction();
+                    if (audioContext && audioContext.state === 'suspended') {
+                        audioContext.resume().then(() => {
+                            console.log('Audio context resumed via menu');
+                            isAudioEnabled = true;
+                        });
+                    }
                     return originalShow.apply(this, arguments);
                 };
             }
