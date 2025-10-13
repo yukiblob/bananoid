@@ -57,29 +57,38 @@ const GameState = (function() {
         return block;
     }
 
-    function loadLevel(levelIndex = 0) {
+    async function loadLevel(levelIndex = 0) {
         const gameArea = document.getElementById("gameArea");
         if (!gameArea) return;
 
         // clear old blocks
         gameArea.querySelectorAll(".block").forEach(b => b.remove());
 
-        const defaultLevels = [
-            [
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [0, 0, 1, 1, 1, 1, 1, 1, 3, 0, 0],
-                [2, 2, 2, 0, 0, 3, 3, 0, 2, 2, 2],
-            ]
-        ];
-        const source =
-            (typeof levels !== "undefined" && Array.isArray(levels)) ? levels :
-                (typeof window !== "undefined" && Array.isArray(window.levels)) ? window.levels :
-                    defaultLevels;
+        let allLevels = [];
 
-        state.totalLevels = source.length;
+        try {
+            // Try to load from API first
+            const response = await fetch('http://localhost:8080/api/levels');
+            if (response.ok) {
+                const data = await response.json();
+                allLevels = data.levels || [];
+            }
+        } catch (error) {
+            console.warn('Could not load levels from API, using default levels');
+        }
+
+        // If no levels from API, use default levels
+        if (allLevels.length === 0) {
+            allLevels =
+                (typeof levels !== "undefined" && Array.isArray(levels)) ? levels :
+                    (typeof window !== "undefined" && Array.isArray(window.levels)) ? window.levels :
+                        defaultLevels;
+        }
+
+        state.totalLevels = allLevels.length;
         state.currentLevel = levelIndex;
 
-        const grid = source[levelIndex] || source[0];
+        const grid = allLevels[levelIndex]?.data || allLevels[levelIndex] || allLevels[0]?.data || allLevels[0];
 
         const blockWidth = 80;
         const blockHeight = 30;
@@ -461,7 +470,7 @@ window.addEventListener('load', () => {
         } else {
             console.warn('Sound Manager not found or not properly defined');
         }
-        
+
         GameState.init();
 
         if (typeof Lives !== 'undefined' && Lives.init) {

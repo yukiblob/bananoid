@@ -159,7 +159,7 @@ const LevelEditor = (function() {
         updateGridDisplay();
     }
 
-    function saveLevel() {
+    async function saveLevel() {
         // Remove empty rows from the top and bottom
         let startRow = 0;
         let endRow = GRID_ROWS - 1;
@@ -183,12 +183,41 @@ const LevelEditor = (function() {
         const levelData = currentGrid.slice(startRow, endRow + 1);
 
         // Generate level name
-        const levelName = `Custom level ${Date.now()}`;
+        const levelName = prompt('Enter a name for your level:', `Custom Level ${new Date().toLocaleDateString()}`);
 
-        // Save level
-        saveToCustomLevels(levelData, levelName);
+        if (!levelName) {
+            return; // User cancelled
+        }
 
-        alert(`Level "${levelName}" saved successfully!`);
+        try {
+            console.log('🔄 Saving level to server...', levelData);
+
+            const response = await fetch('/api/levels/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    data: levelData,
+                    name: levelName
+                })
+            });
+
+            console.log('📡 Response status:', response.status);
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('✅ Level saved successfully:', result);
+                alert(`✅ Level "${levelName}" saved successfully!`);
+            } else {
+                const errorText = await response.text();
+                console.error('❌ Server error:', errorText);
+                alert(`❌ Failed to save level. Server error: ${response.status} - ${errorText}`);
+            }
+        } catch (error) {
+            console.error('💥 Network error saving level:', error);
+            alert(`❌ Network error: ${error.message}\n\nPlease ensure the Go server is running on http://localhost:8080`);
+        }
     }
 
     function saveToCustomLevels(levelData, levelName) {
@@ -284,7 +313,7 @@ const LevelEditor = (function() {
         isEditorVisible = true;
 
         // Hide game UI elements
-        document.querySelectorAll('#score, #livesContainer, #gameTimer, #fpsCounter, .controls').forEach(el => {
+        document.querySelectorAll('#score, #livesContainer, #gameTimer, .controls').forEach(el => {
             el.style.visibility = 'hidden';
         });
 
@@ -297,7 +326,7 @@ const LevelEditor = (function() {
         isEditorVisible = false;
 
         // Show game UI elements
-        document.querySelectorAll('#score, #livesContainer, #gameTimer, #fpsCounter, .controls').forEach(el => {
+        document.querySelectorAll('#score, #livesContainer, #gameTimer, .controls').forEach(el => {
             el.style.visibility = 'visible';
         });
 
