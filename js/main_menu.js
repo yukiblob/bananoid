@@ -61,19 +61,19 @@ const Menu = (function() {
     function handleMenuNavigation(direction) {
     if (!isMenuVisible) return;
 
-        if (direction === 'up') {
-            selectedButtonIndex = (selectedButtonIndex - 1 + menuButtons.length) % menuButtons.length;
-        } else if (direction === 'down') {
-            selectedButtonIndex = (selectedButtonIndex + 1) % menuButtons.length;
-        }
-        updateButtonSelection();
-        
-        if (typeof SoundManager !== 'undefined' && SoundManager.playMenuNavigate) {
-            if (SoundManager.getState && SoundManager.getState() === 'running') {
-                SoundManager.playMenuNavigate();
-            }
+    if (direction === 'up') {
+        selectedButtonIndex = (selectedButtonIndex - 1 + menuButtons.length) % menuButtons.length;
+    } else if (direction === 'down') {
+        selectedButtonIndex = (selectedButtonIndex + 1) % menuButtons.length;
+    }
+    updateButtonSelection();
+    
+    if (typeof SoundManager !== 'undefined' && SoundManager.playMenuNavigate) {
+        if (SoundManager.getState && SoundManager.getState() === 'running') {
+            SoundManager.playMenuNavigate();
         }
     }
+}
 
     function activateSelectedButton() {
     if (menuButtons[selectedButtonIndex]) {
