@@ -450,6 +450,14 @@ window.addEventListener('load', () => {
         if (typeof SoundManager !== 'undefined' && SoundManager.init) {
             console.log('Initializing Sound Manager...');
             SoundManager.init();
+
+            if (typeof Menu !== 'undefined') {
+                const originalStartGame = Menu.startGame;
+                Menu.startGame = function() {
+                    SoundManager.resume();
+                    return originalStartGame.apply(this, arguments);
+                };
+            }
         } else {
             console.warn('Sound Manager not found or not properly defined');
         }

@@ -310,6 +310,9 @@ const Ball = (function() {
             if (minOverlap === overlapTop) {
                 if (stickyPowerupActive && !stuckBalls.has(ballID)) {
                     if (stickBall(ballID, ballData)) {
+                        if (typeof SoundManager !== 'undefined') {
+                            SoundManager.playPaddleHit();
+                        }
                         return true;
                     }
                 }

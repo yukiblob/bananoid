@@ -3,6 +3,7 @@ const SoundManager = (function() {
     let isAudioEnabled = true;
     let isInitialized = false;
     let isAudioResumed = false;
+    let pendingSounds = [];
 
     function init() {
         if (isInitialized) return;
@@ -19,11 +20,18 @@ const SoundManager = (function() {
             }
 
             // this handles browser autoplay policies
-            const resumeAudio = () => {
+            const handleUserInteraction = () => {
                 if (audioContext && audioContext.state === 'suspended') {
                     audioContext.resume().then(() => {
-                        console.log('Audio context resumed successfully!');
+                        console.log('Audio context resumed successfuly');
                         isAudioResumed = true;
+
+                        if (pendingSounds.length > 0) {
+                            console.log('Playing pending sounds:', pendingSounds.length);
+
+                            pendingSounds.forEach(sound => sound());
+                            pendingSounds = [];
+                        }
                     }).catch(error => {
                         console.warn('Failed to resume audio:', error);
                     });
@@ -32,8 +40,16 @@ const SoundManager = (function() {
 
             const interactionEvents = ['click', 'keydown', 'touchstart', 'mousedown'];
             interactionEvents.forEach(event => {
-                document.addEventListener(event, resumeAudio, { once: true }); // Only need one interaction
+                document.addEventListener(event, handleUserInteraction, { once: false }); // Only need one interaction
             });
+
+            if (typeof Menu !== 'undefined') {
+                const originalShow = Menu.show;
+                Menu.show = function() {
+                    handleUserInteraction();
+                    return originalShow.apply(this, arguments);
+                };
+            }
 
             isInitialized = true;
         } catch (error) {
@@ -44,20 +60,35 @@ const SoundManager = (function() {
     }
 
     function ensureAudioContext() {
-        if (isAudioEnabled || !audioContext) return false;
+        if (!isAudioEnabled) return false;
+        if (!audioContext) return false;
 
         if (audioContext.state === 'closed') {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioContext = new AudioContextClass();
+            } catch (error) {
+                console.warn('Failed to recreate audio context:', error);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+        function canPlaySound() {
+        if (!ensureAudioContext()) return false;
+
+        if (audioContext.state === 'suspended') {
+            return false;
         }
 
         return true;
     }
 
     function Beep(frequency, duration, volume = 0.1, type = 'sine') {
-        if (!ensureAudioContext()) return;
-
-        if (!isAudioResumed && audioContext.state === 'suspended') {
-            console.log('Sound blocked: waiting for user interaction');
+        if (!canPlaySound()) {
+            pendingSounds.push(() => Beep(frequency, duration, volume, type));
             return;
         }
 
@@ -79,16 +110,19 @@ const SoundManager = (function() {
 
             oscillator.start(now);
             oscillator.stop(now + duration);
+
+            oscillator.onended = () => {
+                oscillator.disconnect();
+                gainNode.disconnect();
+            };
         } catch (error) {
             console.warn('Error creating beep:', error);
         }
     }
 
     function Tone(frequency, duration, volume = 0.1) {
-        if (!ensureAudioContext()) return;
-
-        if (!isAudioResumed && audioContext.state === 'suspended') {
-            console.log('Sound blocked: waiting for user interaction');
+        if (!canPlaySound()) {
+            pendingSounds.push(() => Tone(frequency, duration, volume));
             return;
         }
 
@@ -102,6 +136,10 @@ const SoundManager = (function() {
             osc1.frequency.value = frequency;
             osc2.frequency.value = frequency * 2;
 
+            osc1.connect(gainNode);
+            osc2.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
             const now = audioContext.currentTime;
 
             gainNode.gain.setValueAtTime(0, now);
@@ -112,6 +150,15 @@ const SoundManager = (function() {
             osc2.start(now);
             osc1.stop(now + duration);
             osc2.stop(now + duration);
+
+            const cleanUp = () => {
+                osc1.disconnect();
+                osc2.disconnect();
+                gainNode.disconnect();
+            };
+            
+            osc1.onended = cleanUp;
+            osc2.onended = cleanUp;
         } catch (error) {
             console.warn('Error creating tone:', error);
         }
@@ -130,10 +177,8 @@ const SoundManager = (function() {
     }
 
     function playPowerup() {
-        if (!ensureAudioContext()) return;
-
-        if (!isAudioResumed && audioContext.state === 'suspended') {
-            console.log('Sound blocked: waiting for user interaction');
+        if (!canPlaySound()) {
+            pendingSounds.push(playPowerup);
             return;
         }
 
@@ -154,16 +199,19 @@ const SoundManager = (function() {
 
             oscillator.start();
             oscillator.stop(audioContext.currentTime + 0.3);
+
+            oscillator.onended = () => {
+                oscillator.disconnect();
+                gainNode.disconnect();
+            };
         } catch (error) {
             console.warn('Error playing powerup sound:', error);
         }
     }
 
     function playLifeLost() {
-        if (!ensureAudioContext()) return;
-
-        if (!isAudioResumed && audioContext.state === 'suspended') {
-            console.log('Sound blocked: waiting for user interaction');
+        if (!canPlaySound()) {
+            pendingSounds.push(playLifeLost);
             return;
         }
 
@@ -183,15 +231,34 @@ const SoundManager = (function() {
 
             oscillator.start();
             oscillator.stop(audioContext.currentTime + 0.5);
+
+            oscillator.onended = () => {
+                oscillator.disconnect();
+                gainNode.disconnect();
+            };
         } catch (error) {
             console.warn('Error playing life lost sound:', error);
         }
     }
 
     function playGameStart() {
+        if (!canPlaySound()) {
+            pendingSounds.push(playGameStart);
+            return;
+        }
         Tone(400, 0.1, 0.1);
         setTimeout(() => Tone(500, 0.1, 0.1), 120);
         setTimeout(() => Tone(600, 0.2, 0.1), 240);
+    }
+
+    function forceResume() {
+        if (audioContext && audioContext.state === 'suspended') {
+            return audioContext.resume().then(() => {
+                console.log('Audio context force-resumed');
+                isAudioResumed = true;
+            });
+        }
+        return Promise.resolve();
     }
 
     return {
@@ -208,11 +275,9 @@ const SoundManager = (function() {
         isEnabled: function() {
             return isAudioEnabled && audioContext !== null;
         },
-        resume: function() {
-            if (audioContext && audioContext.state === 'suspended') {
-                return audioContext.resume();
-            }
-            return Promise.resolve();
+        resume: forceResume,
+        getState: function() {
+            return audioContext ? audioContext.state : 'no-context';
         }
     };
 })();
