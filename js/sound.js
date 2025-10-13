@@ -18,18 +18,38 @@ const SoundManager = (function() {
                 return;
             }
 
-            if (typeof Menu !== 'undefined') {
-                const originalShow = Menu.show;
-                Menu.show = function() {
-                    if (audioContext && audioContext.state === 'suspended') {
-                        audioContext.resume().then(() => {
-                            console.log('Audio context resumed via menu');
-                            isAudioEnabled = true;
-                        });
-                    }
-                    return originalShow.apply(this, arguments);
-                };
-            }
+            const handleUserInteraction = (e) => {
+                const isValidGesture = 
+                    e.type === 'click' || 
+                    e.type === 'touchstart' ||
+                    e.type === 'mousedown' ||
+                    (e.type === 'keydown' && (
+                        e.key === ' ' ||
+                        e.key === 'Enter' ||
+                        e.key === 'ArrowUp' ||
+                        e.key === 'ArrowDown' ||
+                        e.key === 'ArrowLeft' || 
+                        e.key === 'ArrowRight' ||
+                        (e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key))
+                    ));
+
+                if (isValidGesture && audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume().then(() => {
+                        console.log('Audio context resumed successfully via:', e.type, e.key);
+                        isAudioResumed = true;
+                    }).catch(error => {
+                        console.warn('Failed to resume audio:', error);
+                    });
+                }
+            };
+
+            const interactionEvents = ['click', 'keydown', 'touchstart', 'mousedown'];
+            interactionEvents.forEach(event => {
+                window.addEventListener(event, handleUserInteraction, { 
+                    once: false,
+                    capture: true
+                });
+            });
 
             isInitialized = true;
         } catch (error) {
@@ -39,7 +59,12 @@ const SoundManager = (function() {
         }
     }
 
+    function canPlaySound() {
+        return audioContext && audioContext.state === 'running';
+    }
+
     function Beep(frequency, duration, volume = 0.1, type = 'sine') {
+        if (!canPlaySound()) return;
 
         try {
             const oscillator = audioContext.createOscillator();
@@ -70,6 +95,7 @@ const SoundManager = (function() {
     }
 
     function Tone(frequency, duration, volume = 0.1) {
+        if (!canPlaySound()) return;
 
         try {
             const osc1 = audioContext.createOscillator();
@@ -130,6 +156,7 @@ const SoundManager = (function() {
     }
 
     function playBulletFire() {
+        if (!canPlaySound()) return;
 
         try {
             const oscillator = audioContext.createOscillator();
@@ -160,6 +187,7 @@ const SoundManager = (function() {
     }
 
     function playPowerup() {
+        if (!canPlaySound()) return;
 
         try {
             const osc1 = audioContext.createOscillator();
@@ -202,6 +230,7 @@ const SoundManager = (function() {
     }
 
     function playLifeLost() {
+        if (!canPlaySound()) return;
 
         try {
             const oscillator = audioContext.createOscillator();

@@ -59,34 +59,32 @@ const Menu = (function() {
     }
 
     function handleMenuNavigation(direction) {
-    if (!isMenuVisible) return;
+        if (!isMenuVisible) return;
 
-    if (direction === 'up') {
-        selectedButtonIndex = (selectedButtonIndex - 1 + menuButtons.length) % menuButtons.length;
-    } else if (direction === 'down') {
-        selectedButtonIndex = (selectedButtonIndex + 1) % menuButtons.length;
-    }
-    updateButtonSelection();
-    
-    if (typeof SoundManager !== 'undefined' && SoundManager.playMenuNavigate) {
-        if (SoundManager.getState && SoundManager.getState() === 'running') {
+        if (direction === 'up') {
+            selectedButtonIndex = (selectedButtonIndex - 1 + menuButtons.length) % menuButtons.length;
+        } else if (direction === 'down') {
+            selectedButtonIndex = (selectedButtonIndex + 1) % menuButtons.length;
+        }
+        updateButtonSelection();
+        
+        // Just play the sound - SoundManager will handle the queuing if needed
+        if (typeof SoundManager !== 'undefined' && SoundManager.playMenuNavigate) {
             SoundManager.playMenuNavigate();
         }
     }
-}
 
     function activateSelectedButton() {
-    if (menuButtons[selectedButtonIndex]) {
-        const onClickFunc = menuButtons[selectedButtonIndex].onClickFunction;
-        if (onClickFunc) {
-            if (typeof SoundManager !== 'undefined' && SoundManager.playMenuSelect && 
-                SoundManager.getState && SoundManager.getState() === 'running') {
-                SoundManager.playMenuSelect();
+        if (menuButtons[selectedButtonIndex]) {
+            const onClickFunc = menuButtons[selectedButtonIndex].onClickFunction;
+            if (onClickFunc) {
+                if (typeof SoundManager !== 'undefined' && SoundManager.playMenuSelect) {
+                    SoundManager.playMenuSelect();
+                }
+                onClickFunc();
             }
-            onClickFunc();
         }
     }
-}
 
     function playGameStartSound() {
         if (typeof SoundManager !== 'undefined' && SoundManager.playGameStart) {
@@ -391,45 +389,6 @@ const Menu = (function() {
         if (typeof Timer !== 'undefined' && Timer.init) {
             Timer.init();
         }
-
-        let audioContextResumed = false;
-
-        const resumeAudioOnFirstInteraction = (e) => {
-            if (audioContextResumed) return;
-            
-            if (e.type === 'keydown') {
-                audioContextResumed = true;
-                if (typeof SoundManager !== 'undefined' && SoundManager.resume) {
-                    SoundManager.resume().then(() => {
-                        console.log('Audio context resumed via first keypress');
-                    }).catch(error => {
-                        console.warn('Failed to resume audio:', error);
-                    });
-                }
-            } 
-            else if (e.type === 'click' || e.type === 'touchstart') {
-                audioContextResumed = true;
-                if (typeof SoundManager !== 'undefined' && SoundManager.resume) {
-                    SoundManager.resume().then(() => {
-                        console.log('Audio context resumed via first click/touch');
-                    });
-                }
-            }
-        };
-
-        window.addEventListener('keydown', resumeAudioOnFirstInteraction, { 
-            once: false, 
-            capture: true  // Important: capture before other handlers
-        });
-        window.addEventListener('click', resumeAudioOnFirstInteraction, { 
-            once: false, 
-            capture: true 
-        });
-        window.addEventListener('touchstart', resumeAudioOnFirstInteraction, { 
-            once: false, 
-            capture: true 
-        });
-
         window.addEventListener('keydown', (e) => {
             const winScreen = document.getElementById('winScreen');
             const gameOverScreen = document.getElementById('gameOverMessage');
@@ -444,13 +403,10 @@ const Menu = (function() {
                 if (isMenuVisible) {
                     hideMenu();
                 } else {
-                    // Use our improved detection to determine which menu to show
                     if (isInActiveGame()) {
-                        // We're in an active game, show pause menu
                         currentMenu = 'pause';
                         showMenu();
                     } else {
-                        // We're not in an active game, show main menu
                         currentMenu = 'main';
                         showMenu();
                     }
@@ -458,7 +414,6 @@ const Menu = (function() {
                 e.preventDefault();
             }
 
-            // Only process navigation keys if menu is visible
             if (!isMenuVisible) return;
 
             switch (e.key) {
