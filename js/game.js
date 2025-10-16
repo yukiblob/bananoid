@@ -380,6 +380,7 @@ const GameState = (function() {
 
         if (typeof Timer !== 'undefined' && Timer.reset) {
             Timer.reset();
+            Timer.start();
         }
 
         // Reset to first level

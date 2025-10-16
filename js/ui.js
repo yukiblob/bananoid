@@ -21,7 +21,7 @@ const Timer = (function() {
         timerElement = document.createElement('div');
         timerElement.id = 'gameTimer';
         timerElement.className = 'timer';
-        timerElement.textContent = 'Time: 0s';
+        timerElement.textContent = 'Time: 00:00';
 
         const gameArea = document.getElementById('gameArea');
         gameArea.appendChild(timerElement);
@@ -34,7 +34,7 @@ const Timer = (function() {
             // Format time as MM:SS
             const minutes = Math.floor(currentTime / 60);
             const seconds = currentTime % 60;
-            timerElement.textContent = `Time: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            timerElement.textContent = `Time: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
     }
 
@@ -58,7 +58,7 @@ const Timer = (function() {
         pause();
         elapsedTime = 0;
         if (timerElement) {
-            timerElement.textContent = 'Time: 0s';
+            timerElement.textContent = 'Time: 00:00';
         }
     }
 
@@ -68,6 +68,7 @@ const Timer = (function() {
 
     function init() {
         createTimeElement();
+        reset();
     }
 
     return {
