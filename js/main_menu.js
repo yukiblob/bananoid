@@ -1,22 +1,84 @@
 const Menu = (function() {
     let gameState;
     let menuElement;
+    let coinInsertScreen;
     let isMenuVisible = true;
-    let currentMenu = 'main';
+    let currentMenu = 'coinInsert';
     let selectedButtonIndex = 0;
     let menuButtons = [];
 
+    function createCoinInsertScreen() {
+        const gameArea = document.getElementById('gameArea');
+
+        coinInsertScreen = document.createElement('div');
+        coinInsertScreen.id = 'coinInsertScreen';
+        coinInsertScreen.className = 'coin-insert-screen';
+
+        const content = document.createElement('div');
+        content.className = 'coin-insert-content';
+
+        const title = document.createElement('h1');
+        title.className = 'coin-insert-title';
+        title.innerHTML = '<span class="logo-red">BANA</span><span class="logo-blue">NOID</span>';
+
+        const subtitle = document.createElement('h2');
+        subtitle.className = 'menu-subtitle';
+        subtitle.textContent = 'REVENGE OF BANANA';
+
+        const prompt = document.createElement('div');
+        prompt.className = 'coin-insert-prompt';
+
+        const line1 = document.createElement('div');
+        line1.textContent = 'PRESS [ENTER] OR [SPACE]';
+        line1.className = 'prompt-line';
+
+        const line2 = document.createElement('div');
+        line2.textContent = 'TO INSERT COIN';
+        line2.className = 'prompt-line';
+
+        prompt.appendChild(line1);
+        prompt.appendChild(line2);
+
+        content.appendChild(title);
+        content.appendChild(subtitle);
+        content.appendChild(prompt);
+        coinInsertScreen.appendChild(content);
+
+        gameArea.appendChild(coinInsertScreen);
+    }
+
+    function removeCoinInsertScreen() {
+        if (coinInsertScreen) {
+            coinInsertScreen.remove();
+            coinInsertScreen = null;
+        }
+    }
+
+    function coinInsert() {
+        if (typeof SoundManager !== 'undefined' && SoundManager.playMenuSelect) {
+            SoundManager.playMenuSelect();
+        }
+
+        removeCoinInsertScreen();
+        showMainMenu();
+        
+        if (typeof SoundManager !== 'undefined' && SoundManager.resume) {
+            SoundManager.resume();
+        }
+    }
+    
     function createMenu() {
         const gameArea = document.getElementById('gameArea');
 
         // Create menu container
         menuElement = document.createElement('div');
         menuElement.id = 'mainMenu';
+        menuElement.style.display = 'none';
 
         // Add to game area
         gameArea.appendChild(menuElement);
 
-        showMainMenu();
+        createCoinInsertScreen();
     }
 
     function createMenuButton(text, index) {
@@ -376,7 +438,7 @@ const Menu = (function() {
         // Add Insert Coin message
         const insertCoin = document.createElement('div');
         insertCoin.className = 'insert-coin';
-        insertCoin.innerHTML = 'INSERT COIN';
+        insertCoin.innerHTML = 'Player 1';
         menuElement.appendChild(insertCoin);
 
         const credits = document.createElement('div');
@@ -388,6 +450,8 @@ const Menu = (function() {
         menuElement.appendChild(credits);
 
         updateButtonSelection();
+
+        menuElement.style.display = 'flex';
     }
 
     function hideMenu() {
@@ -406,6 +470,11 @@ const Menu = (function() {
     }
 
     function showMenu() {
+        if (currentMenu === 'coinInsert') {
+            coinInsert();
+            return;
+        }
+
         menuElement.style.display = 'flex';
         isMenuVisible = true;
         GameState.setState({ isPaused: true });
@@ -430,8 +499,13 @@ const Menu = (function() {
         const isPaused = gameState.getState().isPaused;
         const winScreen = document.getElementById('winScreen');
         const gameOverScreen = document.getElementById('gameOverMessage');
+        const coinInsertScreen = document.getElementById('coinInsertScreen');
 
-        return !isPaused && !isMenuVisible && !winScreen && !gameOverScreen;
+        return !isPaused && !isMenuVisible && !winScreen && !gameOverScreen && !coinInsertScreen;
+    }
+
+    function isCoinInsertVisible() {
+        return document.getElementById('coinInsertScreen') !== null;
     }
 
     function init(GameState) {
@@ -444,8 +518,17 @@ const Menu = (function() {
         window.addEventListener('keydown', (e) => {
             const winScreen = document.getElementById('winScreen');
             const gameOverScreen = document.getElementById('gameOverMessage');
+            const coinInsertScreenVisible = isCoinInsertVisible();
             const isInDisabledState = isMenuVisible || winScreen || gameOverScreen;
 
+            if (coinInsertScreenVisible) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    coinInsert();
+                    e.preventDefault();
+                }
+                return;
+            }
+            
             if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
                 if (isInDisabledState) {
                     e.preventDefault();
@@ -492,6 +575,7 @@ const Menu = (function() {
         hide: hideMenu,
         showPause: showPauseMenu,
         isVisible: function() { return isMenuVisible; },
-        isInActiveGame: isInActiveGame
+        isInActiveGame: isInActiveGame,
+        isCoinInsertVisible: isCoinInsertVisible
     };
 })();
