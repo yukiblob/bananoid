@@ -3,12 +3,12 @@ const Music = (function() {
     let isPlaying = false;
     let currentSequence = null;
     let masterGain = null;
-    let volume = 0.3;
+    let volume = 0.05;
 
     const chordProgressions = {
         tropical: [
             { notes: [261.63, 329.63, 392.00 ], duration: 2 }, // C major (C4, E4, G4)
-            { notes: [220.00, 261.62, 329.63 ], duration: 2 }, // A minor (A3, C4, E4)
+            { notes: [220.00, 261.63, 329.63 ], duration: 2 }, // A minor (A3, C4, E4)
             { notes: [174.61, 220.00, 261.63 ], duration: 2 }, // F major (F3, A3, C4)
             { notes: [196.00, 246.94, 293.66 ], duration: 2 } // G major (G3, B3, D4)
         ]
@@ -47,13 +47,18 @@ const Music = (function() {
         if (audioContext) return;
 
         try {
+            // Try to use SoundManager's audio context if available
+            if (typeof SoundManager !== 'undefined' && SoundManager.getState) {
+                console.log('Music: Attempting to use SoundManager audio context');
+            }
+            
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;
             if (AudioContextClass) {
                 audioContext = new AudioContextClass();
                 masterGain = audioContext.createGain();
                 masterGain.connect(audioContext.destination);
                 masterGain.gain.value = volume;
-                console.log('Music module initialized');
+                console.log('Music module initialized with volume:', volume);
             }
         } catch (error) {
             console.warn('Music module: Web Audio API not supported', error);
@@ -82,8 +87,12 @@ const Music = (function() {
         oscillator.stop(now + duration);
 
         oscillator.onended = () => {
-            oscillator.disconnect();
-            gainNode.disconnect();
+            try {
+                oscillator.disconnect();
+                gainNode.disconnect();
+            } catch (e) {
+                // Ignore
+            }
         };
 
         return oscillator;
@@ -146,7 +155,7 @@ const Music = (function() {
             case 'snare':
                 const noise = audioContext.createBufferSource();
                 const noiseGain = audioContext.createGain();
-                const filter = audioContext.createBFilter();
+                const filter = audioContext.createBiquadFilter();
 
                 const bufferSize = audioContext.sampleRate * 0.1;
                 const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
@@ -172,7 +181,7 @@ const Music = (function() {
             case 'hihat':
                 const hatOsc = audioContext.createOscillator();
                 const hatGain = audioContext.createGain();
-                const hatFilter = audioContext.createBFilter();
+                const hatFilter = audioContext.createBiquadFilter();
 
                 hatOsc.connect(hatFilter);
                 hatFilter.connect(hatGain);
@@ -191,20 +200,55 @@ const Music = (function() {
     }
 
     function playTropicalTheme() {
-        if (!audioContext || isPlaying) return;
+        if (!audioContext) {
+            console.warn('Music: No audio context available');
+            return;
+        }
 
+        if (isPlaying) {
+            console.log('Music: Already playing');
+            return;
+        }
+
+        console.log('Music: Starting tropical theme');
         isPlaying = true;
+        
+        if (audioContext.state === 'suspended') {
+            audioContext.resume().then(() => {
+                console.log('Music: Audio context resumed');
+                startMusicLoop();
+            }).catch(error => {
+                console.warn('Music: Failed to resume audio context:', error);
+                isPlaying = false;
+            });
+        } else {
+            startMusicLoop();
+        }
+    }
+
+    function startMusicLoop() {
+        if (!audioContext || !isPlaying) return;
+
         let currentTime = audioContext.currentTime;
         const loopDuration = 8;
 
         function scheduleLoop() {
-            if (!isPlaying) return;
+            if (!isPlaying || !audioContext) return;
 
+            const startTime = currentTime;
+
+            // Schedule chords
             chordProgressions.tropical.forEach((chord, index) => {
-                createChord(chord.notes, chord.duration, 'sawtooth');
+                const chordTime = startTime + (index * 2);
+                setTimeout(() => {
+                    if (isPlaying) {
+                        createChord(chord.notes, chord.duration, 'sawtooth');
+                    }
+                }, (chordTime - audioContext.currentTime) * 1000);
             });
 
-            let melodyTime = currentTime;
+            // Schedule melody
+            let melodyTime = startTime;
             melodies.tropical.forEach(melodyNote => {
                 setTimeout(() => {
                     if (isPlaying) {
@@ -214,20 +258,23 @@ const Music = (function() {
                 melodyTime += melodyNote.duration;
             });
 
+            // Schedule drums
             drumPatterns.tropical.forEach(drum => {
+                const drumTime = startTime + drum.time;
                 setTimeout(() => {
                     if (isPlaying) {
                         createDrumSound(drum.type, 0);
                     }
-                }, (currentTime + drum.time - audioContext.currentTime) * 1000);
+                }, (drumTime - audioContext.currentTime) * 1000);
             });
 
             currentTime += loopDuration;
 
-            currentSequence = setTimeout(scheduleLoop, (loopDuration * 1000) - 100);
+            currentSequence = setTimeout(scheduleLoop, (loopDuration * 1000) - 50);
         }
 
-        scheduleLoop
+        scheduleLoop();
+        console.log('Music: Music loop started');
     }
 
     function stop() {

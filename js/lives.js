@@ -161,6 +161,13 @@ const Lives = (function() {
                 case 'menu':
                     if (typeof GameState !== 'undefined' && GameState.returnToMenu) {
                         GameState.returnToMenu();
+                        setTimeout(() => {
+                            if (typeof Music !== 'undefined' && Music.playTropicalTheme) {
+                                Music.resume().then(() => {
+                                    Music.playTropicalTheme();
+                                });
+                            }
+                        }, 100);
                     }
                     break;
             }

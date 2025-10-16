@@ -62,9 +62,14 @@ const Menu = (function() {
         removeCoinInsertScreen();
         showMainMenu();
 
-        if (typeof SoundManager !== 'undefined' && SoundManager.resume) {
-            SoundManager.resume();
-        }
+        setTimeout(() => {
+            if (typeof Music !== 'undefined' && Music.playTropicalTheme) {
+                console.log('Attempting to start music...');
+                Music.resume().then(() => {
+                    Music.playTropicalTheme();
+                });
+            }
+        }, 100);
     }
 
     function createMenu() {
@@ -208,6 +213,13 @@ const Menu = (function() {
             hideMenu();
             GameState.returnToMenu();
             showMainMenu();
+            setTimeout(() => {
+                if (typeof Music !== 'undefined' && Music.playTropicalTheme) {
+                    Music.resume().then(() => {
+                        Music.playTropicalTheme();
+                    });
+                }
+            }, 100);
         };
 
         const mainMenuButton = createMenuButton('Main Menu', onClickMainMenu, 2);
@@ -280,6 +292,9 @@ const Menu = (function() {
         // Create level buttons for all available levels
         for (let i = 0; i < allLevels.length; i++) {
             const onClick = () => {
+                if (typeof Music !== 'undefined' && Music.stop) {
+                    Music.stop();
+                }
                 hideMenu();
                 GameState.loadLevel(i);
                 if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
@@ -399,6 +414,9 @@ const Menu = (function() {
         buttonsContainer.className = 'menu-buttons';
 
         const onClickStart = () => {
+            if (typeof Music !== 'undefined' && Music.stop) {
+                Music.stop();
+            }
             hideMenu();
             setTimeout(() => {
                 GameState.loadLevel(0);

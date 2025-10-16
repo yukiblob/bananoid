@@ -395,6 +395,14 @@ const GameState = (function() {
             gameArea.querySelectorAll('.block').forEach(b => b.remove());
         }
 
+        setTimeout(() => {
+            if (typeof Music !== 'undefined' && Music.playTropicalTheme) {
+                Music.resume().then(() => {
+                    Music.playTropicalTheme();
+                });
+            }
+        }, 100);
+
         // Show menu
         if (typeof Menu !== 'undefined' && Menu.show) {
             Menu.show();
@@ -459,7 +467,7 @@ const GameState = (function() {
 window.addEventListener('load', () => {
     try {
         console.log('Initializing game...');
-        if (typeof Music !== 'udnefined' && Music.init) {
+        if (typeof Music !== 'undefined' && Music.init) {
             console.log('Initializing Music module...');
             Music.init();
         }
