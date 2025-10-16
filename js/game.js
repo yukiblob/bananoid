@@ -322,10 +322,17 @@ const GameState = (function() {
         const winScreen = document.getElementById('winScreen');
         const gameOverScreen = document.getElementById('gameOverScreen');
         const particles = document.querySelectorAll('.celebration-particle');
+        const powerups = document.querySelectorAll('.powerup-pill');
 
         if (winScreen) winScreen.remove();
         if (gameOverScreen) gameOverScreen.remove();
         particles.forEach(particle => particle.remove());
+        powerups.forEach(powerup => powerup.remove());
+
+        // Clean up powerups system
+        if (typeof Powerups !== 'undefined' && Powerups.cleanAllPowerups) {
+            Powerups.cleanAllPowerups();
+        }
 
         // Reset to current level
         loadLevel(state.currentLevel);
@@ -351,6 +358,13 @@ const GameState = (function() {
             Lives.setLives(3);
         }
 
+        // Reset paddle to normal state
+        const paddle = document.getElementById('paddle');
+        if (paddle) {
+            paddle.className = 'paddle';
+            paddle.style.width = '';
+        }
+
         // Unpause game
         state.isPaused = false;
     }
@@ -360,10 +374,17 @@ const GameState = (function() {
         const winScreen = document.getElementById('winScreen');
         const gameOverScreen = document.getElementById('gameOverMessage');
         const particles = document.querySelectorAll('.celebration-particle');
+        const powerups = document.querySelectorAll('.powerup-pill');
 
         if (winScreen) winScreen.remove();
         if (gameOverScreen) gameOverScreen.remove();
         particles.forEach(particle => particle.remove());
+        powerups.forEach(powerup => powerup.remove());
+
+        // Clean up powerups system
+        if (typeof Powerups !== 'undefined' && Powerups.cleanAllPowerups) {
+            Powerups.cleanAllPowerups();
+        }
 
         // Reset game elements
         if (typeof Ball !== 'undefined' && Ball.reset) {
