@@ -207,7 +207,7 @@ const SoundManager = (function() {
             osc2.frequency.linearRampToValueAtTime(1200, audioContext.currentTime + 0.3);
             
             gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.25, audioContext.currentTime + 0.05);
+            gainNode.gain.linearRampToValueAtTime(0.18, audioContext.currentTime + 0.05);
             gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
 
             osc1.start();

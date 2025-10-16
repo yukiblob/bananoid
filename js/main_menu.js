@@ -630,6 +630,7 @@ const Menu = (function() {
         showPause: showPauseMenu,
         isVisible: function() { return isMenuVisible; },
         isInActiveGame: isInActiveGame,
-        isCoinInsertVisible: isCoinInsertVisible
+        isCoinInsertVisible: isCoinInsertVisible,
+        coinInsert: coinInsert
     };
 })();

@@ -458,6 +458,11 @@ const GameState = (function() {
 window.addEventListener('load', () => {
     try {
         console.log('Initializing game...');
+        if (typeof Music !== 'udnefined' && Music.init) {
+            console.log('Initializing Music module...');
+            Music.init();
+        }
+
         if (typeof SoundManager !== 'undefined' && SoundManager.init) {
             console.log('Initializing Sound Manager...');
             SoundManager.init();
@@ -535,6 +540,18 @@ window.addEventListener('load', () => {
         window.addEventListener('keydown', (e) => {
             if (['ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
         });
+
+        if (typeof Menu !== 'undefined') {
+            const originalCoinInsert = Menu.coinInsert;
+            Menu.coinInsert = function() {
+                originalCoinInsert.apply(this, arguments);
+                if (typeof Music !== 'undefined' && Music.playTropicalTheme) {
+                    Music.resume().then(() => {
+                        Music.playTropicalTheme();
+                    });
+                }
+            };
+        }
     } catch (err) {
         console.error('Init error:', err);
     }
