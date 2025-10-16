@@ -405,7 +405,7 @@ const Powerups = (function() {
     }
 
     function cleanAllPowerups() {
-        activePowerups.forEach((powerup, typeName) => {
+        activePowerups.forEach((powerup) => {
             clearTimeout(powerup.timeoutId);
             powerup.cleanup();
         });
@@ -422,6 +422,6 @@ const Powerups = (function() {
         update: function() {
             checkPaddleCollision();
         },
-        cleanAllPowerups
+        cleanAllPowerups: cleanAllPowerups
     };
 })();
