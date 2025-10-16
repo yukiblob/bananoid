@@ -358,15 +358,12 @@ const GameState = (function() {
     function returnToMenu() {
         // Remove win screen, game over screen, and particles
         const winScreen = document.getElementById('winScreen');
-        const gameOverScreen = document.getElementById('gameOverScreen');
+        const gameOverScreen = document.getElementById('gameOverMessage');
         const particles = document.querySelectorAll('.celebration-particle');
 
         if (winScreen) winScreen.remove();
         if (gameOverScreen) gameOverScreen.remove();
         particles.forEach(particle => particle.remove());
-
-        // Reset to first level
-        state.currentLevel = 0;
 
         // Reset game elements
         if (typeof Ball !== 'undefined' && Ball.reset) {
@@ -385,21 +382,26 @@ const GameState = (function() {
             Timer.reset();
         }
 
+        // Reset to first level
+        state.currentLevel = 0;
+
+        // Ensure game is paused
+        state.isPaused = true;
+
+        // Clear any existing blocks
+        const gameArea = document.getElementById('gameArea');
+        if (gameArea) {
+            gameArea.querySelectorAll('.block').forEach(b => b.remove());
+        }
+
         // Show menu
-        setTimeout(() => {
-            if (typeof Menu !== 'undefined' && Menu.show) {
-                // Make sure the menu element exists and is visible
-                const menuElement = document.getElementById('mainMenu');
-                if (menuElement) {
-                    menuElement.style.display = 'flex';
-                }
-                Menu.show();
-            } else {
-                // Fallback: if Menu module isn't available, just pause the game
-                state.isPaused = true;
-                console.warn('Menu module not available');
-            }
-        }, 10);
+        if (typeof Menu !== 'undefined' && Menu.show) {
+            Menu.show();
+        } else {
+            // Fallback: if Menu module isn't available, just pause the game
+            state.isPaused = true;
+            console.warn('Menu module not available');
+        }
     }
 
     // FPS

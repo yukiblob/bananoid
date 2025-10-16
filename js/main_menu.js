@@ -59,34 +59,34 @@ const Menu = (function() {
     }
 
     function handleMenuNavigation(direction) {
-    if (!isMenuVisible) return;
+        if (!isMenuVisible) return;
 
-    if (direction === 'up') {
-        selectedButtonIndex = (selectedButtonIndex - 1 + menuButtons.length) % menuButtons.length;
-    } else if (direction === 'down') {
-        selectedButtonIndex = (selectedButtonIndex + 1) % menuButtons.length;
-    }
-    updateButtonSelection();
-    
-    if (typeof SoundManager !== 'undefined' && SoundManager.playMenuNavigate) {
-        if (SoundManager.getState && SoundManager.getState() === 'running') {
-            SoundManager.playMenuNavigate();
+        if (direction === 'up') {
+            selectedButtonIndex = (selectedButtonIndex - 1 + menuButtons.length) % menuButtons.length;
+        } else if (direction === 'down') {
+            selectedButtonIndex = (selectedButtonIndex + 1) % menuButtons.length;
+        }
+        updateButtonSelection();
+
+        if (typeof SoundManager !== 'undefined' && SoundManager.playMenuNavigate) {
+            if (SoundManager.getState && SoundManager.getState() === 'running') {
+                SoundManager.playMenuNavigate();
+            }
         }
     }
-}
 
     function activateSelectedButton() {
-    if (menuButtons[selectedButtonIndex]) {
-        const onClickFunc = menuButtons[selectedButtonIndex].onClickFunction;
-        if (onClickFunc) {
-            if (typeof SoundManager !== 'undefined' && SoundManager.playMenuSelect && 
-                SoundManager.getState && SoundManager.getState() === 'running') {
-                SoundManager.playMenuSelect();
+        if (menuButtons[selectedButtonIndex]) {
+            const onClickFunc = menuButtons[selectedButtonIndex].onClickFunction;
+            if (onClickFunc) {
+                if (typeof SoundManager !== 'undefined' && SoundManager.playMenuSelect &&
+                    SoundManager.getState && SoundManager.getState() === 'running') {
+                    SoundManager.playMenuSelect();
+                }
+                onClickFunc();
             }
-            onClickFunc();
         }
     }
-}
 
     function playGameStartSound() {
         if (typeof SoundManager !== 'undefined' && SoundManager.playGameStart) {
@@ -143,15 +143,26 @@ const Menu = (function() {
         const restartButton = createMenuButton('Restart', onClickRestart, 1);
         restartButton.onClickFunction = onClickRestart;
 
+        // Return to main menu
+        const onClickMainMenu = () => {
+            hideMenu();
+            GameState.returnToMenu();
+            showMainMenu();
+        };
+
+        const mainMenuButton = createMenuButton('Main Menu', onClickMainMenu, 2);
+        mainMenuButton.onClickFunction = onClickMainMenu;
+
         // Add buttons to container
         buttonsContainer.appendChild(continueButton);
         buttonsContainer.appendChild(restartButton);
+        buttonsContainer.appendChild(mainMenuButton);
 
         // Add button containers to menu
         menuElement.appendChild(buttonsContainer);
 
         // Store buttons for navigation
-        menuButtons = [continueButton, restartButton];
+        menuButtons = [continueButton, restartButton, mainMenuButton];
 
         updateButtonSelection();
     }
@@ -416,6 +427,10 @@ const Menu = (function() {
             Timer.pause();
         }
 
+        if (currentMenu !== 'pause') {
+            currentMenu = 'main';
+        }
+
         // Show appropriate menu based on current state
         if (currentMenu === 'levelSelect') {
             showLevelSelect();
@@ -448,7 +463,7 @@ const Menu = (function() {
 
         const resumeAudioOnFirstInteraction = (e) => {
             if (audioContextResumed) return;
-            
+
             if (e.type === 'keydown') {
                 audioContextResumed = true;
                 if (typeof SoundManager !== 'undefined' && SoundManager.resume) {
@@ -458,7 +473,7 @@ const Menu = (function() {
                         console.warn('Failed to resume audio:', error);
                     });
                 }
-            } 
+            }
             else if (e.type === 'click' || e.type === 'touchstart') {
                 audioContextResumed = true;
                 if (typeof SoundManager !== 'undefined' && SoundManager.resume) {
@@ -469,17 +484,17 @@ const Menu = (function() {
             }
         };
 
-        window.addEventListener('keydown', resumeAudioOnFirstInteraction, { 
-            once: false, 
+        window.addEventListener('keydown', resumeAudioOnFirstInteraction, {
+            once: false,
             capture: true  // Important: capture before other handlers
         });
-        window.addEventListener('click', resumeAudioOnFirstInteraction, { 
-            once: false, 
-            capture: true 
+        window.addEventListener('click', resumeAudioOnFirstInteraction, {
+            once: false,
+            capture: true
         });
-        window.addEventListener('touchstart', resumeAudioOnFirstInteraction, { 
-            once: false, 
-            capture: true 
+        window.addEventListener('touchstart', resumeAudioOnFirstInteraction, {
+            once: false,
+            capture: true
         });
 
         window.addEventListener('keydown', (e) => {
