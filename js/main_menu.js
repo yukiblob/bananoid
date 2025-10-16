@@ -285,7 +285,10 @@ const Menu = (function() {
                 if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
                 if (typeof Score !== 'undefined' && Score.reset) Score.reset();
                 if (typeof Lives !== 'undefined' && Lives.setLives) Lives.setLives(3);
-                if (typeof Timer !== 'undefined' && Timer.reset) Timer.reset();
+                if (typeof Timer !== 'undefined') {
+                    if (Timer.reset) Timer.reset();
+                    if (Timer.start) Timer.start();
+                }
             };
 
             const level = allLevels[i];
