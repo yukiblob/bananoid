@@ -64,31 +64,69 @@ const GameState = (function() {
         // clear old blocks
         gameArea.querySelectorAll(".block").forEach(b => b.remove());
 
-        let allLevels = [];
+        let originalLevels = [];
+        let customLevels = [];
 
+        // Get original levels
+        originalLevels =
+            (typeof levels !== "undefined" && Array.isArray(levels)) ? levels :
+                (typeof window !== "undefined" && Array.isArray(window.levels)) ? window.levels :
+                    defaultLevels;
+
+        // Load custom levels from API
         try {
-            // Try to load from API first
             const response = await fetch('http://localhost:8080/api/levels');
             if (response.ok) {
                 const data = await response.json();
-                allLevels = data.levels || [];
+                customLevels = data.levels || [];
             }
         } catch (error) {
-            console.warn('Could not load levels from API, using default levels');
+            console.warn('Could not load levels from API:', error);
         }
 
-        // If no levels from API, use default levels
-        if (allLevels.length === 0) {
-            allLevels =
-                (typeof levels !== "undefined" && Array.isArray(levels)) ? levels :
-                    (typeof window !== "undefined" && Array.isArray(window.levels)) ? window.levels :
-                        defaultLevels;
-        }
-
+        // Combine original and custom levels
+        const allLevels = [...originalLevels, ...customLevels];
         state.totalLevels = allLevels.length;
         state.currentLevel = levelIndex;
 
-        const grid = allLevels[levelIndex]?.data || allLevels[levelIndex] || allLevels[0]?.data || allLevels[0];
+        console.log('Loading level:', levelIndex, 'Total levels:', state.totalLevels);
+        console.log('Original levels:', originalLevels.length, 'Custom levels:', customLevels.length);
+
+        if (allLevels.length === 0) {
+            console.error('No levels available to load!');
+            return;
+        }
+
+        if (levelIndex >= allLevels.length) {
+            console.warn('Level index out of bounds, loading first level instead');
+            state.currentLevel = 0;
+        }
+
+        // Handle both level formats (array format for original, object format for custom)
+        let grid;
+        const levelData = allLevels[state.currentLevel];
+
+        if (levelData && levelData.data) {
+            // Custom level format with data property
+            grid = levelData.data;
+            console.log('Loading custom level:', levelData.name || `Custom ${state.currentLevel - originalLevels.length + 1}`);
+        } else {
+            // Original level format (direct array)
+            grid = levelData;
+            console.log('Loading original level:', state.currentLevel + 1);
+        }
+
+        // Fallback to first level if current level doesn't exist
+        if (!grid) {
+            console.warn('Level data not found, loading first level');
+            const firstLevel = allLevels[0];
+            if (firstLevel && firstLevel.data) {
+                grid = firstLevel.data;
+            } else {
+                grid = firstLevel;
+            }
+            state.currentLevel = 0;
+        }
 
         const blockWidth = 80;
         const blockHeight = 30;
@@ -303,6 +341,8 @@ const GameState = (function() {
 
         // Load next level
         const nextLevelIndex = state.currentLevel + 1;
+
+        // Check if next level exists (using the total levels from state)
         if (nextLevelIndex < state.totalLevels) {
             state.currentLevel = nextLevelIndex;
             loadLevel(nextLevelIndex);
@@ -314,6 +354,10 @@ const GameState = (function() {
 
             // Unpause game
             state.isPaused = false;
+        } else {
+            // If no more levels, go back to main menu
+            console.log('All levels completed!');
+            returnToMenu();
         }
     }
 
@@ -334,7 +378,7 @@ const GameState = (function() {
             Powerups.cleanAllPowerups();
         }
 
-        // Reset to current level
+        // Reset to current level - use the stored currentLevel
         loadLevel(state.currentLevel);
 
         // Reset ball

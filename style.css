@@ -211,6 +211,36 @@ body {
     margin-bottom: 20px;
 }
 
+/* Level Select Container */
+.level-select-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 20px;
+    width: 100%;
+}
+
+/* Level Section Headers */
+.level-section-header {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 10px;
+    border-bottom: 2px solid;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+/* Make level buttons consistent width */
+.level-select-container .menu-button {
+    width: 280px;
+    min-width: 280px;
+}
+
 .controls-info {
     text-align: center;
     margin-bottom: 30px;

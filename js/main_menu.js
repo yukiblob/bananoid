@@ -257,43 +257,55 @@ const Menu = (function() {
         menuElement.appendChild(title);
 
         const levelsContainer = document.createElement('div');
-        levelsContainer.className = 'levels-grid';
+        levelsContainer.className = 'levels-select-container';
 
-        let allLevels = [];
-        let levelSources = []; // Track which levels are custom
+        // Remove the grid class and use flexbox instead
+        levelsContainer.style.display = 'flex';
+        levelsContainer.style.flexDirection = 'column';
+        levelsContainer.style.alignItems = 'center';
+        levelsContainer.style.gap = '15px';
+        levelsContainer.style.maxHeight = '70vh';
+        levelsContainer.style.overflowY = 'auto';
+        levelsContainer.style.padding = '20px';
 
+        let originalLevels = [];
+        let customLevels = [];
+
+        // Load original levels
+        originalLevels =
+            (typeof levels !== "undefined" && Array.isArray(levels)) ? levels :
+                (typeof window !== "undefined" && Array.isArray(window.levels)) ? window.levels :
+                    defaultLevels;
+
+        // Load custom levels from API
         try {
-            // Load levels from API
             const response = await fetch('http://localhost:8080/api/levels');
             if (response.ok) {
                 const data = await response.json();
-                allLevels = data.levels || [];
-                levelSources = allLevels.map(level => 'custom');
+                customLevels = data.levels || [];
             }
         } catch (error) {
-            console.warn('Could not load levels from API');
+            console.warn('Could not load custom levels from API:', error);
         }
 
-        // If no custom levels, use default levels
-        if (allLevels.length === 0) {
-            allLevels =
-                (typeof levels !== "undefined" && Array.isArray(levels)) ? levels :
-                    (typeof window !== "undefined" && Array.isArray(window.levels)) ? window.levels :
-                        defaultLevels;
-            levelSources = allLevels.map(() => 'original');
-        }
-
-        if (allLevels.length === 0) {
-            const noLevelsMsg = document.createElement('p');
-            noLevelsMsg.textContent = 'No levels available';
-            noLevelsMsg.style.color = '#ff6b6b';
-            levelsContainer.appendChild(noLevelsMsg);
+        // Create section headers
+        if (originalLevels.length > 0) {
+            const originalHeader = document.createElement('div');
+            originalHeader.className = 'level-section-header';
+            originalHeader.textContent = 'ORIGINAL LEVELS';
+            originalHeader.style.width = '100%'; // Full width
+            originalHeader.style.color = '#ffcc00';
+            originalHeader.style.marginTop = '20px';
+            originalHeader.style.marginBottom = '10px';
+            originalHeader.style.fontSize = '16px';
+            originalHeader.style.textShadow = '0 0 5px #ffcc00';
+            levelsContainer.appendChild(originalHeader);
         }
 
         menuButtons = [];
 
-        // Create level buttons for all available levels
-        for (let i = 0; i < allLevels.length; i++) {
+        // Create original level buttons
+        for (let i = 0; i < originalLevels.length; i++) {
             const onClick = () => {
                 if (typeof Music !== 'undefined' && Music.stop) {
                     Music.stop();
@@ -313,39 +325,83 @@ const Menu = (function() {
                 }
             };
 
-            const level = allLevels[i];
-            const isCustom = levelSources[i] === 'custom';
-
-            let buttonText;
-            if (isCustom) {
-                buttonText = level.name || `Custom ${i + 1}`;
-            } else {
-                buttonText = `Original ${i + 1}`;
-            }
-
-            const levelButton = createMenuButton(buttonText, i);
+            const levelButton = createMenuButton(`Original ${i + 1}`, i);
             levelButton.onClickFunction = onClick;
 
-            // Visual distinction
-            if (isCustom) {
-                levelButton.style.color = '#4ecdc4'; // Cyan for custom
-                levelButton.style.textShadow = '0 0 5px #4ecdc4';
-                levelButton.title = level.name ? `Custom: ${level.name}` : 'Custom Level';
-            } else {
-                levelButton.style.color = '#ffcc00'; // Yellow for original
-                levelButton.title = 'Original Level';
-            }
+            // Style for original levels
+            levelButton.style.color = '#ffcc00'; // Yellow for original
+            levelButton.style.textShadow = '0 0 5px #ffcc00';
+            levelButton.title = 'Original Level';
 
             levelsContainer.appendChild(levelButton);
             menuButtons.push(levelButton);
         }
 
+        // Create custom levels section
+        if (customLevels.length > 0) {
+            const customHeader = document.createElement('div');
+            customHeader.className = 'level-section-header';
+            customHeader.textContent = 'CUSTOM LEVELS';
+            customHeader.style.gridColumn = '1 / -1';
+            customHeader.style.color = '#4ecdc4';
+            customHeader.style.marginTop = '30px';
+            customHeader.style.marginBottom = '10px';
+            customHeader.style.fontSize = '16px';
+            customHeader.style.textShadow = '0 0 5px #4ecdc4';
+            levelsContainer.appendChild(customHeader);
+
+            // Create custom level buttons
+            for (let i = 0; i < customLevels.length; i++) {
+                const onClick = () => {
+                    if (typeof Music !== 'undefined' && Music.stop) {
+                        Music.stop();
+                    }
+                    hideMenu();
+
+                    // Make sure game is unpaused when starting a level
+                    GameState.setState({ isPaused: false });
+
+                    // Load custom level (offset by original levels count)
+                    GameState.loadLevel(i + originalLevels.length);
+                    if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
+                    if (typeof Score !== 'undefined' && Score.reset) Score.reset();
+                    if (typeof Lives !== 'undefined' && Lives.setLives) Lives.setLives(3);
+                    if (typeof Timer !== 'undefined') {
+                        if (Timer.reset) Timer.reset();
+                        if (Timer.start) Timer.start();
+                    }
+                };
+
+                const level = customLevels[i];
+                const buttonText = level.name || `Custom ${i + 1}`;
+
+                const levelButton = createMenuButton(buttonText, i + originalLevels.length);
+                levelButton.onClickFunction = onClick;
+
+                // Style for custom levels
+                levelButton.style.color = '#4ecdc4'; // Cyan for custom
+                levelButton.style.textShadow = '0 0 5px #4ecdc4';
+                levelButton.title = level.name ? `Custom: ${level.name}` : 'Custom Level';
+
+                levelsContainer.appendChild(levelButton);
+                menuButtons.push(levelButton);
+            }
+        }
+
+        // Add back button
+        const backSpacer = document.createElement('div');
+        backSpacer.style.height = '40px';
+        levelsContainer.appendChild(backSpacer);
+
         const onClickBack = () => {
             showMainMenu();
         };
 
-        const backButton = createMenuButton('Back', allLevels.length);
+        const backButton = createMenuButton('Back', originalLevels.length + customLevels.length);
         backButton.onClickFunction = onClickBack;
+        backButton.style.color = '#ffffff';
+        backButton.style.textShadow = '0 0 5px #ffffff';
+        backButton.style.marginTop = '20px';
 
         levelsContainer.appendChild(backButton);
         menuButtons.push(backButton);
