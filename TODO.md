@@ -1,12 +1,12 @@
-- when a bullet breaks the last tile the game doesn't end (bug)
-- powerups need to disappear after game has ended loss/win (bug)
+- when a bullet breaks the last tile the game doesn't end (bug) ✅
+- powerups need to disappear after game has ended loss/win (bug) ✅
 - level editor doesn't return to main menu (bug) ✅
 - custom_level level editor replaces the levels.js (bug)
 - high scores 1 (it must be a GO API service)
 - starting the level from level select doesn't start the timer (bug) ✅
 - powerups 10 ✅
 - pause menu 7 ✅
-- level editor 9
+- level editor 8
 - more maps 8
 - boss fight 2
 - cutscenes 1
@@ -15,3 +15,4 @@
 - win/loss screen 7 ✅
 - music/ sound effects
 - add return to main menu in pause menu ✅
+- game pauses when returning to main menu after the game has been paused once (bug) ✅

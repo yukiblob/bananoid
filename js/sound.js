@@ -19,8 +19,8 @@ const SoundManager = (function() {
             }
 
             const handleUserInteraction = (e) => {
-                const isValidGesture = 
-                    e.type === 'click' || 
+                const isValidGesture =
+                    e.type === 'click' ||
                     e.type === 'touchstart' ||
                     e.type === 'mousedown' ||
                     (e.type === 'keydown' && (
@@ -28,7 +28,7 @@ const SoundManager = (function() {
                         e.key === 'Enter' ||
                         e.key === 'ArrowUp' ||
                         e.key === 'ArrowDown' ||
-                        e.key === 'ArrowLeft' || 
+                        e.key === 'ArrowLeft' ||
                         e.key === 'ArrowRight' ||
                         (e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key))
                     ));
@@ -45,7 +45,7 @@ const SoundManager = (function() {
 
             const interactionEvents = ['click', 'keydown', 'touchstart', 'mousedown'];
             interactionEvents.forEach(event => {
-                window.addEventListener(event, handleUserInteraction, { 
+                window.addEventListener(event, handleUserInteraction, {
                     once: false,
                     capture: true
                 });
@@ -127,7 +127,7 @@ const SoundManager = (function() {
                 osc2.disconnect();
                 gainNode.disconnect();
             };
-            
+
             osc1.onended = cleanUp;
             osc2.onended = cleanUp;
         } catch (error) {
@@ -193,7 +193,7 @@ const SoundManager = (function() {
             const osc1 = audioContext.createOscillator();
             const osc2 = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
-        
+
             osc1.connect(gainNode);
             osc2.connect(gainNode);
             gainNode.connect(audioContext.destination);
@@ -205,9 +205,9 @@ const SoundManager = (function() {
             osc2.type = 'square';
             osc2.frequency.setValueAtTime(600, audioContext.currentTime);
             osc2.frequency.linearRampToValueAtTime(1200, audioContext.currentTime + 0.3);
-            
+
             gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.18, audioContext.currentTime + 0.05);
+            gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.05);
             gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
 
             osc1.start();
@@ -220,7 +220,7 @@ const SoundManager = (function() {
                 osc2.disconnect();
                 gainNode.disconnect();
             };
-        
+
             osc1.onended = cleanUp;
             osc2.onended = cleanUp;
         } catch (error) {

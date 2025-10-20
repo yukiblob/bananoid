@@ -407,9 +407,6 @@ const GameState = (function() {
         // Reset to first level
         state.currentLevel = 0;
 
-        // Ensure game is paused
-        state.isPaused = true;
-
         // Clear any existing blocks
         const gameArea = document.getElementById('gameArea');
         if (gameArea) {
@@ -424,14 +421,20 @@ const GameState = (function() {
             }
         }, 100);
 
-        // Show menu
-        if (typeof Menu !== 'undefined' && Menu.show) {
-            Menu.show();
-        } else {
-            // Fallback: if Menu module isn't available, just pause the game
-            state.isPaused = true;
-            console.warn('Menu module not available');
+        if (typeof Menu !== 'undefined') {
+            Menu.setCurrentMenu('main');
         }
+
+        // Show menu
+        setTimeout(() => {
+            if (typeof Menu !== 'undefined' && Menu.show) {
+                Menu.show();
+            } else {
+                // Fallback: if Menu module isn't available, just pause the game
+                state.isPaused = true;
+                console.warn('Menu module not available');
+            }
+        }, 10);
     }
 
     // FPS

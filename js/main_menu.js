@@ -237,6 +237,9 @@ const Menu = (function() {
         menuButtons = [continueButton, restartButton, mainMenuButton];
 
         updateButtonSelection();
+
+        menuElement.style.display = 'flex';
+        isMenuVisible = true;
     }
 
     async function showLevelSelect() {
@@ -296,6 +299,10 @@ const Menu = (function() {
                     Music.stop();
                 }
                 hideMenu();
+
+                // Make sure game is unpaused when starting a level
+                GameState.setState({ isPaused: false });
+
                 GameState.loadLevel(i);
                 if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
                 if (typeof Score !== 'undefined' && Score.reset) Score.reset();
@@ -422,6 +429,15 @@ const Menu = (function() {
                 GameState.loadLevel(0);
                 if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
                 if (typeof Score !== 'undefined' && Score.init) Score.init();
+
+                // Make sure the game is unpaused when starting
+                GameState.setState({ isPaused: false });
+
+                // Start the timer if it exists
+                if (typeof Timer !== 'undefined' && Timer.start) {
+                    Timer.start();
+                }
+
                 playGameStartSound();
             }, 10);
         };
@@ -489,15 +505,17 @@ const Menu = (function() {
     function hideMenu() {
         menuElement.style.display = 'none';
         isMenuVisible = false;
-        GameState.setState({ isPaused: false });
 
-        if (typeof Timer !== 'undefined' && Timer.start) {
-            Timer.start();
+        if (currentMenu === 'pause' || currentMenu === 'main') {
+            GameState.setState({ isPaused: false });
+
+            if (typeof Timer !== 'undefined' && Timer.start) {
+                Timer.start();
+            }
         }
 
-        if (typeof Ball !== 'undefined') {
-            setTimeout(() => {
-            }, 100);
+        if (currentMenu === 'pause') {
+            currentMenu = 'main';
         }
     }
 
@@ -509,14 +527,14 @@ const Menu = (function() {
 
         menuElement.style.display = 'flex';
         isMenuVisible = true;
-        GameState.setState({ isPaused: true });
 
-        if (typeof Timer !== 'undefined' && Timer.pause) {
-            Timer.pause();
-        }
+        // Only pause the game if showing pause menu
+        if (currentMenu === 'pause') {
+            GameState.setState({ isPaused: true });
 
-        if (currentMenu !== 'pause') {
-            currentMenu = 'main';
+            if (typeof Timer !== 'undefined' && Timer.pause) {
+                Timer.pause();
+            }
         }
 
         // Show appropriate menu based on current state
@@ -532,12 +550,11 @@ const Menu = (function() {
     }
 
     function isInActiveGame() {
-        const isPaused = gameState.getState().isPaused;
         const winScreen = document.getElementById('winScreen');
         const gameOverScreen = document.getElementById('gameOverMessage');
         const coinInsertScreen = document.getElementById('coinInsertScreen');
 
-        return !isPaused && !isMenuVisible && !winScreen && !gameOverScreen && !coinInsertScreen;
+        return !isMenuVisible && !winScreen && !gameOverScreen && !coinInsertScreen;
     }
 
     function isCoinInsertVisible() {
@@ -594,7 +611,6 @@ const Menu = (function() {
             const winScreen = document.getElementById('winScreen');
             const gameOverScreen = document.getElementById('gameOverMessage');
             const coinInsertScreenVisible = isCoinInsertVisible();
-            const isInDisabledState = isMenuVisible || winScreen || gameOverScreen;
 
             if (coinInsertScreenVisible) {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -605,23 +621,18 @@ const Menu = (function() {
             }
 
             if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
-                if (isInDisabledState) {
-                    e.preventDefault();
-                    return;
-                }
-
-                if (isMenuVisible) {
-                    hideMenu();
-                } else {
-                    if (isInActiveGame()) {
+                // Only allow pausing if we're in an active game
+                if (!winScreen && !gameOverScreen) {
+                    if (isMenuVisible && currentMenu === 'pause') {
+                        // If pause menu is already visible, hide it
+                        hideMenu();
+                    } else if (!isMenuVisible) {
+                        // If no menu is visible, show pause menu
                         currentMenu = 'pause';
                         showMenu();
-                    } else {
-                        currentMenu = 'main';
-                        showMenu();
                     }
+                    e.preventDefault();
                 }
-                e.preventDefault();
             }
 
             if (!isMenuVisible) return;
@@ -651,6 +662,9 @@ const Menu = (function() {
         showPause: showPauseMenu,
         isVisible: function() { return isMenuVisible; },
         isInActiveGame: isInActiveGame,
+        setCurrentMenu: function(menuType) {
+            currentMenu = menuType;
+        },
         isCoinInsertVisible: isCoinInsertVisible,
         coinInsert: coinInsert
     };
