@@ -445,7 +445,6 @@ const GameState = (function() {
 
         if (typeof Timer !== 'undefined' && Timer.reset) {
             Timer.reset();
-            Timer.start();
         }
 
         // Reset to first level
@@ -456,6 +455,15 @@ const GameState = (function() {
         if (gameArea) {
             gameArea.querySelectorAll('.block').forEach(b => b.remove());
         }
+
+        // Reset paddle to normal state
+        const paddle = document.getElementById('paddle');
+        if (paddle) {
+            paddle.className = 'paddle';
+            paddle.style.width = '';
+        }
+
+        state.isPaused = true;
 
         setTimeout(() => {
             if (typeof Music !== 'undefined' && Music.playTropicalTheme) {

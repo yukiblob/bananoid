@@ -562,7 +562,7 @@ const Menu = (function() {
         menuElement.style.display = 'none';
         isMenuVisible = false;
 
-        if (currentMenu === 'pause' || currentMenu === 'main') {
+        if (currentMenu === 'pause') {
             GameState.setState({ isPaused: false });
 
             if (typeof Timer !== 'undefined' && Timer.start) {
