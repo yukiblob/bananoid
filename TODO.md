@@ -16,4 +16,4 @@
 - music/ sound effects (feature)
 - add return to main menu in pause menu ✅
 - game pauses when returning to main menu after the game has been paused once (bug) ✅
-- game continues to play in the background when returning to the main menu (bug)
+- game continues to play in the background when returning to the main menu (bug) ✅
