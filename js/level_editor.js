@@ -302,6 +302,8 @@ const LevelEditor = (function() {
                 break;
 
             case 'Escape':
+            case 'p':
+            case 'P':
                 hideEditor();
                 e.preventDefault();
                 break;
@@ -333,8 +335,20 @@ const LevelEditor = (function() {
         // Remove keyboard listener
         window.removeEventListener('keydown', handleEditorKeydown);
 
-        // Return to main menu
-        if (typeof Menu !== 'undefined' && Menu.show) {
+        if (typeof GameState !== 'undefined') {
+            GameState.setState({ isPaused: true });
+        }
+
+        setTimeout(() => {
+            if (typeof Music !== 'undefined' && Music.playTropicalTheme) {
+                Music.resume().then(() => {
+                    Music.playTropicalTheme();
+                });
+            }
+        }, 100);
+
+        if (typeof Menu !== 'undefined') {
+            Menu.setCurrentMenu('main');
             Menu.show();
         }
     }
