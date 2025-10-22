@@ -481,6 +481,27 @@ const GameState = (function() {
         }, 10);
     }
 
+    function handleGameStart() {
+        if (typeof Music !== 'undefined') {
+            Music.stop();
+            setTimeout(() => {
+                Music.playCrystalHammer();
+            }, 100);
+        }
+    }
+
+    function handleGamePaused(paused) {
+        if (typeof Music !== 'undefined' && Music.setPaused) {
+            Music.setPaused(paused);
+        }
+    }
+
+    function handleReturnToMenu() {
+        if (typeof Music !== 'undefined') {
+            Music.stop();
+        }
+    }
+
     // FPS
     function updateFPS(now) {
         if (!state.lastFPSUpdate) state.lastFPSUpdate = now;
@@ -506,6 +527,9 @@ const GameState = (function() {
         restartGame,
         returnToMenu,
         showWinScreen,
+        handleGameStart: handleGameStart,
+        handleGamePaused: handleGamePaused,
+        handleReturnToMenu: handleReturnToMenu,
         startGameLoop() {
             function gameLoop(timestamp) {
                 if (!state.isPaused) {

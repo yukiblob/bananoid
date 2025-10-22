@@ -240,6 +240,10 @@ const Menu = (function() {
 
         menuElement.style.display = 'flex';
         isMenuVisible = true;
+
+        if (typeof Music !== 'undefined' && Music.setPaused) {
+            Music.setPaused(true);
+        }
     }
 
     async function showLevelSelect() {
@@ -323,6 +327,12 @@ const Menu = (function() {
                     if (Timer.reset) Timer.reset();
                     if (Timer.start) Timer.start();
                 }
+
+                setTimeout(() => {
+                    if (typeof GameState.handleGameStart === 'function') {
+                        GameState.handleGameStart();
+                    }
+                }, 800);
             };
 
             const levelButton = createMenuButton(`Original ${i + 1}`, i);
@@ -495,6 +505,12 @@ const Menu = (function() {
                 }
 
                 playGameStartSound();
+
+                setTimeout(() => {
+                    if (typeof GameState.handleGameStart === 'function') {
+                        GameState.handleGameStart();
+                    }
+                }, 800);
             }, 10);
         };
 
@@ -571,6 +587,9 @@ const Menu = (function() {
         }
 
         if (currentMenu === 'pause') {
+            if (typeof Music !== 'undefined' && Music.setPaused) {
+                Music.setPaused(false);
+            }
             currentMenu = 'main';
         }
     }
@@ -686,6 +705,11 @@ const Menu = (function() {
                         // If no menu is visible, show pause menu
                         currentMenu = 'pause';
                         showMenu();
+
+                        GameState.setState({ isPaused: true });
+                        if (typeof GameState.handleGamePause === 'function') {
+                            GameState.handleGamePause();
+                        }
                     }
                     e.preventDefault();
                 }
