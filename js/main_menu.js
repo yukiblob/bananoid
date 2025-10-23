@@ -321,23 +321,25 @@ const Menu = (function() {
                 }
                 hideMenu();
 
-                // Make sure game is unpaused when starting a level
-                GameState.setState({ isPaused: false });
-
-                GameState.loadLevel(i);
-                if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
-                if (typeof Score !== 'undefined' && Score.reset) Score.reset();
-                if (typeof Lives !== 'undefined' && Lives.setLives) Lives.setLives(3);
-                if (typeof Timer !== 'undefined') {
-                    if (Timer.reset) Timer.reset();
-                    if (Timer.start) Timer.start();
-                }
-
                 setTimeout(() => {
-                    if (typeof Music !== 'undefined' && Music.playCrystalHammer) {
-                        Music.playCrystalHammer();
+                    // Make sure game is unpaused when starting a level
+                    GameState.setState({ isPaused: false });
+
+                    GameState.loadLevel(i);
+                    if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
+                    if (typeof Score !== 'undefined' && Score.reset) Score.reset();
+                    if (typeof Lives !== 'undefined' && Lives.setLives) Lives.setLives(3);
+                    if (typeof Timer !== 'undefined') {
+                        if (Timer.reset) Timer.reset();
+                        if (Timer.start) Timer.start();
                     }
-                }, 100);
+
+                    setTimeout(() => {
+                        if (typeof Music !== 'undefined' && Music.playCrystalHammer) {
+                            Music.playCrystalHammer();
+                        }
+                    }, 100);
+                }, 10);
             };
 
             const levelButton = createMenuButton(`Original ${i + 1}`, i);
@@ -373,18 +375,20 @@ const Menu = (function() {
                     }
                     hideMenu();
 
-                    // Make sure game is unpaused when starting a level
-                    GameState.setState({ isPaused: false });
+                    setTimeout(() => {
+                        // Make sure game is unpaused when starting a level
+                        GameState.setState({ isPaused: false });
 
-                    // Load custom level (offset by original levels count)
-                    GameState.loadLevel(i + originalLevels.length);
-                    if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
-                    if (typeof Score !== 'undefined' && Score.reset) Score.reset();
-                    if (typeof Lives !== 'undefined' && Lives.setLives) Lives.setLives(3);
-                    if (typeof Timer !== 'undefined') {
-                        if (Timer.reset) Timer.reset();
-                        if (Timer.start) Timer.start();
-                    }
+                        // Load custom level (offset by original levels count)
+                        GameState.loadLevel(i + originalLevels.length);
+                        if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
+                        if (typeof Score !== 'undefined' && Score.reset) Score.reset();
+                        if (typeof Lives !== 'undefined' && Lives.setLives) Lives.setLives(3);
+                        if (typeof Timer !== 'undefined') {
+                            if (Timer.reset) Timer.reset();
+                            if (Timer.start) Timer.start();
+                        }
+                    }, 10);
                 };
 
                 const level = customLevels[i];

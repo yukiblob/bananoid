@@ -6,7 +6,9 @@
 - starting the level from level select doesn't start the timer (bug) ✅
 - powerups 10 ✅
 - pause menu 7 ✅
-- level editor 8 (feature)
+- level editor 8 (feature) ✅
+- levels should only progress in the main path not in custom levels path (bug)
+- level editor UI fixes (bug)
 - more maps 8 (feature)
 - boss fight 2 (feature)
 - cutscenes 1 (feature)

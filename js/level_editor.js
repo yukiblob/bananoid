@@ -5,7 +5,7 @@ const LevelEditor = (function() {
     let currentGrid = [];
     let cursorX = 0;
     let cursorY = 0;
-    const GRID_ROWS = 8;
+    const GRID_ROWS = 14;
     const GRID_COLS = 11;
     const BLOCK_WIDTH = 80;
     const BLOCK_HEIGHT = 30;
@@ -35,9 +35,6 @@ const LevelEditor = (function() {
                 <div class="control-group">
                     <h3>CONTROLS</h3>
                     <p><strong>Arrow Keys:</strong> Move cursor</p>
-                    <p><strong>1:</strong> Place Normal Block</p>
-                    <p><strong>2:</strong> Place Strong Block</p>
-                    <p><strong>3:</strong> Place Unbreakable Block</p>
                     <p><strong>0 or Delete:</strong> Remove Block</p>
                     <p><strong>Space:</strong> Clear All Blocks</p>
                     <p><strong>Enter:</strong> Save Level</p>
@@ -63,12 +60,6 @@ const LevelEditor = (function() {
                         <span>0 - Empty</span>
                     </div>
                 </div>
-            </div>
-
-            <div class="editor-buttons">
-                <div class="menu-button" data-action="save"><span class="arrow-indicator">▶</span><span class="button-text">Save Level</span></div>
-                <div class="menu-button" data-action="clear"><span class="arrow-indicator">▶</span><span class="button-text">Clear All</span></div>
-                <div class="menu-button" data-action="exit"><span class="arrow-indicator">▶</span><span class="button-text">Exit Editor</span></div>
             </div>
         `;
 
@@ -120,6 +111,8 @@ const LevelEditor = (function() {
 
                 cell.style.left = `${x * (BLOCK_WIDTH + GRID_GAP)}px`;
                 cell.style.top = `${y * (BLOCK_HEIGHT + GRID_GAP)}px`;
+                cell.style.width = `${BLOCK_WIDTH}px`;
+                cell.style.height = `${BLOCK_HEIGHT}px`;
 
                 gridElement.appendChild(cell);
             }
@@ -143,10 +136,15 @@ const LevelEditor = (function() {
         const cursor = document.getElementById('editorCursor');
         if (!cursor) return;
 
-        cursor.style.left = `${cursorX * (BLOCK_WIDTH + GRID_GAP)}px`;
-        cursor.style.top = `${cursorY * (BLOCK_HEIGHT + GRID_GAP)}px`;
+        const left = cursorX * (BLOCK_WIDTH + GRID_GAP);
+        const top = cursorY * (BLOCK_HEIGHT + GRID_GAP);
+
+        cursor.style.left = `${left + 20}px`;
+        cursor.style.top = `${top + 20}px`;
         cursor.style.width = `${BLOCK_WIDTH}px`;
         cursor.style.height = `${BLOCK_HEIGHT}px`;
+
+        cursor.style.transform = 'translate(0, 0)';
     }
 
     function placeBlock(blockType) {
@@ -315,8 +313,26 @@ const LevelEditor = (function() {
         isEditorVisible = true;
 
         // Hide game UI elements
-        document.querySelectorAll('#score, #livesContainer, #gameTimer, .controls').forEach(el => {
-            el.style.visibility = 'hidden';
+        const elementsToHide = [
+            '#score',
+            '#livesContainer',
+            '#gameTimer',
+            '.controls',
+            '#paddle',
+            '.ball',
+            '.powerup-pill',
+            '.bullet',
+            '.celebration-particle'
+        ];
+
+        elementsToHide.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.style.visibility = 'hidden';
+            });
+        });
+
+        document.querySelectorAll('.block').forEach(block => {
+            block.style.visibility = 'hidden';
         });
 
         // Add keyboard listener
@@ -328,8 +344,26 @@ const LevelEditor = (function() {
         isEditorVisible = false;
 
         // Show game UI elements
-        document.querySelectorAll('#score, #livesContainer, #gameTimer, .controls').forEach(el => {
-            el.style.visibility = 'visible';
+        const elementsToShow = [
+            '#score',
+            '#livesContainer',
+            '#gameTimer',
+            '.controls',
+            '#paddle',
+            '.ball',
+            '.powerup-pill',
+            '.bullet',
+            '.celebration-particle'
+        ];
+
+        elementsToShow.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.style.visibility = 'visible';
+            });
+        });
+
+        document.querySelectorAll('.block').forEach(block => {
+            block.style.visibility = 'visible';
         });
 
         // Remove keyboard listener
