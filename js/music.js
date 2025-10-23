@@ -4,10 +4,9 @@ const Music = (function() {
     let currentSequence = null;
     let masterGain = null;
     let volume = 0.05;
-    let currentSection = 0;
-    let sectionStartTime = 0;
     let isPaused = false;
     let pauseVolume = 0.025;
+    let activeLayers = new Set();
 
     const chordProgressions = {
         tropical: [
@@ -15,31 +14,6 @@ const Music = (function() {
             { notes: [220.00, 261.63, 329.63 ], duration: 2 }, // A minor (A3, C4, E4)
             { notes: [174.61, 220.00, 261.63 ], duration: 2 }, // F major (F3, A3, C4)
             { notes: [196.00, 246.94, 293.66 ], duration: 2 } // G major (G3, B3, D4)
-        ],
-        crystalSection1: [
-            { notes: [261.63, 329.63, 392.00], duration: 2 }, // C major
-            { notes: [293.66, 369.99, 440.00], duration: 2 }, // D minor
-            { notes: [329.63, 415.30, 493.88], duration: 2 }, // E minor
-            { notes: [392.00, 493.88, 587.33], duration: 2 }  // G major
-        ],
-        crystalSection2: [
-            { notes: [261.63, 311.13, 392.00], duration: 2 }, // C minor
-            { notes: [277.18, 329.63, 415.30], duration: 2 }, // C# diminished
-            { notes: [293.66, 349.23, 440.00], duration: 2 }, // D major
-            { notes: [329.63, 392.00, 493.88], duration: 2 }  // E minor
-        ],
-        crystalSection3: [
-            { notes: [329.63, 415.30, 493.88], duration: 2 }, // E minor
-            { notes: [293.66, 369.99, 440.00], duration: 2 }, // D minor
-            { notes: [261.63, 329.63, 392.00], duration: 2 }, // C major
-            { notes: [392.00, 493.88, 587.33], duration: 2 }  // G major
-        ],
-        crystalSection4: [
-            { notes: [349.23, 440.00, 523.25], duration: 1.5 }, // F major
-            { notes: [392.00, 493.88, 587.33], duration: 1.5 }, // G major
-            { notes: [440.00, 554.37, 659.25], duration: 1 },   // A minor
-            { notes: [493.88, 587.33, 698.46], duration: 1 },   // B diminished
-            { notes: [523.25, 659.25, 783.99], duration: 2 }    // C major high
         ]
     };
 
@@ -54,49 +28,6 @@ const Music = (function() {
             { note: 392.00, duration: 0.5 }, // G4
             { note: 440.00, duration: 0.5 }, // A4
             { note: 493.88, duration: 1.0 } // B4
-        ],
-        crystalSection1: [ // Main melody
-            { note: 523.25, duration: 0.5 }, // C5
-            { note: 587.33, duration: 0.5 }, // D5
-            { note: 659.25, duration: 1.0 }, // E5
-            { note: 523.25, duration: 0.5 }, // C5
-            { note: 493.88, duration: 0.5 }, // B4
-            { note: 440.00, duration: 1.0 }, // A4
-            { note: 392.00, duration: 0.5 }, // G4
-            { note: 440.00, duration: 0.5 }, // A4
-            { note: 493.88, duration: 1.0 }  // B4
-        ],
-        crystalSection2: [ // Counter melody
-            { note: 659.25, duration: 0.25 }, // E5
-            { note: 698.46, duration: 0.25 }, // F5
-            { note: 783.99, duration: 0.5 },  // G5
-            { note: 659.25, duration: 0.25 }, // E5
-            { note: 587.33, duration: 0.25 }, // D5
-            { note: 523.25, duration: 0.75 }, // C5
-            { note: 493.88, duration: 0.25 }, // B4
-            { note: 523.25, duration: 0.5 }   // C5
-        ],
-        crystalSection3: [ // Arpeggio style
-            { note: 392.00, duration: 0.25 }, // G4
-            { note: 493.88, duration: 0.25 }, // B4
-            { note: 587.33, duration: 0.25 }, // D5
-            { note: 659.25, duration: 0.75 }, // E5
-            { note: 587.33, duration: 0.25 }, // D5
-            { note: 493.88, duration: 0.25 }, // B4
-            { note: 392.00, duration: 0.5 },  // G4
-            { note: 440.00, duration: 0.25 }, // A4
-            { note: 523.25, duration: 0.75 }  // C5
-        ],
-        crystalSection4: [ // High intensity
-            { note: 783.99, duration: 0.125 }, // G5
-            { note: 880.00, duration: 0.125 }, // A5
-            { note: 987.77, duration: 0.25 },  // B5
-            { note: 880.00, duration: 0.125 }, // A5
-            { note: 783.99, duration: 0.125 }, // G5
-            { note: 698.46, duration: 0.25 },  // F5
-            { note: 659.25, duration: 0.5 },   // E5
-            { note: 587.33, duration: 0.25 },  // D5
-            { note: 523.25, duration: 0.5 }    // C5
         ]
     };
 
@@ -112,74 +43,6 @@ const Music = (function() {
             { time: 2.75, type: 'hihat' },
             { time: 3.0, type: 'kick' },
             { time: 3.5, type: 'snare' }
-        ],
-        crystalSection1: [ // Basic rock beat
-            { time: 0.0, type: 'kick' },
-            { time: 0.5, type: 'snare' },
-            { time: 1.0, type: 'kick' },
-            { time: 1.5, type: 'snare' },
-            { time: 2.0, type: 'kick' },
-            { time: 2.25, type: 'hihat' },
-            { time: 2.5, type: 'snare' },
-            { time: 2.75, type: 'hihat' },
-            { time: 3.0, type: 'kick' },
-            { time: 3.5, type: 'snare' }
-        ],
-        crystalSection2: [ // More syncopated
-            { time: 0.0, type: 'kick' },
-            { time: 0.25, type: 'hihat' },
-            { time: 0.5, type: 'snare' },
-            { time: 0.75, type: 'hihat' },
-            { time: 1.0, type: 'kick' },
-            { time: 1.25, type: 'hihat' },
-            { time: 1.5, type: 'snare' },
-            { time: 1.75, type: 'hihat' },
-            { time: 2.0, type: 'kick' },
-            { time: 2.25, type: 'snare' },
-            { time: 2.5, type: 'hihat' },
-            { time: 2.75, type: 'kick' },
-            { time: 3.0, type: 'snare' },
-            { time: 3.25, type: 'hihat' },
-            { time: 3.5, type: 'kick' },
-            { time: 3.75, type: 'hihat' }
-        ],
-        crystalSection3: [ // Double-time feel
-            { time: 0.0, type: 'kick' },
-            { time: 0.125, type: 'hihat' },
-            { time: 0.25, type: 'snare' },
-            { time: 0.375, type: 'hihat' },
-            { time: 0.5, type: 'kick' },
-            { time: 0.625, type: 'hihat' },
-            { time: 0.75, type: 'snare' },
-            { time: 0.875, type: 'hihat' },
-            { time: 1.0, type: 'kick' },
-            { time: 1.125, type: 'hihat' },
-            { time: 1.25, type: 'snare' },
-            { time: 1.375, type: 'hihat' },
-            { time: 1.5, type: 'kick' },
-            { time: 1.625, type: 'hihat' },
-            { time: 1.75, type: 'snare' },
-            { time: 1.875, type: 'hihat' }
-        ],
-        crystalSection4: [ // Intense build-up
-            { time: 0.0, type: 'kick' },
-            { time: 0.25, type: 'snare' },
-            { time: 0.5, type: 'kick' },
-            { time: 0.75, type: 'snare' },
-            { time: 1.0, type: 'kick' },
-            { time: 1.0, type: 'snare' }, // Double hit
-            { time: 1.25, type: 'hihat' },
-            { time: 1.5, type: 'kick' },
-            { time: 1.5, type: 'snare' }, // Double hit
-            { time: 1.75, type: 'hihat' },
-            { time: 2.0, type: 'kick' },
-            { time: 2.25, type: 'snare' },
-            { time: 2.5, type: 'kick' },
-            { time: 2.75, type: 'snare' },
-            { time: 3.0, type: 'kick' },
-            { time: 3.25, type: 'snare' },
-            { time: 3.5, type: 'kick' },
-            { time: 3.75, type: 'snare' }
         ]
     };
 
@@ -189,33 +52,6 @@ const Music = (function() {
         { note: 73.42, duration: 2 }, // D2  
         { note: 82.41, duration: 2 }, // E2
         { note: 98.00, duration: 2 }  // G2
-        ],
-        crystalSection1: [
-            { note: 65.41, duration: 2 }, // C2
-            { note: 73.42, duration: 2 }, // D2
-            { note: 82.41, duration: 2 }, // E2
-            { note: 98.00, duration: 2 }  // G2
-        ],
-        crystalSection2: [
-            { note: 65.41, duration: 1 }, // C2
-            { note: 69.30, duration: 1 }, // C#2
-            { note: 73.42, duration: 1 }, // D2
-            { note: 77.78, duration: 1 }, // D#2
-            { note: 82.41, duration: 2 }, // E2
-            { note: 87.31, duration: 2 }  // F2
-        ],
-        crystalSection3: [
-            { note: 82.41, duration: 1.5 }, // E2
-            { note: 73.42, duration: 1.5 }, // D2
-            { note: 65.41, duration: 2 },   // C2
-            { note: 98.00, duration: 3 }    // G2
-        ],
-        crystalSection4: [
-            { note: 87.31, duration: 0.75 }, // F2
-            { note: 98.00, duration: 0.75 }, // G2
-            { note: 110.00, duration: 0.5 }, // A2
-            { note: 116.54, duration: 0.5 }, // A#2
-            { note: 130.81, duration: 2 }    // C3
         ]
     };
 
@@ -274,6 +110,63 @@ const Music = (function() {
         return oscillator;
     }
 
+    function createPianoOscillator(frequency, duration, volumeScale = 1) {
+        if (!audioContext) return null;
+
+        const osc1 = audioContext.createOscillator();
+        const osc2 = audioContext.createOscillator();
+        const osc3 = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        const filter = audioContext.createBiquadFilter();
+
+        osc1.connect(gainNode);
+        osc2.connect(gainNode);
+        osc3.connect(gainNode);
+        gainNode.connect(filter);
+        filter.connect(masterGain);
+
+        osc1.type = 'sine';
+        osc2.type = 'triangle';
+        osc3.type = 'sawtooth';
+
+        osc1.frequency.value = frequency;
+        osc2.frequency.value = frequency * 2.01;
+        osc3.frequency.value = frequency * 3.02;
+
+        filter.type = 'lowpass';
+        filter.frequency.value = 2000 + (frequency * 0.5);
+        filter.Q.value = 1.0;
+
+        const now = audioContext.currentTime;
+
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(0.6 * volumeScale, now + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.3 * volumeScale, now + duration * 0.3);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc3.start(now);
+        osc1.stop(now + duration);
+        osc2.stop(now + duration);
+        osc3.stop(now + duration);
+
+        const cleanup = () => {
+            try {
+                osc1.disconnect();
+                osc2.disconnect();
+                osc3.disconnect();
+                gainNode.disconnect();
+                filter.disconnect();
+            } catch (e) {
+                // Ignore
+            }
+        };
+
+        osc1.onended = cleanup;
+        return { osc1, osc2, osc3, gainNode, filter };
+    }
+
     function createChord(notes, duration, type = 'sawtooth') {
         if (!audioContext) return;
 
@@ -285,28 +178,48 @@ const Music = (function() {
 
     function playBassNote(note, duration) {
         if (!audioContext) return;
-        createOscillator(note, 'sine', duration, 0.7);
-        createOscillator(note * 2, 'triangle', duration * 0.8, 0.4);
+        
+        const bassNote = createPianoOscillator(note, duration, 0.6);
+
+        const subOsc = audioContext.createOscillator();
+        const subGain = audioContext.createGain();
+
+        subOsc.connect(subGain);
+        subGain.connect(masterGain);
+
+        subOsc.type = 'sine';
+        subOsc.frequency.value = note * 0.5;
+
+        const now = audioContext.currentTime;
+        subGain.gain.setValueAtTime(0, now);
+        subGain.gain.linearRampToValueAtTime(0.3, now + 0.1);
+        subGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        subOsc.start(now);
+        subOsc.stop(now + duration);
     }
 
     function playMelodyNote(note, duration, type = 'square') {
         if (!audioContext) return;
 
-        const oscillator = createOscillator(note, type, duration, 0.9);
+        if (type === 'piano') {
+            createPianoOscillator(note, duration, 0.8);
+        } else {
+            const oscillator = createOscillator(note, type, duration, 0.9);
+            if (oscillator) {
+                const vibrato = audioContext.createOscillator();
+                const vibratoGain = audioContext.createGain();
 
-        if (oscillator) {
-            const vibrato = audioContext.createOscillator();
-            const vibratoGain = audioContext.createGain();
+                vibrato.connect(vibratoGain);
+                vibratoGain.connect(oscillator.frequency);
 
-            vibrato.connect(vibratoGain);
-            vibratoGain.connect(oscillator.frequency);
+                vibrato.type = 'sine';
+                vibrato.frequency.value = 5 + Math.random() * 2;
+                vibratoGain.gain.value = 1.5 + Math.random() * 1;
 
-            vibrato.type = 'sine';
-            vibrato.frequency.value = 5 + Math.random() * 2;
-            vibratoGain.gain.value = 1.5 + Math.random() * 1;
-
-            vibrato.start();
-            vibrato.stop(audioContext.currentTime + duration);
+                vibrato.start();
+                vibrato.stop(audioContext.currentTime + duration);
+            }
         }
     }
 
@@ -387,8 +300,7 @@ const Music = (function() {
         }
 
         if (isPlaying) {
-            console.log('Music: Already playing');
-            return;
+            stop();
         }
 
         console.log('Music: Starting tropical theme');
@@ -397,129 +309,26 @@ const Music = (function() {
         if (audioContext.state === 'suspended') {
             audioContext.resume().then(() => {
                 console.log('Music: Audio context resumed');
-                startMusicLoop();
+                startTropicalMusicLoop();
             }).catch(error => {
                 console.warn('Music: Failed to resume audio context:', error);
                 isPlaying = false;
             });
         } else {
-            startMusicLoop();
+            startTropicalMusicLoop();
         }
     }
 
-    function playCrystalHammer() {
-        if (!audioContext) {
-            console.warn('Music: no audio context available');
-            return;
-        }
-
-        if (isPlaying) {
-            console.log('Music: already playing');
-            return;
-        }
-
-        console.log('Starting Crystal Hammer');
-        isPlaying = true;
-        currentSection = 0;
-        sectionStartTime = audioContext.currentTime;
-
-        if (audioContext.state === 'suspended') {
-            audioContext.resume().then(() => {
-                console.log('Music: Audio context resumed');
-                startCrystalMusicLoop();
-            }).catch(error => {
-                console.warn('Music: Failed to resume audio context:', error);
-                isPlaying = false;
-            });
-        } else {
-            startCrystalMusicLoop();
-        }
-    }
-
-    function startCrystalMusicLoop() {
+    function startTropicalMusicLoop() {
         if (!audioContext || !isPlaying) return;
 
-        let currentTime = audioContext.currentTime;
-        const sectionDuration = 16;
-        const totalSections = 4;
-
-        function scheduleLoop() {
-            if (!isPlaying || !audioContext) return;
-
-            const startTime = currentTime;
-            const sectionName = `crystalSection${(currentSection % totalSections) +1}`;
-
-            console.log(`Music: Playing section ${sectionName}`);
-
-            const chords = chordProgressions[sectionName];
-            chords.forEach((chord, index) => {
-                const chordTime = startTime + (index * 4);
-                setTimeout(() => {
-                    if (isPlaying) {
-                        createChord(chord.notes, chord.duration, 'sawtooth');
-                    }
-                }, (chordTime - audioContext.currentTime) * 1000);
-            });
-
-            const bass = bassLines[sectionName];
-            bass.forEach((bassNote, index) => {
-                const bassDuration = sectionDuration / bass.length;
-                const bassTime = startTime + (index * bassDuration);
-                setTimeout(() => {
-                    if (isPlaying) {
-                        playBassNote(bassNote.note, bassNote.duration);
-                    }
-                }, (bassTime - audioContext.currentTime) * 1000);
-            });
-
-            const melody = melodies[sectionName];
-            let melodyTime = startTime;
-            melody.forEach(melodyNote => {
-                setTimeout(() => {
-                    if (isPlaying) {
-                        playMelodyNote(melodyNote.note, melodyNote.duration, 'square');
-                    }
-                }, (melodyTime - audioContext.currentTime) * 1000);
-                melodyTime += melodyNote.duration;
-            });
-
-            const drums = drumPatterns[sectionName];
-            drums.forEach(drum => {
-                const drumTime = startTime + drum.time;
-                setTimeout(() => {
-                    if (isPlaying && audioContext) {
-                        createDrumSound(drum.type, drumTime - audioContext.currentTime);
-                    }
-                }, (drumTime - audioContext.currentTime) * 1000);
-            });
-
-            currentTime += sectionDuration;
-            currentSection++;
-
-            currentSequence = setTimeout(scheduleLoop, (sectionDuration * 1000) - 50);
-        }
-
-        scheduleLoop();
-        console.log('Music: Crystal Hammer started');
-    }
-
-    function setPaused(paused) {
-        isPaused = paused;
-        if (masterGain) {
-            masterGain.gain.value = paused ? pauseVolume : volume;
-        }
-    }
-
-    function startMusicLoop() {
-        if (!audioContext || !isPlaying) return;
-
-        let currentTime = audioContext.currentTime;
+        let nextScheduleTime = audioContext.currentTime;
         const loopDuration = 8;
 
         function scheduleLoop() {
             if (!isPlaying || !audioContext) return;
 
-            const startTime = currentTime;
+            const startTime = nextScheduleTime;
 
             // Schedule chords
             chordProgressions.tropical.forEach((chord, index) => {
@@ -563,22 +372,425 @@ const Music = (function() {
                 }, (drumTime - audioContext.currentTime) * 1000);
             });
 
-            currentTime += loopDuration;
+            nextScheduleTime = startTime + loopDuration;
+            const timeUntilNext = (nextScheduleTime - audioContext.currentTime) * 1000;
 
-            currentSequence = setTimeout(scheduleLoop, (loopDuration * 1000) - 50);
+            if (timeUntilNext > 10) {
+                currentSequence = setTimeout(scheduleLoop, timeUntilNext - 10);
+            } else {
+                currentSequence = setTimeout(scheduleLoop, 10);
+            }
         }
 
         scheduleLoop();
         console.log('Music: Music loop started');
     }
 
+    function playCrystalHammer() {
+        if (!audioContext) {
+            console.warn('Music: no audio context available');
+            return;
+        }
+
+        if (isPlaying) {
+            stop();
+        }
+
+        console.log('Starting Crystal Hammer');
+        isPlaying = true;
+        
+        activeLayers = new Set(['foundation'])
+
+        if (audioContext.state === 'suspended') {
+            audioContext.resume().then(() => {
+                console.log('Music: Audio context resumed');
+                startCrystalMusicLoop();
+            }).catch(error => {
+                console.warn('Music: Failed to resume audio context:', error);
+                isPlaying = false;
+            });
+        } else {
+            startCrystalMusicLoop();
+        }
+    }
+
+    function startCrystalMusicLoop() {
+        if (!audioContext || !isPlaying) return;
+
+        const foundationDuration = 8;
+
+        function scheduleCrystalFoundation() {
+            if (!isPlaying || !audioContext) return;
+
+            const startTime = audioContext.currentTime;
+
+            if (activeLayers.has('foundation')) {
+                scheduleLayer(startTime, 'foundation');
+            }
+
+            activeLayers.forEach(layer => {
+                if (layer !== 'foundation') {
+                    scheduleLayer(startTime, layer);
+                }
+            });
+
+            currentSequence = setTimeout(scheduleCrystalFoundation, foundationDuration * 1000);
+        }
+        scheduleCrystalFoundation();
+        scheduleLayerProgression();
+    }
+
+    function scheduleLayerProgression() {
+        if (!isPlaying) return;
+
+        const progression = [
+            { time: 0, layers: ['foundation'] },
+            { time: 8, layers: ['foundation', 'bass'] },
+            { time: 16, layers: ['foundation', 'bass', 'arpeggio'] },
+            { time: 24, layers: ['foundation', 'bass', 'lead'] },
+            { time: 32, layers: ['foundation', 'bass', 'arpeggio', 'lead'] },
+            { time: 40, layers: ['foundation'] },
+            { time: 44, layers: ['foundation', 'bass', 'arpeggio', 'lead'] }
+        ];
+
+        const totalTime = 52;
+
+        progression.forEach(({ time, layers }) => {
+            setTimeout(() => {
+                if (isPlaying) {
+                    activeLayers = new Set(layers);
+                    console.log('Music: layers changed to:', Array.from(activeLayers));
+                }
+            }, time * 1000);
+        });
+
+        setTimeout(() => {
+            if (isPlaying) {
+                console.log('Music: restarting loop');
+                scheduleLayerProgression();
+            }
+        }, totalTime * 1000);
+    }
+
+    function scheduleLayer(startTime, layerType) {
+        switch (layerType) {
+            case 'foundation':
+                scheduleFoundationMelody(startTime);
+                scheduleFoundationDrums(startTime);
+                break;
+            case 'bass':
+                scheduleBassLayer(startTime);
+                break;
+            case 'arpeggio':
+                scheduleArpeggioLayer(startTime);
+                break;
+            case 'lead':
+                scheduleLeadLayer(startTime);
+                break;
+        }
+    }
+
+    function scheduleFoundationMelody(startTime) {
+        const section1 = [
+            { note: 659.25, duration: 0.125 }, // E5
+            { note: 659.25, duration: 0.125 }, // E5
+            { note: 587.33, duration: 0.25 },  // D5
+            { note: 659.25, duration: 0.25 },  // E5
+            { note: 587.33, duration: 0.125 }, // D5
+            { note: 659.25, duration: 0.25 },  // E5
+            { note: 659.25, duration: 0.125 }, // E5
+            { note: 587.33, duration: 0.25 },  // D5
+            { note: 659.25, duration: 0.25 },  // E5
+            { note: 523.25, duration: 0.25 }   // C5
+        ];
+
+        const section2 = [
+            { note: 587.33, duration: 0.25 },  // D5
+            { note: 523.25, duration: 0.25 },  // C5
+            { note: 587.33, duration: 0.125 }, // D5
+            { note: 659.25, duration: 0.125 }, // E5
+            { note: 523.25, duration: 0.125 }, // C5
+            { note: 587.33, duration: 0.875 }, // D5
+            { note: 523.25, duration: 0.125 }, // C5
+            { note: 587.33, duration: 0.125 }  // D5
+        ];
+
+        const section3 = [
+            { note: 698.46, duration: 0.25 },  // F5
+            { note: 659.25, duration: 0.25 },  // E5
+            { note: 523.25, duration: 0.25 },  // C5
+            { note: 349.23, duration: 1.0 },  // F4 (lower octave)
+            { note: 523.25, duration: 0.125 }, // C5
+            { note: 587.33, duration: 0.125 }  // D5
+        ];
+
+        scheduleFoundationPads(startTime);
+
+        const foundationMelody = [
+            ...section1,
+            ...section2,
+            ...section1,
+            ...section3
+        ];
+
+        let melodyTime = startTime;
+        foundationMelody.forEach(melodyNote => {
+            setTimeout(() => {
+                if (isPlaying) {
+                    playMelodyNote(melodyNote.note, melodyNote.duration, 'piano');
+                }
+            }, (melodyTime - audioContext.currentTime) * 1000);
+            melodyTime += melodyNote.duration;
+        });
+    }
+
+    function scheduleFoundationPads(startTime) {
+        if (!audioContext || !isPlaying) return;
+
+        const section1Pads = [
+            { notes: [130.81, 196.00, 293.66], duration: 2.0 }, // C3, G3, D4
+            { notes: [261.63, 392.00, 523.25], duration: 2.0 }  // C4, G4, C5
+        ];
+ 
+        const section2Pads = [
+            { notes: [98.00, 146.83], duration: 2.0 },  // G2, D3
+            { notes: [196.00, 293.66], duration: 2.0 }  // G3, D4
+        ];
+
+        const section1AgainPads = [
+            { notes: [110.00, 130.81, 164.81, 146.83], duration: 1.875 }, // A2, C3, E3, D3
+            { notes: [98.00, 146.83], duration: 0.125 }  // G2, D3
+        ];
+
+        const section3Pads = [
+            { notes: [87.31, 130.81, 164.81], duration: 1.5 }, // F2, C3, E3
+            { notes: [98.00, 146.83], duration: 0.5 }  // G2, D3
+        ];
+
+        let currentTime = startTime;
+
+        section1Pads.forEach(pad => {
+            setTimeout(() => {
+                if (isPlaying) {
+                    createPadChord(pad.notes, pad.duration);
+                }
+            }, (currentTime - audioContext.currentTime) * 1000);
+        });
+        currentTime += 2;
+
+        section2Pads.forEach(pad => {
+            setTimeout(() => {
+                if (isPlaying) {
+                    createPadChord(pad.notes, pad.duration);
+                }
+            }, (currentTime - audioContext.currentTime) * 1000);
+        });
+        currentTime += 2;
+
+        section1AgainPads.forEach(pad => {
+            setTimeout(() => {
+                if (isPlaying) {
+                    createPadChord(pad.notes, pad.duration);
+                }
+            }, (currentTime - audioContext.currentTime) * 1000);
+            currentTime += pad.duration;
+        });
+
+        section3Pads.forEach(pad => {
+            setTimeout(() => {
+                if (isPlaying) {
+                    createPadChord(pad.notes, pad.duration);
+                }
+            }, (currentTime - audioContext.currentTime) * 1000);
+            currentTime += pad.duration;
+        });
+    }
+
+    function createPadChord(notes, duration) {
+        if (!audioContext) return;
+
+        notes.forEach(note => {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(filter);
+            filter.connect(masterGain);
+
+            oscillator.type = 'sine';
+            oscillator.frequency.value = note;
+
+            filter.type = 'lowpass';
+            filter.frequency.value = 800 + (note * 0.5);
+            filter.Q.value = 0.5;
+
+            const now = audioContext.currentTime;
+
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.15, now + 0.5);
+            gainNode.gain.setValueAtTime(0.15, now + duration - 0.5);
+            gainNode.gain.linearRampToValueAtTime(0, now + duration);
+
+            oscillator.start(now);
+            oscillator.stop(now + duration);
+        });
+    }
+
+    function scheduleFoundationDrums(startTime) {
+        const foundationDrums = [
+            { time: 0.0, type: 'kick' },
+            { time: 0.125, type: 'hihat' },
+            { time: 0.25, type: 'snare' },
+            { time: 0.375, type: 'hihat' },
+            { time: 0.5, type: 'kick' },
+            { time: 0.625, type: 'hihat' },
+            { time: 0.75, type: 'snare' },
+            { time: 0.875, type: 'hihat' },
+            { time: 1.0, type: 'kick' },
+            { time: 1.125, type: 'hihat' },
+            { time: 1.25, type: 'snare' },
+            { time: 1.375, type: 'hihat' },
+            { time: 1.5, type: 'kick' },
+            { time: 1.625, type: 'hihat' },
+            { time: 1.75, type: 'snare' },
+            { time: 1.875, type: 'hihat' }
+        ];
+
+        for (let section = 0; section < 4; section++) {
+            const sectionStart = startTime + (section * 2);
+                foundationDrums.forEach(drum => {
+                const drumTime = sectionStart + drum.time;
+                setTimeout(() => {
+                    if (isPlaying && audioContext) {
+                        createDrumSound(drum.type, drumTime - audioContext.currentTime);
+                    }
+                }, (drumTime - audioContext.currentTime) * 1000);
+            });
+        }
+    }
+
+    function scheduleBassLayer(startTime) {
+        const bassSection1 = [
+            { note: 130.81, duration: 0.5 }, // C3 - follows E melody
+            { note: 130.81, duration: 0.5 }, // C3
+            { note: 146.83, duration: 0.5 }, // D3 - follows D melody  
+            { note: 130.81, duration: 0.5 }  // C3 - follows E melody
+        ];
+
+        const bassSection2 = [
+            { note: 146.83, duration: 0.5 }, // D3
+            { note: 130.81, duration: 0.5 }, // C3
+            { note: 146.83, duration: 0.5 }, // D3
+            { note: 130.81, duration: 0.5 }  // C3
+        ];
+
+        const bassSection3 = [
+            { note: 174.61, duration: 1.0 }, // F3 - matches F section
+            { note: 130.81, duration: 1.0 }  // C3 - resolution
+        ];
+
+        const bassLayer = [
+            ...bassSection1,
+            ...bassSection2,
+            ...bassSection1,
+            ...bassSection3
+        ];
+
+        let bassTime = startTime;
+        bassLayer.forEach(bassNote => {
+            setTimeout(() => {
+                if (isPlaying) {
+                    playBassNote(bassNote.note, bassNote.duration);
+                }
+            }, (bassTime - audioContext.currentTime) * 1000);
+            bassTime += bassNote.duration;
+        });
+    }
+
+    function scheduleArpeggioLayer(startTime) {
+        const arpeggioPattern = [
+            { note: 261.63, duration: 0.125 }, // C4
+            { note: 329.63, duration: 0.125 }, // E4
+            { note: 392.00, duration: 0.125 }, // G4
+            { note: 493.88, duration: 0.125 }, // B4
+            { note: 392.00, duration: 0.125 }, // G4
+            { note: 329.63, duration: 0.125 }, // E4
+            { note: 261.63, duration: 0.125 }, // C4
+            { note: 196.00, duration: 0.125 }, // G3
+        ];
+
+        const arpeggio = [
+            ...arpeggioPattern,
+            ...arpeggioPattern,
+            ...arpeggioPattern,
+            ...arpeggioPattern
+        ];
+
+        let arpTime = startTime;
+        arpeggio.forEach(arpNote => {
+            setTimeout(() => {
+                if (isPlaying) {
+                    playMelodyNote(arpNote.note, arpNote.duration, 'piano');
+                }
+            }, (arpTime - audioContext.currentTime) * 1000);
+            arpTime += arpNote.duration;
+        });
+    }
+
+    function scheduleLeadLayer(startTime) {
+        const leadSection1 = [
+            { note: 523.25, duration: 0.25 }, // C5
+            { note: 587.33, duration: 0.25 }, // D5
+            { note: 659.25, duration: 0.5 }, // E5
+            { note: 523.25, duration: 0.5 }, // C5
+            { note: 587.33, duration: 0.5 }  // D5
+        ];
+
+        const leadSection2 = [
+            { note: 659.25, duration: 0.5 }, // E5
+            { note: 587.33, duration: 0.5 }, // D5
+            { note: 523.25, duration: 1.0 }  // C5
+        ];
+
+        const leadSection3 = [
+            { note: 698.46, duration: 0.5 }, // F5
+            { note: 659.25, duration: 0.5 }, // E5
+            { note: 523.25, duration: 1.0 }  // C5
+        ];
+
+        const leadMelody = [
+            ...leadSection1,
+            ...leadSection2,
+            ...leadSection1,
+            ...leadSection3
+        ];
+
+        let leadTime = startTime;
+        leadMelody.forEach(leadNote => {
+            setTimeout(() => {
+                if (isPlaying) {
+                    playMelodyNote(leadNote.note, leadNote.duration, 'piano');
+                }
+            }, (leadTime - audioContext.currentTime) * 1000);
+            leadTime += leadNote.duration;
+        });
+    }
+
+    function setPaused(paused) {
+        isPaused = paused;
+        if (masterGain) {
+            masterGain.gain.value = paused ? pauseVolume : volume;
+        }
+    }
+
     function stop() {
         isPlaying = false;
+        activeLayers.clear();
         if (currentSequence) {
             clearTimeout(currentSequence);
             currentSequence = null;
         }
-        currentSection = 0;
     }
 
     function setVolume(newVolume) {
@@ -604,6 +816,9 @@ const Music = (function() {
         setVolume: setVolume,
         setPaused: setPaused,
         resume: resume,
-        isPlaying: function() { return isPlaying; }
-    };
+        isPlaying: function() { return isPlaying; },
+        setLayers: function(layers) {
+            activeLayers = new Set(layers);
+        }
+    }
 })();

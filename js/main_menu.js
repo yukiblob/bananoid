@@ -202,6 +202,12 @@ const Menu = (function() {
             setTimeout(() => {
                 GameState.restartGame();
                 playGameStartSound();
+                if (typeof Music !== 'undefined' && Music.playCrystalHammer) {
+                    Music.stop();
+                    setTimeout(() => {
+                        Music.playCrystalHammer();
+                    }, 100);
+                }
             }, 10);
         };
 
@@ -215,9 +221,8 @@ const Menu = (function() {
             showMainMenu();
             setTimeout(() => {
                 if (typeof Music !== 'undefined' && Music.playTropicalTheme) {
-                    Music.resume().then(() => {
-                        Music.playTropicalTheme();
-                    });
+                    Music.stop();
+                    Music.playTropicalTheme();
                 }
             }, 100);
         };
@@ -329,10 +334,10 @@ const Menu = (function() {
                 }
 
                 setTimeout(() => {
-                    if (typeof GameState.handleGameStart === 'function') {
-                        GameState.handleGameStart();
+                    if (typeof Music !== 'undefined' && Music.playCrystalHammer) {
+                        Music.playCrystalHammer();
                     }
-                }, 800);
+                }, 100);
             };
 
             const levelButton = createMenuButton(`Original ${i + 1}`, i);
@@ -507,10 +512,10 @@ const Menu = (function() {
                 playGameStartSound();
 
                 setTimeout(() => {
-                    if (typeof GameState.handleGameStart === 'function') {
-                        GameState.handleGameStart();
+                    if (typeof Music !== 'undefined' && Music.playCrystalHammer) {
+                        Music.playCrystalHammer();
                     }
-                }, 800);
+                }, 100);
             }, 10);
         };
 

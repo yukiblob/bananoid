@@ -409,6 +409,14 @@ const GameState = (function() {
             paddle.style.width = '';
         }
 
+        if (typeof Music !== 'undefined' && Music.playCrystalHammer && SoundManager.playGameStart) {
+            Music.stop();
+            SoundManager.playGameStart();
+            setTimeout(() => {
+                Music.playCrystalHammer();
+            }, 100);
+        }
+
         // Unpause game
         state.isPaused = false;
     }
@@ -467,9 +475,8 @@ const GameState = (function() {
 
         setTimeout(() => {
             if (typeof Music !== 'undefined' && Music.playTropicalTheme) {
-                Music.resume().then(() => {
-                    Music.playTropicalTheme();
-                });
+                Music.stop();
+                Music.playTropicalTheme();
             }
         }, 100);
 
@@ -487,15 +494,6 @@ const GameState = (function() {
                 console.warn('Menu module not available');
             }
         }, 10);
-    }
-
-    function handleGameStart() {
-        if (typeof Music !== 'undefined') {
-            Music.stop();
-            setTimeout(() => {
-                Music.playCrystalHammer();
-            }, 100);
-        }
     }
 
     function handleGamePaused(paused) {
@@ -535,7 +533,6 @@ const GameState = (function() {
         restartGame,
         returnToMenu,
         showWinScreen,
-        handleGameStart: handleGameStart,
         handleGamePaused: handleGamePaused,
         handleReturnToMenu: handleReturnToMenu,
         startGameLoop() {
