@@ -3,10 +3,14 @@ const Music = (function() {
     let isPlaying = false;
     let currentSequence = null;
     let masterGain = null;
-    let volume = 0.05;
+    let volume = 0.035;
     let isPaused = false;
-    let pauseVolume = 0.025;
+    let pauseVolume = 0.02;
     let activeLayers = new Set();
+
+    let scheduledTimeouts = new Set();
+    let activeOscillators = new Set();
+    let nextScheduledTime = 0;
 
     const chordProgressions = {
         tropical: [
@@ -98,7 +102,10 @@ const Music = (function() {
         oscillator.start(now);
         oscillator.stop(now + duration);
 
+        activeOscillators.add(oscillator);
+
         oscillator.onended = () => {
+            activeOscillators.delete(oscillator);
             try {
                 oscillator.disconnect();
                 gainNode.disconnect();
@@ -118,6 +125,10 @@ const Music = (function() {
         const osc3 = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         const filter = audioContext.createBiquadFilter();
+
+        activeOscillators.add(osc1);
+        activeOscillators.add(osc2);
+        activeOscillators.add(osc3);
 
         osc1.connect(gainNode);
         osc2.connect(gainNode);
@@ -152,6 +163,9 @@ const Music = (function() {
         osc3.stop(now + duration);
 
         const cleanup = () => {
+            activeOscillators.delete(osc1);
+            activeOscillators.delete(osc2);
+            activeOscillators.delete(osc3);
             try {
                 osc1.disconnect();
                 osc2.disconnect();
@@ -167,6 +181,85 @@ const Music = (function() {
         return { osc1, osc2, osc3, gainNode, filter };
     }
 
+    function playArcadeMelody(note, duration, type = 'arcade') {
+        if (!audioContext) return;
+
+        const osc1 = audioContext.createOscillator();
+        const osc2 = audioContext.createOscillator();
+        const osc3 = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        const filter = audioContext.createBiquadFilter();
+        const lfo = audioContext.createOscillator();
+        const lfoGain = audioContext.createGain();
+
+        osc1.connect(gainNode);
+        osc2.connect(gainNode);
+        osc3.connect(gainNode);
+        gainNode.connect(filter);
+        filter.connect(masterGain);
+
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc1.detune);
+        lfoGain.connect(osc2.detune);
+
+        osc1.type = 'square';
+        osc2.type = 'sawtooth';
+        osc3.type = 'triangle';
+
+        osc1.frequency.value = note;
+        osc2.frequency.value = note * 1.005;
+        osc3.frequency.value = note * 0.995;
+
+        lfo.frequency.value = 0.3 + Math.random() * 0.5;
+        lfoGain.gain.value = 5 + Math.random() * 5;
+
+        filter.type = 'lowpass';
+        filter.frequency.value = 2000 + (note * 0.8);
+        filter.Q.value = 0.7;
+
+        const now = audioContext.currentTime;
+
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(0.8, now + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.6, now + duration * 0.1);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc3.start(now);
+        lfo.start(now);
+
+        osc1.stop(now + duration);
+        osc2.stop(now + duration);
+        osc3.stop(now + duration);
+        lfo.stop(now + duration);
+
+        activeOscillators.add(osc1);
+        activeOscillators.add(osc2);
+        activeOscillators.add(osc3);
+        activeOscillators.add(lfo);
+
+        const cleanup = () => {
+            activeOscillators.delete(osc1);
+            activeOscillators.delete(osc2);
+            activeOscillators.delete(osc3);
+            activeOscillators.delete(lfo);
+            try {
+                osc1.disconnect();
+                osc2.disconnect();
+                osc3.disconnect();
+                gainNode.disconnect();
+                filter.disconnect();
+                lfo.disconnect();
+                lfoGain.disconnect();
+            } catch (e) {
+                // Ignore
+            }
+        };
+
+        osc1.onended = cleanup;
+    }
+
     function createChord(notes, duration, type = 'sawtooth') {
         if (!audioContext) return;
 
@@ -179,7 +272,7 @@ const Music = (function() {
     function playBassNote(note, duration) {
         if (!audioContext) return;
         
-        const bassNote = createPianoOscillator(note, duration, 0.6);
+        createPianoOscillator(note, duration, 0.6);
 
         const subOsc = audioContext.createOscillator();
         const subGain = audioContext.createGain();
@@ -233,6 +326,18 @@ const Music = (function() {
                 const kickOsc = audioContext.createOscillator();
                 const kickGain = audioContext.createGain();
 
+                activeOscillators.delete(kickOsc);
+
+                kickOsc.onended = () => {
+                    activeOscillators.delete(kickOsc);
+                    try {
+                        kickOsc.disconnect();
+                        kickGain.disconnect();
+                    } catch (e) {
+                        // Ignore
+                    }
+                };
+
                 kickOsc.connect(kickGain);
                 kickGain.connect(masterGain);
 
@@ -270,6 +375,9 @@ const Music = (function() {
 
                 noise.start(now);
                 noise.stop(now + 0.3);
+
+                activeOscillators.add(noise);
+                noise.onended = () => activeOscillators.delete(noise);
                 break;
 
             case 'hihat':
@@ -289,6 +397,9 @@ const Music = (function() {
 
                 hatOsc.start(now);
                 hatOsc.stop(now + 0.1);
+
+                activeOscillators.add(hatOsc);
+                hatOsc.onended = () => activeOscillators.delete(hatOsc);
                 break;
         }
     }
@@ -333,43 +444,50 @@ const Music = (function() {
             // Schedule chords
             chordProgressions.tropical.forEach((chord, index) => {
                 const chordTime = startTime + (index * 2);
-                setTimeout(() => {
+                const timeoutId  = setTimeout(() => {
+                    scheduledTimeouts.delete(timeoutId);
                     if (isPlaying) {
                         createChord(chord.notes, chord.duration, 'sawtooth');
                     }
                 }, (chordTime - audioContext.currentTime) * 1000);
+                scheduledTimeouts.add(timeoutId);
             });
 
             // Schedule bass
             const tropicalBass = bassLines.tropical;
             tropicalBass.forEach((bassNote, index) => {
                 const bassTime = startTime + (index * 2);
-                setTimeout(() => {
+                const timeoutId = setTimeout(() => {
+                    scheduledTimeouts.delete(timeoutId)
                     if (isPlaying) {
                         playBassNote(bassNote.note, bassNote.duration);
                     }
                 }, (bassTime - audioContext.currentTime) * 1000);
+                scheduledTimeouts.add(timeoutId);
             });
 
             // Schedule melody
             let melodyTime = startTime;
             melodies.tropical.forEach(melodyNote => {
-                setTimeout(() => {
+                const timeoutId = setTimeout(() => {
+                    scheduledTimeouts.delete(timeoutId);
                     if (isPlaying) {
                         playMelodyNote(melodyNote.note, melodyNote.duration, 'square');
                     }
                 }, (melodyTime - audioContext.currentTime) * 1000);
                 melodyTime += melodyNote.duration;
+                scheduledTimeouts.add(timeoutId);
             });
 
             // Schedule drums
             drumPatterns.tropical.forEach(drum => {
                 const drumTime = startTime + drum.time;
-                setTimeout(() => {
+                const timeoutId = setTimeout(() => {
                     if (isPlaying && audioContext) {
                         createDrumSound(drum.type, drumTime - audioContext.currentTime);
                     }
                 }, (drumTime - audioContext.currentTime) * 1000);
+                scheduledTimeouts.add(timeoutId);
             });
 
             nextScheduleTime = startTime + loopDuration;
@@ -377,8 +495,10 @@ const Music = (function() {
 
             if (timeUntilNext > 10) {
                 currentSequence = setTimeout(scheduleLoop, timeUntilNext - 10);
+                scheduledTimeouts.add(currentSequence);
             } else {
                 currentSequence = setTimeout(scheduleLoop, 10);
+                scheduledTimeouts.add(currentSequence);
             }
         }
 
@@ -435,6 +555,7 @@ const Music = (function() {
             });
 
             currentSequence = setTimeout(scheduleCrystalFoundation, foundationDuration * 1000);
+            scheduledTimeouts.add(currentSequence);
         }
         scheduleCrystalFoundation();
         scheduleLayerProgression();
@@ -456,20 +577,24 @@ const Music = (function() {
         const totalTime = 52;
 
         progression.forEach(({ time, layers }) => {
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
+                scheduledTimeouts.delete(timeoutId);
                 if (isPlaying) {
                     activeLayers = new Set(layers);
                     console.log('Music: layers changed to:', Array.from(activeLayers));
                 }
             }, time * 1000);
+            scheduledTimeouts.add(timeoutId)
         });
 
-        setTimeout(() => {
+        const loopTimeoutId = setTimeout(() => {
+            scheduledTimeouts.delete(loopTimeoutId);
             if (isPlaying) {
                 console.log('Music: restarting loop');
                 scheduleLayerProgression();
             }
         }, totalTime * 1000);
+        scheduledTimeouts.add(loopTimeoutId);
     }
 
     function scheduleLayer(startTime, layerType) {
@@ -535,12 +660,14 @@ const Music = (function() {
 
         let melodyTime = startTime;
         foundationMelody.forEach(melodyNote => {
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
+                scheduledTimeouts.delete(timeoutId);
                 if (isPlaying) {
-                    playMelodyNote(melodyNote.note, melodyNote.duration, 'piano');
+                    playArcadeMelody(melodyNote.note, melodyNote.duration, 'piano');
                 }
             }, (melodyTime - audioContext.currentTime) * 1000);
             melodyTime += melodyNote.duration;
+            scheduledTimeouts.add(timeoutId);
         });
     }
 
@@ -570,39 +697,47 @@ const Music = (function() {
         let currentTime = startTime;
 
         section1Pads.forEach(pad => {
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
+                scheduledTimeouts.delete(timeoutId);
                 if (isPlaying) {
                     createPadChord(pad.notes, pad.duration);
                 }
             }, (currentTime - audioContext.currentTime) * 1000);
+            scheduledTimeouts.add(timeoutId);
         });
         currentTime += 2;
 
         section2Pads.forEach(pad => {
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
+                scheduledTimeouts.delete(timeoutId);
                 if (isPlaying) {
                     createPadChord(pad.notes, pad.duration);
                 }
             }, (currentTime - audioContext.currentTime) * 1000);
+            scheduledTimeouts.add(timeoutId);
         });
         currentTime += 2;
 
         section1AgainPads.forEach(pad => {
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
+                scheduledTimeouts.delete(timeoutId);
                 if (isPlaying) {
                     createPadChord(pad.notes, pad.duration);
                 }
             }, (currentTime - audioContext.currentTime) * 1000);
             currentTime += pad.duration;
+            scheduledTimeouts.add(timeoutId);
         });
 
         section3Pads.forEach(pad => {
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
+                scheduledTimeouts.delete(timeoutId);
                 if (isPlaying) {
                     createPadChord(pad.notes, pad.duration);
                 }
             }, (currentTime - audioContext.currentTime) * 1000);
             currentTime += pad.duration;
+            scheduledTimeouts.add(timeoutId);
         });
     }
 
@@ -661,11 +796,13 @@ const Music = (function() {
             const sectionStart = startTime + (section * 2);
                 foundationDrums.forEach(drum => {
                 const drumTime = sectionStart + drum.time;
-                setTimeout(() => {
+                const timeoutId = setTimeout(() => {
+                    scheduledTimeouts.delete(timeoutId);
                     if (isPlaying && audioContext) {
                         createDrumSound(drum.type, drumTime - audioContext.currentTime);
                     }
                 }, (drumTime - audioContext.currentTime) * 1000);
+                scheduledTimeouts.add(timeoutId);
             });
         }
     }
@@ -699,12 +836,14 @@ const Music = (function() {
 
         let bassTime = startTime;
         bassLayer.forEach(bassNote => {
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
+                scheduledTimeouts.delete(timeoutId);
                 if (isPlaying) {
                     playBassNote(bassNote.note, bassNote.duration);
                 }
             }, (bassTime - audioContext.currentTime) * 1000);
             bassTime += bassNote.duration;
+            scheduledTimeouts.add(timeoutId);
         });
     }
 
@@ -729,12 +868,14 @@ const Music = (function() {
 
         let arpTime = startTime;
         arpeggio.forEach(arpNote => {
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
+                scheduledTimeouts.delete(timeoutId);
                 if (isPlaying) {
                     playMelodyNote(arpNote.note, arpNote.duration, 'piano');
                 }
             }, (arpTime - audioContext.currentTime) * 1000);
             arpTime += arpNote.duration;
+            scheduledTimeouts.add(timeoutId);
         });
     }
 
@@ -768,12 +909,14 @@ const Music = (function() {
 
         let leadTime = startTime;
         leadMelody.forEach(leadNote => {
-            setTimeout(() => {
+            const timeoutId = setTimeout(() => {
+                scheduledTimeouts.delete(timeoutId);
                 if (isPlaying) {
                     playMelodyNote(leadNote.note, leadNote.duration, 'piano');
                 }
             }, (leadTime - audioContext.currentTime) * 1000);
             leadTime += leadNote.duration;
+            scheduledTimeouts.add(timeoutId);
         });
     }
 
@@ -787,10 +930,50 @@ const Music = (function() {
     function stop() {
         isPlaying = false;
         activeLayers.clear();
+        
+        scheduledTimeouts.forEach(timeoutId => {
+            clearTimeout(timeoutId);
+        });
+        scheduledTimeouts.clear();
+
+        activeOscillators.forEach(oscillator => {
+            try {
+                oscillator.stop();
+                oscillator.disconnect();
+            } catch (e) {
+                // Ignore
+            }
+        });
+
         if (currentSequence) {
             clearTimeout(currentSequence);
             currentSequence = null;
         }
+
+        if (masterGain && audioContext) {
+            const now = audioContext.currentTime;
+            masterGain.gain.cancelScheduledValues(now);
+            masterGain.gain.setValueAtTime(masterGain.gain.value, now);
+            masterGain.gain.linearRampToValueAtTime(0.001, now + 0.1);
+        }
+
+        console.log('Music: Stopped all playback');
+    }
+
+    function fadeStop(fadeDuration = 0.1) {
+        if (!audioContext || !masterGain) {
+            stop();
+            return;
+        }
+
+        const now = audioContext.currentTime;
+        masterGain.gain.cancelScheduledValues(now);
+        masterGain.gain.setValueAtTime(masterGain.gain.value, now);
+        masterGain.gain.linearRampToValueAtTime(0.001, now + fadeDuration);
+
+        setTimeout(() => {
+            stop();
+        }, fadeDuration * 1000);
     }
 
     function setVolume(newVolume) {
@@ -813,6 +996,7 @@ const Music = (function() {
         playTropicalTheme: playTropicalTheme,
         playCrystalHammer: playCrystalHammer,
         stop: stop,
+        fadeStop: fadeStop,
         setVolume: setVolume,
         setPaused: setPaused,
         resume: resume,

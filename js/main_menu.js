@@ -203,7 +203,7 @@ const Menu = (function() {
                 GameState.restartGame();
                 playGameStartSound();
                 if (typeof Music !== 'undefined' && Music.playCrystalHammer) {
-                    Music.stop();
+                    Music.fadeStop();
                     setTimeout(() => {
                         Music.playCrystalHammer();
                     }, 100);
@@ -221,7 +221,7 @@ const Menu = (function() {
             showMainMenu();
             setTimeout(() => {
                 if (typeof Music !== 'undefined' && Music.playTropicalTheme) {
-                    Music.stop();
+                    Music.fadeStop();
                     Music.playTropicalTheme();
                 }
             }, 100);
@@ -317,7 +317,7 @@ const Menu = (function() {
         for (let i = 0; i < originalLevels.length; i++) {
             const onClick = () => {
                 if (typeof Music !== 'undefined' && Music.stop) {
-                    Music.stop();
+                    Music.fadeStop();
                 }
                 hideMenu();
 
@@ -371,7 +371,7 @@ const Menu = (function() {
             for (let i = 0; i < customLevels.length; i++) {
                 const onClick = () => {
                     if (typeof Music !== 'undefined' && Music.stop) {
-                        Music.stop();
+                        Music.fadeStop();
                     }
                     hideMenu();
 
@@ -497,7 +497,7 @@ const Menu = (function() {
 
         const onClickStart = () => {
             if (typeof Music !== 'undefined' && Music.stop) {
-                Music.stop();
+                Music.fadeStop();
             }
             hideMenu();
             setTimeout(() => {
