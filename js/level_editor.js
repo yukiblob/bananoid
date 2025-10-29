@@ -7,8 +7,8 @@ const LevelEditor = (function() {
     let cursorY = 0;
     const GRID_ROWS = 14;
     const GRID_COLS = 11;
-    const BLOCK_WIDTH = 80;
-    const BLOCK_HEIGHT = 30;
+    const BLOCK_WIDTH = 45;
+    const BLOCK_HEIGHT = 20;
     const GRID_GAP = 2;
 
     function createEditor() {
@@ -22,24 +22,43 @@ const LevelEditor = (function() {
         // Create editor UI
         editorElement.innerHTML = `
              <div class="editor-header">
-                <h1 class="menu-title">LEVEL EDITOR</h1>
                 <h2 class="menu-subtitle">CREATE YOUR OWN LEVEL</h2>
             </div>
 
-            <div class="editor-grid-container">
-                <div class="editor-grid" id="editorGrid"></div>
-                <div class="editor-cursor" id="editorCursor"></div>
-            </div>
-
-            <div class="editor-controls">
-                <div class="control-group">
-                    <h3>CONTROLS</h3>
-                    <p><strong>Arrow Keys:</strong> Move cursor</p>
-                    <p><strong>0 or Delete:</strong> Remove Block</p>
-                    <p><strong>Space:</strong> Clear All Blocks</p>
-                    <p><strong>Enter:</strong> Save Level</p>
-                    <p><strong>Escape:</strong> Exit Editor</p>
+             <div class="editor-main-content">
+        <div class="editor-left-panel">
+            <div class="editor-grid-with-labels">
+                <div class="column-labels">
+                    ${Array.from({ length: GRID_COLS }, (_, i) =>
+            `<div class="column-label">${i + 1}</div>`
+        ).join('')}
                 </div>
+
+                <div class="grid-and-row-labels">
+                    <div class="row-labels">
+                        ${Array.from({ length: GRID_ROWS }, (_, i) =>
+            `<div class="row-label">${i + 1}</div>`
+        ).join('')}
+                    </div>
+
+                    <div class="editor-grid-container">
+                        <div class="editor-grid" id="editorGrid"></div>
+                        <div class="editor-cursor" id="editorCursor"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <div class="editor-right-panel">
+                <div class="editor-controls">
+                    <div class="control-group">
+                        <h3>CONTROLS</h3>
+                        <p><strong>Arrow Keys:</strong> Move cursor</p>
+                        <p><strong>0 or Delete:</strong> Remove Block</p>
+                        <p><strong>Space:</strong> Clear All Blocks</p>
+                        <p><strong>Enter:</strong> Save Level</p>
+                        <p><strong>Escape:</strong> Exit Editor</p>
+                    </div>
 
                 <div class="block-preview">
                     <h3>BLOCK TYPES</h3>
@@ -139,8 +158,8 @@ const LevelEditor = (function() {
         const left = cursorX * (BLOCK_WIDTH + GRID_GAP);
         const top = cursorY * (BLOCK_HEIGHT + GRID_GAP);
 
-        cursor.style.left = `${left + 20}px`;
-        cursor.style.top = `${top + 20}px`;
+        cursor.style.left = `${left + 9}px`;
+        cursor.style.top = `${top + 9}px`;
         cursor.style.width = `${BLOCK_WIDTH}px`;
         cursor.style.height = `${BLOCK_HEIGHT}px`;
 
