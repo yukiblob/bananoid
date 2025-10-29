@@ -4,7 +4,9 @@ const Music = (function() {
     let currentSequence = null;
     let masterGain = null;
     let volume = 0.035;
+    let volume = 0.035;
     let isPaused = false;
+    let pauseVolume = 0.02;
     let pauseVolume = 0.02;
     let activeLayers = new Set();
 
@@ -14,10 +16,10 @@ const Music = (function() {
 
     const chordProgressions = {
         tropical: [
-            { notes: [261.63, 329.63, 392.00 ], duration: 2 }, // C major (C4, E4, G4)
-            { notes: [220.00, 261.63, 329.63 ], duration: 2 }, // A minor (A3, C4, E4)
-            { notes: [174.61, 220.00, 261.63 ], duration: 2 }, // F major (F3, A3, C4)
-            { notes: [196.00, 246.94, 293.66 ], duration: 2 } // G major (G3, B3, D4)
+            { notes: [261.63, 329.63, 392.00], duration: 2 }, // C major (C4, E4, G4)
+            { notes: [220.00, 261.63, 329.63], duration: 2 }, // A minor (A3, C4, E4)
+            { notes: [174.61, 220.00, 261.63], duration: 2 }, // F major (F3, A3, C4)
+            { notes: [196.00, 246.94, 293.66], duration: 2 } // G major (G3, B3, D4)
         ]
     };
 
@@ -52,10 +54,10 @@ const Music = (function() {
 
     const bassLines = {
         tropical: [
-        { note: 65.41, duration: 2 }, // C2
-        { note: 73.42, duration: 2 }, // D2  
-        { note: 82.41, duration: 2 }, // E2
-        { note: 98.00, duration: 2 }  // G2
+            { note: 65.41, duration: 2 }, // C2
+            { note: 73.42, duration: 2 }, // D2  
+            { note: 82.41, duration: 2 }, // E2
+            { note: 98.00, duration: 2 }  // G2
         ]
     };
 
@@ -67,7 +69,7 @@ const Music = (function() {
             if (typeof SoundManager !== 'undefined' && SoundManager.getState) {
                 console.log('Music: Attempting to use SoundManager audio context');
             }
-            
+
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;
             if (AudioContextClass) {
                 audioContext = new AudioContextClass();
@@ -416,7 +418,7 @@ const Music = (function() {
 
         console.log('Music: Starting tropical theme');
         isPlaying = true;
-        
+
         if (audioContext.state === 'suspended') {
             audioContext.resume().then(() => {
                 console.log('Music: Audio context resumed');
@@ -518,7 +520,7 @@ const Music = (function() {
 
         console.log('Starting Crystal Hammer');
         isPlaying = true;
-        
+
         activeLayers = new Set(['foundation'])
 
         if (audioContext.state === 'suspended') {
@@ -678,7 +680,7 @@ const Music = (function() {
             { notes: [130.81, 196.00, 293.66], duration: 2.0 }, // C3, G3, D4
             { notes: [261.63, 392.00, 523.25], duration: 2.0 }  // C4, G4, C5
         ];
- 
+
         const section2Pads = [
             { notes: [98.00, 146.83], duration: 2.0 },  // G2, D3
             { notes: [196.00, 293.66], duration: 2.0 }  // G3, D4
@@ -794,7 +796,7 @@ const Music = (function() {
 
         for (let section = 0; section < 4; section++) {
             const sectionStart = startTime + (section * 2);
-                foundationDrums.forEach(drum => {
+            foundationDrums.forEach(drum => {
                 const drumTime = sectionStart + drum.time;
                 const timeoutId = setTimeout(() => {
                     scheduledTimeouts.delete(timeoutId);

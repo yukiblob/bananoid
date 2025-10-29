@@ -167,6 +167,15 @@ const GameState = (function() {
         return false;
     }
 
+    function getOriginalLevelsCount() {
+        const originalLevels =
+            (typeof levels !== "undefined" && Array.isArray(levels)) ? levels :
+                (typeof window !== "undefined" && Array.isArray(window.levels)) ? window.levels :
+                    defaultLevels;
+
+        return originalLevels.length;
+    }
+
     function showWinScreen() {
         // Pause the game
         state.isPaused = true;
@@ -196,7 +205,7 @@ const GameState = (function() {
                     <p>Lives Remaining: <span class="lives-value">${livesLeft}</span></p>
                 </div>
                 <div class="menu-buttons">
-                    ${state.currentLevel < state.totalLevels - 1 ?
+                    ${state.currentLevel < getOriginalLevelsCount() - 1 ?
                 '<div class="menu-button" data-action="nextLevel"><span class="arrow-indicator">▶</span><span class="button-text">Next Level</span></div>' :
                 ''
             }
@@ -341,9 +350,10 @@ const GameState = (function() {
 
         // Load next level
         const nextLevelIndex = state.currentLevel + 1;
+        const originalLevelsCount = getOriginalLevelsCount();
 
         // Check if next level exists (using the total levels from state)
-        if (nextLevelIndex < state.totalLevels) {
+        if (nextLevelIndex < originalLevelsCount) {
             state.currentLevel = nextLevelIndex;
             loadLevel(nextLevelIndex);
 
@@ -533,6 +543,7 @@ const GameState = (function() {
         restartGame,
         returnToMenu,
         showWinScreen,
+        getOriginalLevelsCount,
         handleGamePaused: handleGamePaused,
         handleReturnToMenu: handleReturnToMenu,
         startGameLoop() {
