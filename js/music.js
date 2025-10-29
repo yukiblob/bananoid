@@ -4,10 +4,8 @@ const Music = (function() {
     let currentSequence = null;
     let masterGain = null;
     let volume = 0.035;
-    let volume = 0.035;
     let isPaused = false;
-    let pauseVolume = 0.02;
-    let pauseVolume = 0.02;
+    let pauseVolume = 0.022;
     let activeLayers = new Set();
 
     let scheduledTimeouts = new Set();
@@ -328,7 +326,7 @@ const Music = (function() {
                 const kickOsc = audioContext.createOscillator();
                 const kickGain = audioContext.createGain();
 
-                activeOscillators.delete(kickOsc);
+                activeOscillators.add(kickOsc);
 
                 kickOsc.onended = () => {
                     activeOscillators.delete(kickOsc);
@@ -418,6 +416,12 @@ const Music = (function() {
 
         console.log('Music: Starting tropical theme');
         isPlaying = true;
+
+        if (masterGain) {
+            const now = audioContext.currentTime;
+            masterGain.gain.cancelScheduledValues(now);
+            masterGain.gain.setValueAtTime(volume, now);
+        }
 
         if (audioContext.state === 'suspended') {
             audioContext.resume().then(() => {
@@ -520,6 +524,12 @@ const Music = (function() {
 
         console.log('Starting Crystal Hammer');
         isPlaying = true;
+
+        if (masterGain) {
+            const now = audioContext.currentTime;
+            masterGain.gain.cancelScheduledValues(now);
+            masterGain.gain.setValueAtTime(volume, now);
+        }
 
         activeLayers = new Set(['foundation'])
 
@@ -946,6 +956,7 @@ const Music = (function() {
                 // Ignore
             }
         });
+        activeOscillators.clear();
 
         if (currentSequence) {
             clearTimeout(currentSequence);
@@ -963,19 +974,36 @@ const Music = (function() {
     }
 
     function fadeStop(fadeDuration = 0.1) {
-        if (!audioContext || !masterGain) {
-            stop();
-            return;
+        isPlaying = false;
+        activeLayers.clear();
+
+        scheduledTimeouts.forEach(timeoutId => {
+            clearTimeout(timeoutId);
+        });
+        scheduledTimeouts.clear();
+
+        activeOscillators.forEach(oscillator => {
+            try {
+                oscillator.stop();
+                oscillator.disconnect();
+            } catch (e) {
+                // Ignore
+            }
+        });
+        activeOscillators.clear();
+
+        if (currentSequence) {
+            clearTimeout(currentSequence);
+            currentSequence = null;
         }
 
-        const now = audioContext.currentTime;
-        masterGain.gain.cancelScheduledValues(now);
-        masterGain.gain.setValueAtTime(masterGain.gain.value, now);
-        masterGain.gain.linearRampToValueAtTime(0.001, now + fadeDuration);
+        if (masterGain && audioContext) {
+            const now = audioContext.currentTime;
+            masterGain.gain.cancelScheduledValues(now);
+            masterGain.gain.setValueAtTime(0.001, now);
+        }
 
-        setTimeout(() => {
-            stop();
-        }, fadeDuration * 1000);
+        console.log('Music: fade Stopped for transition')
     }
 
     function setVolume(newVolume) {

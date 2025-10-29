@@ -204,9 +204,7 @@ const Menu = (function() {
                 playGameStartSound();
                 if (typeof Music !== 'undefined' && Music.playCrystalHammer) {
                     Music.fadeStop();
-                    setTimeout(() => {
-                        Music.playCrystalHammer();
-                    }, 100);
+                    Music.playCrystalHammer();
                 }
             }, 10);
         };
@@ -338,7 +336,7 @@ const Menu = (function() {
                         if (typeof Music !== 'undefined' && Music.playCrystalHammer) {
                             Music.playCrystalHammer();
                         }
-                    }, 100);
+                    }, 50);
                 }, 10);
             };
 
