@@ -7,7 +7,7 @@
 - powerups 10 ✅
 - pause menu 7 ✅
 - level editor 8 (feature) ✅
-- levels should only progress in the main path not in custom levels path (bug)
+- levels should only progress in the main path not in custom levels path (bug) ✅
 - level editor UI fixes (bug)
 - more maps 8 (feature)
 - boss fight 2 (feature)
