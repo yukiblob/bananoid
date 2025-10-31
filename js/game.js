@@ -128,17 +128,19 @@ const GameState = (function() {
             state.currentLevel = 0;
         }
 
-        const blockWidth = 80;
+        const blockWidth = 88;
         const blockHeight = 30;
-        const gap = 2;
+        const gap = 0;
 
         const cols = grid[0].length;
 
         const totalWidth = cols * blockWidth + (cols - 1) * gap;
 
         // center horizontally and keep a bit of padding from the top
-        const offsetX = (gameArea.clientWidth - totalWidth) / 2;
-        const offsetY = 40; // small top margin
+        const maxSidePadding = 7;
+        const calculatedOffset = (gameArea.clientWidth - totalWidth) / 2;
+        const offsetX = Math.min(calculatedOffset, maxSidePadding);
+        const offsetY = 40;
 
         grid.forEach((row, rowIndex) => {
             row.forEach((cell, colIndex) => {
