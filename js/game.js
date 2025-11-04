@@ -105,40 +105,55 @@ const GameState = (function() {
         let grid;
         const levelObj = allLevels[state.currentLevel];
 
-        if (levelObj && levelObj.data) {
-            const rows = levelObj.rows;
-            const cols = levelObj.cols;
-            grid = [];
+        console.log('Raw level data:', levelObj); // Debug log
 
-            // Convert flattened array back to 2D grid
-            for (let i = 0; i < rows; i++) {
-                const row = levelObj.data.slice(i * cols, (i + 1) * cols);
-                grid.push(row);
+        if (levelObj && levelObj.data) {
+            if (Array.isArray(levelObj.data[0])) {
+                grid = levelObj.data;
+                console.log('Loading level (nested format):', levelObj.name);
+            } else if (Array.isArray(levelObj.data)) {
+                // New flattened format with rows/cols
+                const rows = levelObj.rows || 14;
+                const cols = levelObj.cols || 11;
+                grid = [];
+
+                // Convert flattened array back to 2D grid
+                for (let i = 0; i < rows; i++) {
+                    const start = i * cols;
+                    const end = start + cols;
+                    let row = [];
+
+                    if (i * cols < levelObj.data.length) {
+                        row = levelObj.data.slice(start, end);
+                    }
+
+                    // Ensure row has exactly cols elements (pad with 0 if needed)
+                    while (row.length < cols) {
+                        row.push(0);
+                    }
+
+                    grid.push(row);
+                }
+                console.log('Loading level (flattened format):', levelObj.name);
             }
-            console.log('Loading level:', levelObj.name || `Level ${state.currentLevel + 1}`);
+        } else if (Array.isArray(levelObj)) {
+            // Legacy direct array format
+            grid = levelObj;
+            console.log('Loading legacy level format');
         } else {
-            // Fallback for any legacy format
-            console.warn('Legacy level format detected, using fallback');
-            grid = levelObj || allLevels[0];
+            console.error('Invalid level format:', levelObj);
+            // Fallback to a default level with full grid
+            grid = Array(14).fill().map(() => Array(11).fill(0));
+            grid[0] = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]; // Add some blocks
         }
 
-        // Fallback to first level if current level doesn't exist
-        if (!grid) {
-            console.warn('Level data not found, loading first level');
-            grid = allLevels[0].data ?
-                // Convert object format to grid
-                (() => {
-                    const level = allLevels[0];
-                    const rows = level.rows;
-                    const cols = level.cols;
-                    const grid = [];
-                    for (let i = 0; i < rows; i++) {
-                        grid.push(level.data.slice(i * cols, (i + 1) * cols));
-                    }
-                    return grid;
-                })() :
-                allLevels[0]; // Legacy array format
-            state.currentLevel = 0;
+        console.log('Processed grid dimensions:', grid.length, 'rows x', grid[0].length, 'columns');
+
+        // Ensure grid has at least one row and column
+        if (!grid || !grid.length || !grid[0] || !grid[0].length) {
+            console.error('Invalid grid after processing, using fallback');
+            grid = Array(14).fill().map(() => Array(11).fill(0));
+            grid[0] = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
         }
 
         const blockWidth = 88;
@@ -146,7 +161,6 @@ const GameState = (function() {
         const gap = 0;
 
         const cols = grid[0].length;
-
         const totalWidth = cols * blockWidth + (cols - 1) * gap;
 
         // center horizontally and keep a bit of padding from the top
@@ -155,6 +169,9 @@ const GameState = (function() {
         const offsetX = Math.min(calculatedOffset, maxSidePadding);
         const offsetY = 40;
 
+        console.log('Rendering blocks at offset:', offsetX, offsetY); // Debug log
+
+        // Use the full grid for rendering
         grid.forEach((row, rowIndex) => {
             row.forEach((cell, colIndex) => {
                 if (cell != 0) {
@@ -169,6 +186,8 @@ const GameState = (function() {
                 }
             });
         });
+
+        console.log('Finished loading level, blocks created:', document.querySelectorAll('.block').length); // Debug log
     }
 
     // Win Condition/screen

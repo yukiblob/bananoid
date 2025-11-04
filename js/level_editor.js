@@ -177,40 +177,9 @@ const LevelEditor = (function() {
     }
 
     async function saveLevel() {
-        // Remove empty rows from the top and bottom
-        let startRow = 0;
-        let endRow = GRID_ROWS - 1;
-
-        // Find first non-empty row from top
-        while (startRow < GRID_ROWS && currentGrid[startRow].every(cell => cell === 0)) {
-            startRow++;
-        }
-
-        // Find first non-empty row from bottom
-        while (endRow >= 0 && currentGrid[endRow].every(cell => cell === 0)) {
-            endRow--;
-        }
-
-        if (startRow > endRow) {
-            alert('Cannot save empty level!');
-            return;
-        }
-
-        // Extract the relevant rows
-        const levelData = currentGrid.slice(startRow, endRow + 1);
-        const rows = levelData.length;
+        const levelData = currentGrid;
+        const rows = GRID_ROWS;
         const cols = GRID_COLS;
-
-        // Convert to flattened array with visual line breaks
-        const flattenedData = [];
-        levelData.forEach((row, rowIndex) => {
-            flattenedData.push(...row);
-        });
-
-        // Format the data string with line breaks for readability
-        const formattedDataString = levelData.map(row =>
-            row.join(', ')
-        ).join(',\n');
 
         // Generate level name
         const levelName = prompt('Enter a name for your level:', `Custom Level ${new Date().toLocaleDateString()}`);
@@ -219,20 +188,29 @@ const LevelEditor = (function() {
             return; // User cancelled
         }
 
-        try {
-            console.log('🔄 Saving level to server...', flattenedData);
+        // Convert to flattened array
+        const flattenedData = [];
+        levelData.forEach(row => {
+            flattenedData.push(...row);
+        });
 
+        // Create the data object to send
+        const saveData = {
+            data: flattenedData,
+            rows: rows,
+            cols: cols,
+            name: levelName
+        };
+
+        console.log('🔄 Saving level to server:', saveData);
+
+        try {
             const response = await fetch('/api/levels/save', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    data: flattenedData,
-                    rows: rows,
-                    cols: cols,
-                    name: levelName
-                })
+                body: JSON.stringify(saveData)
             });
 
             console.log('📡 Response status:', response.status);
@@ -242,11 +220,15 @@ const LevelEditor = (function() {
                 console.log('✅ Level saved successfully:', result);
 
                 // Show the formatted data to the user
-                alert(`✅ Level "${levelName}" saved successfully!\n\nFormatted data:\n${formattedDataString}`);
+                const formattedDataString = levelData.map(row =>
+                    row.join(', ')
+                ).join(',\n');
+
+                alert(`✅ Level "${levelName}" saved successfully!\n\nLevel uses full ${rows}x${cols} grid with empty spaces as zeros.`);
             } else {
                 const errorText = await response.text();
                 console.error('❌ Server error:', errorText);
-                alert(`❌ Failed to save level. Server error: ${response.status} - ${errorText}`);
+                alert(`❌ Failed to save level. Server error: ${response.status}\n${errorText}`);
             }
         } catch (error) {
             console.error('💥 Network error saving level:', error);
