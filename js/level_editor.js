@@ -198,6 +198,19 @@ const LevelEditor = (function() {
 
         // Extract the relevant rows
         const levelData = currentGrid.slice(startRow, endRow + 1);
+        const rows = levelData.length;
+        const cols = GRID_COLS;
+
+        // Convert to flattened array with visual line breaks
+        const flattenedData = [];
+        levelData.forEach((row, rowIndex) => {
+            flattenedData.push(...row);
+        });
+
+        // Format the data string with line breaks for readability
+        const formattedDataString = levelData.map(row =>
+            row.join(', ')
+        ).join(',\n');
 
         // Generate level name
         const levelName = prompt('Enter a name for your level:', `Custom Level ${new Date().toLocaleDateString()}`);
@@ -207,7 +220,7 @@ const LevelEditor = (function() {
         }
 
         try {
-            console.log('🔄 Saving level to server...', levelData);
+            console.log('🔄 Saving level to server...', flattenedData);
 
             const response = await fetch('/api/levels/save', {
                 method: 'POST',
@@ -215,7 +228,9 @@ const LevelEditor = (function() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    data: levelData,
+                    data: flattenedData,
+                    rows: rows,
+                    cols: cols,
                     name: levelName
                 })
             });
@@ -225,7 +240,9 @@ const LevelEditor = (function() {
             if (response.ok) {
                 const result = await response.json();
                 console.log('✅ Level saved successfully:', result);
-                alert(`✅ Level "${levelName}" saved successfully!`);
+
+                // Show the formatted data to the user
+                alert(`✅ Level "${levelName}" saved successfully!\n\nFormatted data:\n${formattedDataString}`);
             } else {
                 const errorText = await response.text();
                 console.error('❌ Server error:', errorText);

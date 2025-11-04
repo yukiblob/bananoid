@@ -102,29 +102,42 @@ const GameState = (function() {
             state.currentLevel = 0;
         }
 
-        // Handle both level formats (array format for original, object format for custom)
         let grid;
-        const levelData = allLevels[state.currentLevel];
+        const levelObj = allLevels[state.currentLevel];
 
-        if (levelData && levelData.data) {
-            // Custom level format with data property
-            grid = levelData.data;
-            console.log('Loading custom level:', levelData.name || `Custom ${state.currentLevel - originalLevels.length + 1}`);
+        if (levelObj && levelObj.data) {
+            const rows = levelObj.rows;
+            const cols = levelObj.cols;
+            grid = [];
+
+            // Convert flattened array back to 2D grid
+            for (let i = 0; i < rows; i++) {
+                const row = levelObj.data.slice(i * cols, (i + 1) * cols);
+                grid.push(row);
+            }
+            console.log('Loading level:', levelObj.name || `Level ${state.currentLevel + 1}`);
         } else {
-            // Original level format (direct array)
-            grid = levelData;
-            console.log('Loading original level:', state.currentLevel + 1);
+            // Fallback for any legacy format
+            console.warn('Legacy level format detected, using fallback');
+            grid = levelObj || allLevels[0];
         }
 
         // Fallback to first level if current level doesn't exist
         if (!grid) {
             console.warn('Level data not found, loading first level');
-            const firstLevel = allLevels[0];
-            if (firstLevel && firstLevel.data) {
-                grid = firstLevel.data;
-            } else {
-                grid = firstLevel;
-            }
+            grid = allLevels[0].data ?
+                // Convert object format to grid
+                (() => {
+                    const level = allLevels[0];
+                    const rows = level.rows;
+                    const cols = level.cols;
+                    const grid = [];
+                    for (let i = 0; i < rows; i++) {
+                        grid.push(level.data.slice(i * cols, (i + 1) * cols));
+                    }
+                    return grid;
+                })() :
+                allLevels[0]; // Legacy array format
             state.currentLevel = 0;
         }
 

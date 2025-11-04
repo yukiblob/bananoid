@@ -11,8 +11,10 @@ import (
 )
 
 type Level struct {
-	Data [][]int `json:"data"`
-	Name string  `json:"name"`
+	Data []int  `json:"data"`
+	Rows int    `json:"rows"`
+	Cols int    `json:"cols"`
+	Name string `json:"name"`
 }
 
 type LevelsResponse struct {
@@ -58,6 +60,12 @@ func handleSaveLevel(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&level); err != nil {
 		fmt.Printf("Invalid JSON: %v\n", err)
 		http.Error(w, `{"error": "Invalid JSON"}`, http.StatusBadRequest)
+		return
+	}
+
+	// Validate required fields
+	if level.Data == nil || level.Rows == 0 || level.Cols == 0 {
+		http.Error(w, `{"error": "Missing required fields: data, rows, or cols"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -142,10 +150,57 @@ func saveLevel(level Level) error {
 }
 
 func toJSONString(v interface{}) string {
-	b, err := json.MarshalIndent(v, "", "    ")
+	b, err := json.Marshal(v)
 	if err != nil {
 		fmt.Printf("Error marshaling JSON: %v\n", err)
 		return "[]"
 	}
-	return string(b)
+
+	var levels []Level
+	if err := json.Unmarshal(b, &levels); err != nil {
+		fmt.Printf("Error unmarshaling for formatting: %v\n", err)
+		return string(b)
+	}
+
+	var result strings.Builder
+	result.WriteString("[\n")
+
+	for i, level := range levels {
+		result.WriteString("    {\n")
+		result.WriteString(`        "data": [`)
+
+		// Format with clear row separation
+		for row := 0; row < level.Rows; row++ {
+			if row > 0 {
+				result.WriteString(",\n                 ")
+			}
+			for col := 0; col < level.Cols; col++ {
+				if col > 0 {
+					result.WriteString(", ")
+				}
+				idx := row*level.Cols + col
+				if idx < len(level.Data) {
+					result.WriteString(fmt.Sprintf("%d", level.Data[idx]))
+				} else {
+					result.WriteString("0") // pad with zeros if needed
+				}
+			}
+		}
+
+		result.WriteString("],\n")
+		result.WriteString(fmt.Sprintf(`        "rows": %d,`, level.Rows))
+		result.WriteString("\n")
+		result.WriteString(fmt.Sprintf(`        "cols": %d,`, level.Cols))
+		result.WriteString("\n")
+		result.WriteString(fmt.Sprintf(`        "name": "%s"`, level.Name))
+		result.WriteString("\n    }")
+
+		if i < len(levels)-1 {
+			result.WriteString(",")
+		}
+		result.WriteString("\n")
+	}
+
+	result.WriteString("]")
+	return result.String()
 }
