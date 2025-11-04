@@ -27,8 +27,8 @@ func main() {
 	http.HandleFunc("/api/levels", handleLevels)
 	http.HandleFunc("/api/levels/save", handleSaveLevel)
 
-	fmt.Println("Server running on http://localhost:8081")
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	fmt.Println("Server running on http://localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func handleLevels(w http.ResponseWriter, r *http.Request) {
