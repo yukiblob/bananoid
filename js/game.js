@@ -112,9 +112,8 @@ const GameState = (function() {
                 grid = levelObj.data;
                 console.log('Loading level (nested format):', levelObj.name);
             } else if (Array.isArray(levelObj.data)) {
-                // New flattened format with rows/cols
-                const rows = levelObj.rows || 14;
-                const cols = levelObj.cols || 11;
+                const rows = 14;
+                const cols = 11;
                 grid = [];
 
                 // Convert flattened array back to 2D grid
@@ -136,15 +135,6 @@ const GameState = (function() {
                 }
                 console.log('Loading level (flattened format):', levelObj.name);
             }
-        } else if (Array.isArray(levelObj)) {
-            // Legacy direct array format
-            grid = levelObj;
-            console.log('Loading legacy level format');
-        } else {
-            console.error('Invalid level format:', levelObj);
-            // Fallback to a default level with full grid
-            grid = Array(14).fill().map(() => Array(11).fill(0));
-            grid[0] = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]; // Add some blocks
         }
 
         console.log('Processed grid dimensions:', grid.length, 'rows x', grid[0].length, 'columns');

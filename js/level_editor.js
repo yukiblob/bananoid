@@ -178,8 +178,6 @@ const LevelEditor = (function() {
 
     async function saveLevel() {
         const levelData = currentGrid;
-        const rows = GRID_ROWS;
-        const cols = GRID_COLS;
 
         // Generate level name
         const levelName = prompt('Enter a name for your level:', `Custom Level ${new Date().toLocaleDateString()}`);
@@ -194,11 +192,8 @@ const LevelEditor = (function() {
             flattenedData.push(...row);
         });
 
-        // Create the data object to send
         const saveData = {
             data: flattenedData,
-            rows: rows,
-            cols: cols,
             name: levelName
         };
 
@@ -224,7 +219,7 @@ const LevelEditor = (function() {
                     row.join(', ')
                 ).join(',\n');
 
-                alert(`✅ Level "${levelName}" saved successfully!\n\nLevel uses full ${rows}x${cols} grid with empty spaces as zeros.`);
+                alert(`✅ Level "${levelName}" saved successfully!\n\nLevel uses full ${GRID_ROWS}x${GRID_COLS} grid.`);
             } else {
                 const errorText = await response.text();
                 console.error('❌ Server error:', errorText);

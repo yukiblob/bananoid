@@ -12,8 +12,6 @@ import (
 
 type Level struct {
 	Data []int  `json:"data"`
-	Rows int    `json:"rows"`
-	Cols int    `json:"cols"`
 	Name string `json:"name"`
 }
 
@@ -63,9 +61,8 @@ func handleSaveLevel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate required fields
-	if level.Data == nil || level.Rows == 0 || level.Cols == 0 {
-		http.Error(w, `{"error": "Missing required fields: data, rows, or cols"}`, http.StatusBadRequest)
+	if level.Data == nil {
+		http.Error(w, `{"error": "Missing required field: data"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -169,16 +166,16 @@ func toJSONString(v interface{}) string {
 		result.WriteString("    {\n")
 		result.WriteString(`        "data": [`)
 
-		// Format with clear row separation
-		for row := 0; row < level.Rows; row++ {
+		// Format with clear row separation (always 14 rows, 11 cols)
+		for row := 0; row < 14; row++ {
 			if row > 0 {
 				result.WriteString(",\n                 ")
 			}
-			for col := 0; col < level.Cols; col++ {
+			for col := 0; col < 11; col++ {
 				if col > 0 {
 					result.WriteString(", ")
 				}
-				idx := row*level.Cols + col
+				idx := row*11 + col
 				if idx < len(level.Data) {
 					result.WriteString(fmt.Sprintf("%d", level.Data[idx]))
 				} else {
@@ -188,10 +185,6 @@ func toJSONString(v interface{}) string {
 		}
 
 		result.WriteString("],\n")
-		result.WriteString(fmt.Sprintf(`        "rows": %d,`, level.Rows))
-		result.WriteString("\n")
-		result.WriteString(fmt.Sprintf(`        "cols": %d,`, level.Cols))
-		result.WriteString("\n")
 		result.WriteString(fmt.Sprintf(`        "name": "%s"`, level.Name))
 		result.WriteString("\n    }")
 
