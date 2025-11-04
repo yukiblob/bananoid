@@ -264,7 +264,7 @@ const Menu = (function() {
         menuElement.appendChild(title);
 
         const levelsContainer = document.createElement('div');
-        levelsContainer.className = 'levels-select-container';
+        levelsContainer.className = 'level-select-container';
 
         // Remove the grid class and use flexbox instead
         levelsContainer.style.display = 'flex';

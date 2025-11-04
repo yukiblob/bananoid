@@ -15,8 +15,8 @@
 - timer 7 ✅
 - lives 8 ✅
 - win/loss screen 7 ✅
-- music/sound effects (feature)
+- music/sound effects (feature) ✅
 - add return to main menu in pause menu ✅
 - game pauses when returning to main menu after the game has been paused once (bug) ✅
 - game continues to play in the background when returning to the main menu (bug) ✅
-- yellow arrow is buggy in Level Select (bug)
+- yellow arrow is buggy in Level Select (bug) ✅
