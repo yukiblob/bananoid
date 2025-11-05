@@ -72,7 +72,7 @@ const Lives = (function() {
             livesContainer.classList.add('life-gained');
             setTimeout(() => {
                 livesContainer.classList.remove('life-gained');
-            }, 500);
+            }, 100);
         }
     }
 

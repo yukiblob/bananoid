@@ -368,6 +368,14 @@ const GameState = (function() {
         // Remove win screen and particles
         const winScreen = document.getElementById('winScreen');
         const particles = document.querySelectorAll('.celebration-particle');
+        const powerups = document.querySelectorAll('.powerup-pill');
+        particles.forEach(particle => particle.remove());
+        powerups.forEach(powerup => powerup.remove());
+
+        // Clean up powerups system
+        if (typeof Powerups !== 'undefined' && Powerups.cleanAllPowerups) {
+            Powerups.cleanAllPowerups();
+        }
 
         if (winScreen) winScreen.remove();
         particles.forEach(particle => particle.remove());
@@ -384,6 +392,11 @@ const GameState = (function() {
             // Reset ball
             if (typeof Ball !== 'undefined' && Ball.reset) {
                 Ball.reset();
+            }
+
+            // Gain extra life
+            if (typeof Lives !== 'undefined' && Lives.gainLife) {
+                Lives.gainLife();
             }
 
             // Unpause game
@@ -412,8 +425,8 @@ const GameState = (function() {
             Powerups.cleanAllPowerups();
         }
 
-        // Reset to current level - use the stored currentLevel
-        loadLevel(state.currentLevel);
+        // Reset game to level 1
+        loadLevel(0);
 
         // Reset ball
         if (typeof Ball !== 'undefined' && Ball.reset) {
