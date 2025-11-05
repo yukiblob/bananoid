@@ -3,8 +3,10 @@ const Ball = (function() {
     let balls = new Map();
     const ballRadius = 10;
     const baseSpeed = 8;
+    const MAX_SPEED_MULTIPLIER = 2.0;
+    const MAX_SPEED = baseSpeed * MAX_SPEED_MULTIPLIER;
     let accelerationFactor = 1.0;
-    const accelerationRate = 1.008;
+    const accelerationRate = 1.006;
     let nextBallID = 1;
     let stickyPowerupActive = false;
     let stuckBalls = new Map();
@@ -225,12 +227,16 @@ const Ball = (function() {
     }
 
     function applyAcceleration(ballData) {
-        accelerationFactor *= accelerationRate;
         const currentSpeed = Math.sqrt(ballData.speedX * ballData.speedX + ballData.speedY * ballData.speedY);
-        const angle = Math.atan2(ballData.speedY, ballData.speedX);
+        if (currentSpeed < MAX_SPEED) {
+            accelerationFactor *= accelerationRate;
 
-        ballData.speedX = baseSpeed * Math.cos(angle) * accelerationFactor;
-        ballData.speedY = baseSpeed * Math.sin(angle) * accelerationFactor;
+            const newSpeed = Math.min(baseSpeed * accelerationFactor, MAX_SPEED);
+            const angle = Math.atan2(ballData.speedY, ballData.speedX);
+
+            ballData.speedX = newSpeed * Math.cos(angle);
+            ballData.speedY = newSpeed * Math.sin(angle);
+        }
     }
 
     function checkWallCollision(ballData) {
@@ -519,14 +525,15 @@ const Ball = (function() {
     }
 
     function setAcceleration(factor) {
-        accelerationFactor = factor;
+        accelerationFactor = Math.min(factor, MAX_SPEED_MULTIPLIER);
 
         balls.forEach((ballData) => {
             if (ballData.isLaunched) {
                 const angle = Math.atan2(ballData.speedY, ballData.speedX);
+                const speed = Math.min(baseSpeed * accelerationFactor, MAX_SPEED);
 
-                ballData.speedX = baseSpeed * Math.cos(angle) * accelerationFactor;
-                ballData.speedY = baseSpeed * Math.sin(angle) * accelerationFactor;
+                ballData.speedX = speed * Math.cos(angle);
+                ballData.speedY = speed * Math.sin(angle);
             }
         });
     }

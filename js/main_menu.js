@@ -386,6 +386,12 @@ const Menu = (function() {
                             if (Timer.reset) Timer.reset();
                             if (Timer.start) Timer.start();
                         }
+
+                        setTimeout(() => {
+                            if (typeof Music !== 'undefined' && Music.playCrystalHammer) {
+                                Music.playCrystalHammer();
+                            }
+                        }, 50);
                     }, 10);
                 };
 
