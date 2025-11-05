@@ -3,7 +3,7 @@ const Ball = (function() {
     let balls = new Map();
     const ballRadius = 10;
     const baseSpeed = 8;
-    const MAX_SPEED_MULTIPLIER = 2.0;
+    const MAX_SPEED_MULTIPLIER = 1.8;
     const MAX_SPEED = baseSpeed * MAX_SPEED_MULTIPLIER;
     let accelerationFactor = 1.0;
     const accelerationRate = 1.006;
@@ -204,9 +204,10 @@ const Ball = (function() {
         const maxBounceAngle = 75 * Math.PI / 180;
 
         const angle = hitPosition * maxBounceAngle;
+        const speed = Math.min(baseSpeed * accelerationFactor, MAX_SPEED);
 
-        ballData.speedX = baseSpeed * Math.sin(angle) * stuckData.originalAcceleration;
-        ballData.speedY = -baseSpeed * Math.cos(angle) * stuckData.originalAcceleration;
+        ballData.speedX = speed * Math.sin(angle);
+        ballData.speedY = -speed * Math.cos(angle);
         ballData.isLaunched = true;
 
         setGracePeriod(ballID);
@@ -370,91 +371,129 @@ const Ball = (function() {
         const blocks = document.querySelectorAll('.block');
         const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
 
-        for (let block of blocks) {
-            const rect = block.getBoundingClientRect();
+        let collision = false
+        let collisionStep = -1;
+        let collidedBlock = null;
+        let blockRectData = null;
 
-            // Block position relative to gameArea
-            const blockLeft = rect.left - gameAreaRect.left;
-            const blockTop = rect.top - gameAreaRect.top;
-            const blockRight = blockLeft + rect.width;
-            const blockBottom = blockTop + rect.height;
+        const steps = calculateSteps(ballData);
+        const stepX = ballData.speedX / steps;
+        const stepY = ballData.speedY / steps;
 
-            // Check overlap
-            if (ballData.x + ballRadius > blockLeft &&
-                ballData.x - ballRadius < blockRight &&
-                ballData.y + ballRadius > blockTop &&
-                ballData.y - ballRadius < blockBottom) {
+        const originalX = ballData.x;
+        const originalY = ballData.y;
 
-                if (typeof SoundManager !== 'undefined') {
-                    SoundManager.playBrickHit();
+        for (let step = 0; step < steps; step++) {
+            const testX = originalX + stepX * step;
+            const testY = originalY + stepY * step;
+        
+            for (let block of blocks) {
+                if (!block.parentElement) continue;
+
+                const rect = block.getBoundingClientRect();
+
+                // Block position relative to gameArea
+                const blockLeft = rect.left - gameAreaRect.left;
+                const blockTop = rect.top - gameAreaRect.top;
+                const blockRight = blockLeft + rect.width;
+                const blockBottom = blockTop + rect.height;
+
+                if (testX + ballRadius > blockLeft &&
+                    testX - ballRadius < blockRight &&
+                    testY + ballRadius > blockTop &&
+                    testY - ballRadius < blockBottom) {
+
+                    collision = true;
+                    collisionStep = step;
+                    collidedBlock = block;
+                    blockRectData = { blockLeft, blockTop, blockRight, blockBottom }
+                    
+                    break;
                 }
-
-                // Collision detected
-                const blockType = block.classList.contains("unbreakable") ? "unbreakable"
-                    : block.classList.contains("strong") ? "strong"
-                        : "normal";
-
-                if (blockType !== "unbreakable") {
-                    if (blockType === "strong") {
-                        // Turn strong into normal on first hit
-                        block.classList.remove("strong");
-                        block.classList.add("normal");
-                        if (typeof Score !== 'undefined') Score.add(50);
-                    } else {
-                        const blockRect = block.getBoundingClientRect();
-                        const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
-
-                        const blockCenterX = blockRect.left - gameAreaRect.left + blockRect.width / 2;
-                        const blockCenterY = blockRect.top - gameAreaRect.top + blockRect.height / 2;
-
-                        // Remove block
-                        block.remove();
-                        Score.add(100);
-
-                        if (typeof Powerups !== 'undefined' && Powerups.createPill) {
-                            Powerups.createPill(blockCenterX, blockCenterY);
-                        }
-                    }
-
-                    // Check win condition after breaking a block
-                    setTimeout(() => {
-                        if (typeof GameState !== 'undefined' && GameState.checkWinCondition) {
-                            GameState.checkWinCondition();
-                        }
-                    }, 0);
-                }
-
-                // Adjust ball direction
-                const overlapLeft = ballData.x + ballRadius - blockLeft;
-                const overlapRight = blockRight - (ballData.x - ballRadius);
-                const overlapTop = ballData.y + ballRadius - blockTop;
-                const overlapBottom = blockBottom - (ballData.y - ballRadius);
-
-                const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
-
-                if (minOverlap === overlapLeft) {
-                    // hit from left
-                    ballData.x = blockLeft - ballRadius;
-                    ballData.speedX = -Math.abs(ballData.speedX);
-                } else if (minOverlap === overlapRight) {
-                    // hit from right
-                    ballData.x = blockRight + ballRadius;
-                    ballData.speedX = Math.abs(ballData.speedX);
-                } else if (minOverlap === overlapTop) {
-                    // hit from top
-                    ballData.y = blockTop - ballRadius;
-                    ballData.speedY = -Math.abs(ballData.speedY);
-                } else if (minOverlap === overlapBottom) {
-                    // hit from bottom
-                    ballData.y = blockBottom + ballRadius;
-                    ballData.speedY = Math.abs(ballData.speedY);
-                }
-
-                applyAcceleration(ballData);
-                return true; // stop after first hit (one block per frame)
             }
+            if (collision) break;
         }
+        if (collision && collisionStep >= 0) {
+            if (collisionStep === 0) {
+                ballData.x = originalX - Math.sign(ballData.speedX) * 0.1;
+                ballData.y = originalY - Math.sign(ballData.speedY) * 0.1;
+            } else {
+                ballData.x = originalX + stepX * (collisionStep - 1);
+                ballData.y = originalY + stepY * (collisionStep - 1);
+            }
+            
+            handleBlockCollision(ballData, collidedBlock, 
+                blockRectData.blockLeft, blockRectData.blockTop,
+                blockRectData.blockRight, blockRectData.blockBottom);
+            return true;
+        }
+
         return false;
+    }
+
+    function calculateSteps(ballData) {
+        const distance = Math.sqrt(ballData.speedX * ballData.speedX + ballData.speedY * ballData.speedY);
+        const steps = Math.max(2, Math.min(8, Math.ceil(distance / 5)));
+        return steps;
+    }
+
+    function handleBlockCollision(ballData, block, blockLeft, blockTop, blockRight, blockBottom) {
+        const overlapLeft = (ballData.x + ballRadius) - blockLeft;
+        const overlapRight = blockRight - (ballData.x - ballRadius);
+        const overlapTop = (ballData.y + ballRadius) - blockTop;
+        const overlapBottom = blockBottom - (ballData.y - ballRadius);
+
+        const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+
+        if (minOverlap === overlapLeft) {
+            ballData.x = blockLeft - ballRadius - 0.1;
+            ballData.speedX = -Math.abs(ballData.speedX);
+        } else if (minOverlap === overlapRight) {
+            ballData.x = blockRight + ballRadius + 0.1;
+            ballData.speedX = Math.abs(ballData.speedX);
+        } else if (minOverlap === overlapTop) {
+            ballData.y = blockTop - ballRadius - 0.1;
+            ballData.speedY = -Math.abs(ballData.speedY);
+        } else if (minOverlap === overlapBottom) {
+            ballData.y = blockBottom + ballRadius + 0.1;
+            ballData.speedY = Math.abs(ballData.speedY);
+        }
+
+        if (typeof SoundManager !== 'undefined') {
+            SoundManager.playBrickHit();
+        }
+
+        const blockType = block.classList.contains("unbreakable") ? "unbreakable"
+            : block.classList.contains("strong") ? "strong"
+            : "normal";
+        
+        if (blockType !== "unbreakable") {
+            if (blockType === "strong") {
+                block.classList.remove("strong");
+                block.classList.add("normal");
+                if (typeof Score !== "undefined") Score.add(50);
+            } else {
+                const blockRect = block.getBoundingClientRect();
+                const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
+
+                const blockCenterX = blockRect.left - gameAreaRect.left + blockRect.width / 2;
+                const blockCenterY = blockRect.top - gameAreaRect.top + blockRect.height / 2;
+
+                block.remove();
+                Score.add(100);
+
+                if (typeof Powerups !== 'undefined' && Powerups.createPill) {
+                    Powerups.createPill(blockCenterX, blockCenterY);
+                }
+            }
+
+            setTimeout(() => {
+                if (typeof GameState !== 'undefined' && GameState.checkWinCondition) {
+                    GameState.checkWinCondition();
+                }
+            }, 0);
+        }
+        applyAcceleration(ballData);
     }
 
     function removeBall(ballID) {
