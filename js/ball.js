@@ -50,10 +50,11 @@ const Ball = (function() {
 
         const originalAngle = Math.atan2(originalVelocity.y, originalVelocity.x);
         const originalSpeed = Math.sqrt(originalVelocity.x * originalVelocity.x + originalVelocity.y * originalVelocity.y);
+        const cappedSpeed = Math.min(originalSpeed, MAX_SPEED);
 
         const newAngle = originalAngle + (angleOffset * Math.PI / 180);
-        const speedX = originalSpeed * Math.cos(newAngle);
-        const speedY = originalSpeed * Math.sin(newAngle);
+        const speedX = cappedSpeed * Math.cos(newAngle);
+        const speedY = cappedSpeed * Math.sin(newAngle);
 
         const ballData = {
             element: ballElement,
@@ -327,10 +328,11 @@ const Ball = (function() {
                 const maxBounceAngle = 75 * Math.PI / 180;
 
                 const angle = hitPosition * maxBounceAngle;
-                const speed = Math.sqrt(ballData.speedX * ballData.speedX + ballData.speedY * ballData.speedY);
+                const currentSpeed = Math.sqrt(ballData.speedX * ballData.speedX + ballData.speedY * ballData.speedY);
+                const speed = Math.min(currentSpeed, MAX_SPEED);
 
-                ballData.speedX = speed * Math.sin(angle) * accelerationFactor;
-                ballData.speedY = -speed * Math.cos(angle) * accelerationFactor;
+                ballData.speedX = speed * Math.sin(angle);
+                ballData.speedY = -speed * Math.cos(angle);
 
                 ballData.y = paddleTop - ballRadius;
 
@@ -464,6 +466,7 @@ const Ball = (function() {
     }
 
     function update() {
+        normalizeBallSpeed();
         const ballsToRemove = [];
 
         updateStuckBalls();
@@ -534,6 +537,20 @@ const Ball = (function() {
 
                 ballData.speedX = speed * Math.cos(angle);
                 ballData.speedY = speed * Math.sin(angle);
+            }
+        });
+    }
+
+    function normalizeBallSpeed() {
+        balls.forEach((ballData) => {
+            if (ballData.isLaunched) {
+                const currentSpeed = Math.sqrt(ballData.speedX * ballData.speedX + ballData.speedY * ballData.speedY);
+                if (currentSpeed > MAX_SPEED) {
+                    const ratio = MAX_SPEED / currentSpeed;
+                    ballData.speedX *= ratio;
+                    ballData.speedY *= ratio;
+                    console.warn('Ball speed was normalized');
+                }
             }
         });
     }
