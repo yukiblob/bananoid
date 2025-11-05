@@ -73,6 +73,8 @@ const Lives = (function() {
             setTimeout(() => {
                 livesContainer.classList.remove('life-gained');
             }, 100);
+        } else {
+            Score.add(10000);
         }
     }
 
