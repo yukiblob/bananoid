@@ -828,7 +828,6 @@ body {
     margin-bottom: 40px;
 }
 
-flex-shrink: 0;
 .game-over-content .menu-title {
     font-family: 'Press Start 2P', monospace;
     font-size: 48px;
