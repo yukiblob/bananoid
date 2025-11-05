@@ -135,6 +135,9 @@ const Menu = (function() {
         }
         updateButtonSelection();
 
+        // Auto-scroll to keep selected button in view
+        autoScrollToSelectedButton();
+
         // Just play the sound - SoundManager will handle the queuing if needed
         if (typeof SoundManager !== 'undefined' && SoundManager.playMenuNavigate) {
             SoundManager.playMenuNavigate();
@@ -266,15 +269,6 @@ const Menu = (function() {
         const levelsContainer = document.createElement('div');
         levelsContainer.className = 'level-select-container';
 
-        // Remove the grid class and use flexbox instead
-        levelsContainer.style.display = 'flex';
-        levelsContainer.style.flexDirection = 'column';
-        levelsContainer.style.alignItems = 'center';
-        levelsContainer.style.gap = '15px';
-        levelsContainer.style.maxHeight = '70vh';
-        levelsContainer.style.overflowY = 'auto';
-        levelsContainer.style.padding = '20px';
-
         let originalLevels = [];
         let customLevels = [];
 
@@ -284,7 +278,7 @@ const Menu = (function() {
                 (typeof window !== "undefined" && Array.isArray(window.levels)) ? window.levels :
                     defaultLevels;
 
-        // Load custom levels from API
+        // Load custom levels
         try {
             const response = await fetch('http://localhost:8080/api/levels');
             if (response.ok) {
@@ -295,21 +289,34 @@ const Menu = (function() {
             console.warn('Could not load custom levels from API:', error);
         }
 
+        menuButtons = [];
+
+        const onClickBack = () => {
+            showMainMenu();
+        };
+
+        const backButton = createMenuButton('Back', 0);
+        backButton.onClickFunction = onClickBack;
+        backButton.style.color = '#ffffff';
+        backButton.style.textShadow = '0 0 5px #ffffff';
+        backButton.style.marginBottom = '20px';
+
+        levelsContainer.appendChild(backButton);
+        menuButtons.push(backButton);
+
         // Create section headers
         if (originalLevels.length > 0) {
             const originalHeader = document.createElement('div');
             originalHeader.className = 'level-section-header';
             originalHeader.textContent = 'ORIGINAL LEVELS';
-            originalHeader.style.width = '100%'; // Full width
+            originalHeader.style.width = '100%';
             originalHeader.style.color = '#ffcc00';
-            originalHeader.style.marginTop = '20px';
+            originalHeader.style.marginTop = '10px';
             originalHeader.style.marginBottom = '10px';
             originalHeader.style.fontSize = '16px';
             originalHeader.style.textShadow = '0 0 5px #ffcc00';
             levelsContainer.appendChild(originalHeader);
         }
-
-        menuButtons = [];
 
         // Create original level buttons
         for (let i = 0; i < originalLevels.length; i++) {
@@ -340,11 +347,11 @@ const Menu = (function() {
                 }, 10);
             };
 
-            const levelButton = createMenuButton(`Original ${i + 1}`, i);
+            const levelButton = createMenuButton(`Original ${i + 1}`, i + 1); // +1 because back button is index 0
             levelButton.onClickFunction = onClick;
 
             // Style for original levels
-            levelButton.style.color = '#ffcc00'; // Yellow for original
+            levelButton.style.color = '#ffcc00';
             levelButton.style.textShadow = '0 0 5px #ffcc00';
             levelButton.title = 'Original Level';
 
@@ -357,9 +364,9 @@ const Menu = (function() {
             const customHeader = document.createElement('div');
             customHeader.className = 'level-section-header';
             customHeader.textContent = 'CUSTOM LEVELS';
-            customHeader.style.gridColumn = '1 / -1';
+            customHeader.style.width = '100%';
             customHeader.style.color = '#4ecdc4';
-            customHeader.style.marginTop = '30px';
+            customHeader.style.marginTop = '20px';
             customHeader.style.marginBottom = '10px';
             customHeader.style.fontSize = '16px';
             customHeader.style.textShadow = '0 0 5px #4ecdc4';
@@ -398,11 +405,11 @@ const Menu = (function() {
                 const level = customLevels[i];
                 const buttonText = level.name || `Custom ${i + 1}`;
 
-                const levelButton = createMenuButton(buttonText, i + originalLevels.length);
+                const levelButton = createMenuButton(buttonText, i + 1 + originalLevels.length); // Adjust index for back button
                 levelButton.onClickFunction = onClick;
 
                 // Style for custom levels
-                levelButton.style.color = '#4ecdc4'; // Cyan for custom
+                levelButton.style.color = '#4ecdc4';
                 levelButton.style.textShadow = '0 0 5px #4ecdc4';
                 levelButton.title = level.name ? `Custom: ${level.name}` : 'Custom Level';
 
@@ -411,27 +418,32 @@ const Menu = (function() {
             }
         }
 
-        // Add back button
-        const backSpacer = document.createElement('div');
-        backSpacer.style.height = '40px';
-        levelsContainer.appendChild(backSpacer);
-
-        const onClickBack = () => {
-            showMainMenu();
-        };
-
-        const backButton = createMenuButton('Back', originalLevels.length + customLevels.length);
-        backButton.onClickFunction = onClickBack;
-        backButton.style.color = '#ffffff';
-        backButton.style.textShadow = '0 0 5px #ffffff';
-        backButton.style.marginTop = '20px';
-
-        levelsContainer.appendChild(backButton);
-        menuButtons.push(backButton);
-
         menuElement.appendChild(levelsContainer);
-
         updateButtonSelection();
+    }
+
+    function autoScrollToSelectedButton() {
+        if (currentMenu !== 'levelSelect') return;
+
+        const levelsContainer = document.querySelector('.level-select-container');
+        const selectedButton = menuButtons[selectedButtonIndex];
+
+        if (!levelsContainer || !selectedButton) return;
+
+        const containerRect = levelsContainer.getBoundingClientRect();
+        const buttonRect = selectedButton.getBoundingClientRect();
+        const containerHeight = containerRect.height;
+        const buttonTop = buttonRect.top - containerRect.top;
+        const buttonBottom = buttonRect.bottom - containerRect.top;
+
+        // Scroll if button is near top or bottom
+        if (buttonTop < 50) {
+            // Button is too high, scroll up
+            levelsContainer.scrollTop += buttonTop - 50;
+        } else if (buttonBottom > containerHeight - 50) {
+            // Button is too low, scroll down
+            levelsContainer.scrollTop += buttonBottom - containerHeight + 50;
+        }
     }
 
     function showControls() {
