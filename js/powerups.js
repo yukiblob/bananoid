@@ -412,6 +412,16 @@ const Powerups = (function() {
         activePowerups.clear();
 
         stopFiring();
+
+        const bullets = document.querySelectorAll('.bullet');
+        bullets.forEach(bullet => {
+            bullet.remove();
+        });
+
+        powerupElements.forEach(pill => {
+            pill.remove();
+        });
+        powerupElements = [];
     }
 
     return {

@@ -125,7 +125,7 @@ const Ball = (function() {
             return;
         }
 
-        const angle = (Math.random() * 120 - 60) * Math.PI / 180;
+        const angle = (Math.random() * 60 - 30) * Math.PI / 180;
         ballData.speedX = baseSpeed * Math.sin(angle) * accelerationFactor;
         ballData.speedY = -baseSpeed * Math.cos(angle) * accelerationFactor;
         ballData.isLaunched = true;
@@ -443,20 +443,40 @@ const Ball = (function() {
         const overlapTop = (ballData.y + ballRadius) - blockTop;
         const overlapBottom = blockBottom - (ballData.y - ballRadius);
 
-        const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+        let collisionSide = null;
 
-        if (minOverlap === overlapLeft) {
-            ballData.x = blockLeft - ballRadius - 0.1;
-            ballData.speedX = -Math.abs(ballData.speedX);
-        } else if (minOverlap === overlapRight) {
-            ballData.x = blockRight + ballRadius + 0.1;
-            ballData.speedX = Math.abs(ballData.speedX);
-        } else if (minOverlap === overlapTop) {
-            ballData.y = blockTop - ballRadius - 0.1;
-            ballData.speedY = -Math.abs(ballData.speedY);
-        } else if (minOverlap === overlapBottom) {
-            ballData.y = blockBottom + ballRadius + 0.1;
-            ballData.speedY = Math.abs(ballData.speedY);
+        const isClearlyHorizontal = Math.min(overlapLeft, overlapRight) < Math.min(overlapTop, overlapBottom) * 0.7;
+        const isClearlyVertical = Math.min(overlapTop, overlapBottom) < Math.min(overlapLeft, overlapRight) * 0.7;
+
+        if (isClearlyHorizontal) {
+            collisionSide = (overlapLeft < overlapRight) ? 'left' : 'right';
+        } else if (isClearlyVertical) {
+            collisionSide = (overlapTop < overlapBottom) ? 'top' : 'bottom';
+        } else {
+            if (Math.abs(ballData.speedX) > Math.abs(ballData.speedY)) {
+                collisionSide = (overlapLeft < overlapRight) ? 'left' : 'right';
+            } else {
+                collisionSide = (overlapTop < overlapBottom) ? 'top' : 'bottom';
+            }
+        }
+
+        switch (collisionSide) {
+            case 'left':
+                ballData.x = blockLeft - ballRadius - 0.1;
+                ballData.speedX = -Math.abs(ballData.speedX);
+                break;
+            case 'right':
+                ballData.x = blockRight + ballRadius + 0.1;
+                ballData.speedX = Math.abs(ballData.speedX);
+                break;
+            case 'top':
+                ballData.y = blockTop - ballRadius - 0.1;
+                ballData.speedY = -Math.abs(ballData.speedY);
+                break;
+            case 'bottom':
+                ballData.y = blockBottom + ballRadius + 0.1;
+                ballData.speedY = Math.abs(ballData.speedY);
+                break;
         }
 
         if (typeof SoundManager !== 'undefined') {
