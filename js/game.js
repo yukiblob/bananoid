@@ -64,6 +64,10 @@ const GameState = (function() {
         // clear old blocks
         gameArea.querySelectorAll(".block").forEach(b => b.remove());
 
+        if (typeof TunnelTrigger !== 'undefined' && TunnelTrigger.reset) {
+            TunnelTrigger.reset();
+        }
+        
         let originalLevels = [];
         let customLevels = [];
 
@@ -177,6 +181,14 @@ const GameState = (function() {
             });
         });
 
+        setTimeout(() => {
+            if (state.currentLevel === 8) {
+                console.log('Initializing victory trigger');
+                if (typeof TunnelTrigger !== 'undefined' && TunnelTrigger.initTriggerForLevel9) {
+                    TunnelTrigger.initTriggerForLevel9();
+                }
+            }
+        }, 100);
         console.log('Finished loading level, blocks created:', document.querySelectorAll('.block').length); // Debug log
     }
 
@@ -594,6 +606,9 @@ const GameState = (function() {
                     }
                     if (typeof Powerups !== 'undefined' && Powerups.update) {
                         Powerups.update();
+                    }
+                    if (state.currentLevel === 8 && typeof TunnelTrigger !== 'undefined' && TunnelTrigger.update) {
+                        TunnelTrigger.update();
                     }
                     updateFPS(timestamp);
                 }
