@@ -347,13 +347,16 @@ const Menu = (function() {
                 }, 10);
             };
 
-            const levelButton = createMenuButton(`Original ${i + 1}`, i + 1); // +1 because back button is index 0
+            const level = originalLevels[i];
+            const buttonText = level.name || `Original ${i + 1}1`;
+
+            const levelButton = createMenuButton(buttonText, i + 1);
             levelButton.onClickFunction = onClick;
 
             // Style for original levels
             levelButton.style.color = '#ffcc00';
             levelButton.style.textShadow = '0 0 5px #ffcc00';
-            levelButton.title = 'Original Level';
+            levelButton.title = level.name ? `Original: ${level.name}` : 'Original Level';
 
             levelsContainer.appendChild(levelButton);
             menuButtons.push(levelButton);
