@@ -386,7 +386,7 @@ const Ball = (function() {
         for (let step = 0; step < steps; step++) {
             const testX = originalX + stepX * step;
             const testY = originalY + stepY * step;
-        
+
             for (let block of blocks) {
                 if (!block.parentElement) continue;
 
@@ -407,7 +407,7 @@ const Ball = (function() {
                     collisionStep = step;
                     collidedBlock = block;
                     blockRectData = { blockLeft, blockTop, blockRight, blockBottom }
-                    
+
                     break;
                 }
             }
@@ -421,8 +421,8 @@ const Ball = (function() {
                 ballData.x = originalX + stepX * (collisionStep - 1);
                 ballData.y = originalY + stepY * (collisionStep - 1);
             }
-            
-            handleBlockCollision(ballData, collidedBlock, 
+
+            handleBlockCollision(ballData, collidedBlock,
                 blockRectData.blockLeft, blockRectData.blockTop,
                 blockRectData.blockRight, blockRectData.blockBottom);
             return true;
@@ -443,40 +443,20 @@ const Ball = (function() {
         const overlapTop = (ballData.y + ballRadius) - blockTop;
         const overlapBottom = blockBottom - (ballData.y - ballRadius);
 
-        let collisionSide = null;
+        const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
 
-        const isClearlyHorizontal = Math.min(overlapLeft, overlapRight) < Math.min(overlapTop, overlapBottom) * 0.7;
-        const isClearlyVertical = Math.min(overlapTop, overlapBottom) < Math.min(overlapLeft, overlapRight) * 0.7;
-
-        if (isClearlyHorizontal) {
-            collisionSide = (overlapLeft < overlapRight) ? 'left' : 'right';
-        } else if (isClearlyVertical) {
-            collisionSide = (overlapTop < overlapBottom) ? 'top' : 'bottom';
-        } else {
-            if (Math.abs(ballData.speedX) > Math.abs(ballData.speedY)) {
-                collisionSide = (overlapLeft < overlapRight) ? 'left' : 'right';
-            } else {
-                collisionSide = (overlapTop < overlapBottom) ? 'top' : 'bottom';
-            }
-        }
-
-        switch (collisionSide) {
-            case 'left':
-                ballData.x = blockLeft - ballRadius - 0.1;
-                ballData.speedX = -Math.abs(ballData.speedX);
-                break;
-            case 'right':
-                ballData.x = blockRight + ballRadius + 0.1;
-                ballData.speedX = Math.abs(ballData.speedX);
-                break;
-            case 'top':
-                ballData.y = blockTop - ballRadius - 0.1;
-                ballData.speedY = -Math.abs(ballData.speedY);
-                break;
-            case 'bottom':
-                ballData.y = blockBottom + ballRadius + 0.1;
-                ballData.speedY = Math.abs(ballData.speedY);
-                break;
+        if (minOverlap === overlapLeft) {
+            ballData.x = blockLeft - ballRadius - 0.1;
+            ballData.speedX = -Math.abs(ballData.speedX);
+        } else if (minOverlap === overlapRight) {
+            ballData.x = blockRight + ballRadius + 0.1;
+            ballData.speedX = Math.abs(ballData.speedX);
+        } else if (minOverlap === overlapTop) {
+            ballData.y = blockTop - ballRadius - 0.1;
+            ballData.speedY = -Math.abs(ballData.speedY);
+        } else if (minOverlap === overlapBottom) {
+            ballData.y = blockBottom + ballRadius + 0.1;
+            ballData.speedY = Math.abs(ballData.speedY);
         }
 
         if (typeof SoundManager !== 'undefined') {
@@ -485,8 +465,8 @@ const Ball = (function() {
 
         const blockType = block.classList.contains("unbreakable") ? "unbreakable"
             : block.classList.contains("strong") ? "strong"
-            : "normal";
-        
+                : "normal";
+
         if (blockType !== "unbreakable") {
             if (blockType === "strong") {
                 block.classList.remove("strong");
