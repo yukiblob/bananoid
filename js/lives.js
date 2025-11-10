@@ -78,10 +78,20 @@ const Lives = (function() {
         }
     }
 
-    function gameOver() {
+    async function gameOver() {
         // Trigger game over logic
         if (typeof gameState !== 'undefined') {
             gameState.setState({ isPaused: true });
+        }
+
+        // Calculate final score
+        const finalScore = typeof Score !== 'undefined' ? Score.getScore() : 0;
+        const timeElapsed = typeof Timer !== 'undefined' ? Timer.getElapsedTime() : 0;
+
+        // Automatically prompt for score submission on game over
+        let scoreboardData = null;
+        if (typeof gameState !== 'undefined' && gameState.promptAndSubmitScore) {
+            scoreboardData = await gameState.promptAndSubmitScore(finalScore, timeElapsed);
         }
 
         // Show game over message
@@ -90,21 +100,47 @@ const Lives = (function() {
         gameOverScreen.className = 'game-over-screen';
 
         gameOverScreen.innerHTML = `
-            <div class="game-over-content">
-                <div class="title-wrapper">
-                    <h1 class="menu-title">YOU DIED</h1>
-                    <h2 class="menu-subtitle">Failed to restore your banana form</h2>
+        <div class="game-over-content">
+            <div class="title-wrapper">
+                <h1 class="menu-title">YOU DIED</h1>
+                <h2 class="menu-subtitle">Failed to restore your banana form</h2>
+            </div>
+            <div class="game-over-stats">
+                <p>Final Score: <span class="score-value">${finalScore}</span></p>
+                <p>Time: <span class="time-value">${formatTime(timeElapsed)}</span></p>
+            </div>
+            ${scoreboardData ? `
+            <div class="scoreboard-section">
+                <div class="rank-message">
+                    ${scoreboardData.rank ? `Rank: ${scoreboardData.rank} (Top ${scoreboardData.percentile}%)` : 'Score submitted!'}
                 </div>
-                <div class="menu-buttons">
-                    <div class="menu-button" data-action="restart"><span class="arrow-indicator">▶</span><span class="button-text">Restart</span></div>
-                    <div class="menu-button" data-action="menu"><span class="arrow-indicator">▶</span><span class="button-text">Main Menu</span></div>
+                <div class="scoreboard-table" id="gameOverScoreboard">
+                    <!-- Scoreboard will be loaded here -->
                 </div>
             </div>
-        `;
+            ` : ''}
+            <div class="menu-buttons">
+                <div class="menu-button" data-action="restart"><span class="arrow-indicator">▶</span><span class="button-text">Restart</span></div>
+                <div class="menu-button" data-action="menu"><span class="arrow-indicator">▶</span><span class="button-text">Main Menu</span></div>
+            </div>
+        </div>
+    `;
 
         document.getElementById('gameArea').appendChild(gameOverScreen);
 
+        // Load scoreboard if we have scoreboard data
+        if (scoreboardData && typeof gameState !== 'undefined' && gameState.loadAndDisplayScoreboard) {
+            await gameState.loadAndDisplayScoreboard('gameOverScoreboard');
+        }
+
         initGameOverNavigation();
+    }
+
+    // Helper function to format time
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${minutes}:${secs.toString().padStart(2, '0')}`;
     }
 
     function initGameOverNavigation() {
