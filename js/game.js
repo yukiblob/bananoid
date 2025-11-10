@@ -633,6 +633,10 @@ window.addEventListener('load', () => {
 
         GameState.init();
 
+        if (typeof CutsceneManager !== 'undefined') {
+            console.log('Initializing Cutscene Manager...');
+        }
+
         if (typeof Lives !== 'undefined' && Lives.init) {
             console.log('Initializing Lives module...');
             Lives.init(GameState);

@@ -519,26 +519,15 @@ const Menu = (function() {
                 Music.fadeStop();
             }
             hideMenu();
+
+            playGameStartSound();
+            
             setTimeout(() => {
-                GameState.loadLevel(0);
-                if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
-                if (typeof Score !== 'undefined' && Score.init) Score.init();
-
-                // Make sure the game is unpaused when starting
-                GameState.setState({ isPaused: false });
-
-                // Start the timer if it exists
-                if (typeof Timer !== 'undefined' && Timer.start) {
-                    Timer.start();
+                if (typeof CutsceneManager !== 'undefined' && CutsceneManager.showIntro) {
+                    CutsceneManager.showIntro();
+                } else {
+                    startGameDirectly();
                 }
-
-                playGameStartSound();
-
-                setTimeout(() => {
-                    if (typeof Music !== 'undefined' && Music.playCrystalHammer) {
-                        Music.playCrystalHammer();
-                    }
-                }, 100);
             }, 10);
         };
 
@@ -600,6 +589,22 @@ const Menu = (function() {
         updateButtonSelection();
 
         menuElement.style.display = 'flex';
+    }
+
+    function startGameDirectly() {
+        GameState.loadLevel(0);
+        if (typeof Ball !== 'undefined' && Ball.reset) Ball.reset();
+        if (typeof Score !== 'undefined' && Score.init) Score.init();
+        GameState.setState({ isPaused: false });
+        if (typeof Timer !== 'undefined' && Timer.start) Timer.start();
+
+        playGameStartSound();
+
+        setTimeout(() => {
+            if (typeof Music !== 'undefined' && Music.playCrystalHammer) {
+                Music.playCrystalHammer();
+            }
+        }, 100);
     }
 
     function hideMenu() {
