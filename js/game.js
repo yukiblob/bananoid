@@ -63,7 +63,7 @@ const GameState = (function() {
 
         // clear old blocks
         gameArea.querySelectorAll(".block").forEach(b => b.remove());
-        
+
         let originalLevels = [];
         let customLevels = [];
 
@@ -199,7 +199,7 @@ const GameState = (function() {
         return originalLevels.length;
     }
 
-    function showWinScreen() {
+    async function showWinScreen() {
         // Pause the game
         state.isPaused = true;
 
@@ -207,6 +207,15 @@ const GameState = (function() {
         const finalScore = typeof Score !== 'undefined' ? Score.getScore() : 0;
         const timeElapsed = typeof Timer !== 'undefined' ? Timer.getElapsedTime() : 0;
         const livesLeft = typeof Lives !== 'undefined' ? Lives.getCurrentLives() : 0;
+
+        // Check if this is the final level
+        const isFinalLevel = state.currentLevel >= getOriginalLevelsCount() - 1;
+
+        // For final level or game over, automatically prompt for score submission
+        let scoreboardData = null;
+        if (isFinalLevel) {
+            scoreboardData = await promptAndSubmitScore(finalScore, timeElapsed);
+        }
 
         // Create win screen
         const winScreen = document.createElement('div');
@@ -217,18 +226,28 @@ const GameState = (function() {
         const seconds = timeElapsed % 60;
 
         winScreen.innerHTML = `
-             <div class="win-content">
-                <div class="title-wrapper">
-                    <h1 class="menu-title">LEVEL COMPLETE!</h1>
-                    <h2 class="menu-subtitle">CONGRATULATIONS</h2>
+        <div class="win-content">
+            <div class="title-wrapper">
+                <h1 class="menu-title">${isFinalLevel ? 'GAME COMPLETED!' : 'LEVEL COMPLETE!'}</h1>
+                <h2 class="menu-subtitle">${isFinalLevel ? 'BANANA FORM RESTORED!' : 'CONGRATULATIONS'}</h2>
+            </div>
+            <div class="win-stats">
+                <p>Final Score: <span class="score-value">${finalScore}</span></p>
+                <p>Time: <span class="time-value">${minutes}:${seconds.toString().padStart(2, '0')}</span></p>
+                <p>Lives Remaining: <span class="lives-value">${livesLeft}</span></p>
+            </div>
+            ${scoreboardData ? `
+            <div class="scoreboard-section">
+                <div class="rank-message">
+                    ${scoreboardData.rank ? `Rank: ${scoreboardData.rank} (Top ${scoreboardData.percentile}%)` : 'Score submitted!'}
                 </div>
-                <div class="win-stats">
-                    <p>Final Score: <span class="score-value">${finalScore}</span></p>
-                    <p>Time: <span class="time-value">${minutes}:${seconds.toString().padStart(2, '0')}</span></p>
-                    <p>Lives Remaining: <span class="lives-value">${livesLeft}</span></p>
+                <div class="scoreboard-table" id="winScoreboard">
+                    <!-- Scoreboard will be loaded here -->
                 </div>
-                <div class="menu-buttons">
-                    ${state.currentLevel < getOriginalLevelsCount() - 1 ?
+            </div>
+            ` : ''}
+            <div class="menu-buttons">
+                ${state.currentLevel < getOriginalLevelsCount() - 1 ?
                 '<div class="menu-button" data-action="nextLevel"><span class="arrow-indicator">▶</span><span class="button-text">Next Level</span></div>' :
                 ''
             }
@@ -240,11 +259,115 @@ const GameState = (function() {
 
         document.getElementById('gameArea').appendChild(winScreen);
 
+        // Load scoreboard if we have scoreboard data
+        if (scoreboardData) {
+            await loadAndDisplayScoreboard('winScoreboard');
+        }
+
         // Initialize win screen navigation
         initWinScreenNavigation();
 
         // Add celebration effect
         createCelebrationEffects();
+    }
+
+    async function promptAndSubmitScore(finalScore, timeElapsed) {
+        // Simple alert for name input
+        const playerName = prompt('Enter your name for the leaderboard (max 10 characters):', 'ANON');
+
+        if (playerName === null) {
+            return null; // User cancelled
+        }
+
+        const name = playerName.trim().substring(0, 10) || 'ANON';
+
+        try {
+            const response = await fetch('/api/scoreboard', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    score: finalScore,
+                    time: timeElapsed
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                return result; // Return rank and percentile info
+            } else {
+                throw new Error('Failed to submit score');
+            }
+        } catch (error) {
+            console.error('Error submitting score:', error);
+            alert('Failed to submit score. Please try again.');
+            return { rank: null, percentile: null }; // Return empty data but continue
+        }
+    }
+
+    async function loadAndDisplayScoreboard(containerId) {
+        try {
+            const response = await fetch('/api/scoreboard?page=1&pageSize=5');
+            if (response.ok) {
+                const data = await response.json();
+                displayScoreboard(containerId, data);
+            }
+        } catch (error) {
+            console.error('Error loading scoreboard:', error);
+        }
+    }
+
+    function displayScoreboard(containerId, data) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        let html = `
+        <div class="table-header">
+            <span>RANK</span>
+            <span>NAME</span>
+            <span>SCORE</span>
+            <span>TIME</span>
+        </div>
+    `;
+
+        if (data.scores && data.scores.length > 0) {
+            data.scores.forEach((score, index) => {
+                const rank = (data.page - 1) * 5 + index + 1;
+                html += `
+                <div class="table-row">
+                    <span>${formatRank(rank)}</span>
+                    <span>${score.name}</span>
+                    <span>${score.score.toLocaleString()}</span>
+                    <span>${formatTime(score.time)}</span>
+                </div>
+            `;
+            });
+        } else {
+            html += `
+            <div class="table-row">
+                <span colspan="4" style="text-align: center; padding: 20px;">
+                    No scores yet! Be the first!
+                </span>
+            </div>
+        `;
+        }
+
+        container.innerHTML = html;
+    }
+
+    function formatRank(rank) {
+        if (rank === 1) return '1st';
+        if (rank === 2) return '2nd';
+        if (rank === 3) return '3rd';
+        return `${rank}th`;
+    }
+
+    function formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${minutes}:${secs.toString().padStart(2, '0')}`;
     }
 
     function initWinScreenNavigation() {
@@ -280,14 +403,14 @@ const GameState = (function() {
             updateButtonSelection();
         }
 
-        function activateSelectedButton() {
+        async function activateSelectedButton() {
             if (winButtons[selectedButtonIndex]) {
                 const action = winButtons[selectedButtonIndex].getAttribute('data-action');
-                handleWinScreenAction(action);
+                await handleWinScreenAction(action);
             }
         }
 
-        function handleWinScreenAction(action) {
+        async function handleWinScreenAction(action) {
             switch (action) {
                 case 'nextLevel':
                     nextLevel();
@@ -297,6 +420,9 @@ const GameState = (function() {
                     break;
                 case 'menu':
                     returnToMenu();
+                    break;
+                case 'submitScore':
+                    await submitScore();
                     break;
             }
         }
@@ -310,7 +436,6 @@ const GameState = (function() {
         // Add keyboard event listener for win screen
         function handleWinScreenKeydown(e) {
             if (!document.getElementById('winScreen')) {
-                // Win screen is gone, remove listener
                 window.removeEventListener('keydown', handleWinScreenKeydown);
                 return;
             }
@@ -330,14 +455,12 @@ const GameState = (function() {
                     e.preventDefault();
                     break;
                 case 'Escape':
-                    // Escape goes to main menu
                     returnToMenu();
                     e.preventDefault();
                     break;
             }
         }
 
-        // Add event listener
         window.addEventListener('keydown', handleWinScreenKeydown);
     }
 
@@ -578,6 +701,11 @@ const GameState = (function() {
         nextLevel,
         restartGame,
         returnToMenu,
+        promptAndSubmitScore: promptAndSubmitScore,
+        loadAndDisplayScoreboard: loadAndDisplayScoreboard,
+        displayScoreboard: displayScoreboard,
+        formatRank: formatRank,
+        formatTime: formatTime,
         showWinScreen,
         getOriginalLevelsCount,
         handleGamePaused: handleGamePaused,
@@ -689,6 +817,11 @@ window.addEventListener('load', () => {
             Score.init();
         } else {
             console.error('Score module not found');
+        }
+        if (typeof Scoreboard !== 'undefined' && Scoreboard.init) {
+            Scoreboard.init();
+        } else {
+            console.error('Scoreboard module not found');
         }
 
         GameState.startGameLoop();

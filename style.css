@@ -1405,6 +1405,32 @@ body {
     cursor: none;
 }
 
+.score-submission {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(255, 204, 0, 0.1);
+    border: 1px solid rgba(255, 204, 0, 0.3);
+    border-radius: 8px;
+    text-align: center;
+}
+
+.score-submission p {
+    color: #ffcc00;
+    font-size: 14px;
+    margin: 0;
+}
+
+.game-over-stats {
+    margin: 25px 0;
+    font-size: 18px;
+    line-height: 2;
+    text-align: center;
+}
+
+.game-over-stats p {
+    margin: 15px 0;
+}
+
 .game-over-content .title-wrapper {
     display: flex;
     flex-direction: column;
@@ -1641,4 +1667,230 @@ body {
     top: 0;
     width: 1px;
     height: 100%;
+}
+
+/* Scoreboard Styles */
+.scoreboard-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(12, 16, 39, 0.95), rgba(12, 16, 39, 0.98));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+}
+
+.scoreboard-content {
+    background: none;
+    padding: 40px;
+    text-align: center;
+    color: white;
+    animation: slideIn 0.5s ease-out;
+    min-width: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.score-stats {
+    margin: 25px 0;
+    font-size: 18px;
+    line-height: 2;
+}
+
+.score-stats p {
+    margin: 15px 0;
+}
+
+.input-hint, .pagination-hint {
+    color: #888;
+    font-size: 10px;
+    margin-top: 8px;
+    text-transform: uppercase;
+}
+
+.scoreboard-section {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.rank-message {
+    color: #ffcc00;
+    font-size: 14px;
+    margin-bottom: 15px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.scoreboard-table {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr 1fr;
+    padding: 12px;
+    background: rgba(255, 204, 0, 0.2);
+    border-bottom: 2px solid #ffcc00;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr 1fr;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 11px;
+}
+
+.table-row:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.game-over-stats {
+    margin: 25px 0;
+    font-size: 18px;
+    line-height: 2;
+    text-align: center;
+}
+
+.game-over-stats p {
+    margin: 15px 0;
+}
+
+.name-input-section {
+    margin: 30px 0;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.name-input-section h3 {
+    color: #ffcc00;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+#playerNameInput {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid #ffcc00;
+    border-radius: 4px;
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    padding: 12px;
+    margin: 10px 0;
+    text-align: center;
+    width: 200px;
+    text-transform: uppercase;
+}
+
+#playerNameInput:focus {
+    outline: none;
+    border-color: #00bcd4;
+    box-shadow: 0 0 10px rgba(0, 188, 212, 0.5);
+}
+
+#submitScoreBtn {
+    background: linear-gradient(to bottom, #ffcc00, #ff9900);
+    border: none;
+    border-radius: 4px;
+    color: #000;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    padding: 10px 20px;
+    margin: 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+#submitScoreBtn:hover {
+    background: linear-gradient(to bottom, #ffdd00, #ffaa00);
+}
+
+.rank-message {
+    color: #ffcc00;
+    font-size: 14px;
+    margin: 20px 0;
+    line-height: 1.5;
+}
+
+.scoreboard-table {
+    width: 100%;
+    margin: 20px 0;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr 1fr;
+    padding: 15px;
+    background: rgba(255, 204, 0, 0.2);
+    border-bottom: 2px solid #ffcc00;
+    font-weight: bold;
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr 2fr 1fr;
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.table-row:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.pagination {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.pagination button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid #ffcc00;
+    border-radius: 4px;
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+ 
+
+    .pagination-info {
+    color: #ffcc00;
+    font-size: 14px;
+}padding: 8px 16px;
+    cursor: pointer;
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination button:not(:disabled):hover {
+    background: rgba(255, 204, 0, 0.2);
+}
+
+.pagination-info {
+    color: #ffcc00;
+    font-size: 14px;
 }

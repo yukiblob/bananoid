@@ -22,6 +22,7 @@ type LevelsResponse struct {
 func main() {
 	fs := http.FileServer(http.Dir("."))
 	http.Handle("/", fs)
+	http.HandleFunc("/api/scoreboard", handleScoreboard)
 
 	// API endpoints
 	http.HandleFunc("/api/levels", handleLevels)
