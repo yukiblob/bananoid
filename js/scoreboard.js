@@ -191,36 +191,52 @@ const Scoreboard = (function() {
         }
     }
 
-    function displayScoreboard(data) {
-        const scoreboardBody = document.getElementById('scoreboardBody');
-        const pageInfo = document.getElementById('pageInfo');
+    function displayScoreboard(containerId, data) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
 
-        // Clear existing scores
-        scoreboardBody.innerHTML = '';
+        let html = `
+        <div class="table-header">
+            <span>RANK</span>
+            <span>NAME</span>
+            <span>SCORE</span>
+            <span>TIME</span>
+        </div>
+    `;
 
-        // Add scores to table
         if (data.scores && data.scores.length > 0) {
             data.scores.forEach((score, index) => {
                 const rank = (data.page - 1) * 5 + index + 1;
-                const row = document.createElement('div');
-                row.className = 'table-row';
-                row.innerHTML = `
+                html += `
+                <div class="table-row">
                     <span>${formatRank(rank)}</span>
                     <span>${score.name}</span>
                     <span>${score.score.toLocaleString()}</span>
                     <span>${formatTime(score.time)}</span>
-                `;
-                scoreboardBody.appendChild(row);
+                </div>
+            `;
             });
         } else {
-            const emptyRow = document.createElement('div');
-            emptyRow.className = 'table-row';
-            emptyRow.innerHTML = `<span colspan="4" style="grid-column: 1 / -1; text-align: center; padding: 20px;">No scores yet! Be the first to submit!</span>`;
-            scoreboardBody.appendChild(emptyRow);
+            html += `
+            <div class="table-row">
+                <span colspan="4" style="grid-column: 1 / -1; text-align: center; padding: 20px;">
+                    No scores yet! Be the first!
+                </span>
+            </div>
+        `;
         }
 
-        // Update pagination
-        pageInfo.textContent = `Page ${data.page}/${data.totalPages}`;
+        // Add pagination controls if there are multiple pages
+        if (data.totalPages > 1) {
+            html += `
+            <div class="scoreboard-pagination">
+                <div class="pagination-info">Page ${data.page}/${data.totalPages}</div>
+                <div class="pagination-hint">Use ← → to navigate</div>
+            </div>
+        `;
+        }
+
+        container.innerHTML = html;
     }
 
     function handleScoreboardKeydown(e) {
