@@ -44,6 +44,7 @@ const CutsceneManager = (function() {
                         <div class="cutscene-text">Once upon a time, there was a happy banana...</div>
                     </div>
                     <div class="cutscene-prompt">Press SPACE to continue</div>
+                    <div class="cutscene-prompt">or ENTER to skip</div>
                 </div>
             `,
             onEnter: null
@@ -78,6 +79,7 @@ const CutsceneManager = (function() {
                         <div class="cutscene-text">Then, one day, the evil D'oh visited bananaland...</div>
                     </div>
                     <div class="cutscene-prompt">Press SPACE to continue</div>
+                    <div class="cutscene-prompt">or ENTER to skip</div>
                 </div>
             `,
             onEnter: function() {
@@ -102,6 +104,7 @@ const CutsceneManager = (function() {
                         </div>
                         <div class="recliner">
                             <div class="naked-banana-paddle banana-shaking"></div>
+                            <div class="stolen-banana-peel scene-3"></div>
                         </div>
                         <div class="sun"></div>
                         <div class="boss-container scene-3">
@@ -112,12 +115,12 @@ const CutsceneManager = (function() {
                                 <div class="moai-mouth"></div>
                             </div>
                         </div>
-                        <div class="stolen-banana-peel scene-3"></div>
                     </div>
                     <div class="cutscene-textbox">
                         <div class="cutscene-text">And stole the banana's peel!</div>
                     </div>
                     <div class="cutscene-prompt">Press SPACE to continue</div>
+                    <div class="cutscene-prompt">or ENTER to skip</div>
                 </div>
             `,
             onEnter: function() {
@@ -148,6 +151,7 @@ const CutsceneManager = (function() {
                         </div>
                         <div class="recliner">
                             <div class="naked-banana-paddle banana-shaking"></div>
+                            <div class="stolen-banana-peel scene-4"></div>
                         </div>
                         <div class="sun"></div>
                         <div class="boss-container scene-4">
@@ -158,7 +162,6 @@ const CutsceneManager = (function() {
                                 <div class="moai-mouth"></div>
                             </div>
                         </div>
-                        <div class="stolen-banana-peel scene-4"></div>
                     </div>
                     <div class="cutscene-textbox">
                         <div class="cutscene-text">You must assault D'oh's fortress and get it back!</div>
@@ -169,7 +172,9 @@ const CutsceneManager = (function() {
             onEnter: function() {
                 setTimeout(() => {
                     const boss = document.querySelector('.boss-container.scene-4');
+                    const peel = document.querySelector('.stolen-banana-peel.scene-4');
                     if (boss) boss.classList.add('boss-exit-complete');
+                    if (peel) peel.classList.add('peel-exit-complete');
                 }, 100);
             }
         }

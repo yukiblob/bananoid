@@ -304,7 +304,7 @@ body {
     height: 100px;
     background: linear-gradient(to bottom, #8B4513, #A0522D);
     border-radius: 20px 20px 0 0;
-    z-index: 2;
+    z-index: 30;
 }
 
 .recliner::before {
@@ -523,7 +523,7 @@ body {
 .boss-container {
     position: absolute;
     top: -300px; /* Start off-screen */
-    left: 40%;
+    left: 37%;
     transform: translateX(-50%);
     z-index: 20;
     transition: top 1.5s ease-out;
@@ -544,13 +544,18 @@ body {
     transition: none;
 }
 
-.boss-container.scene-4 {
+.boss-container.scene-4,
+.stolen-banana-peel.scene-4 {
     top: 0px;
     transition: top 1.5s ease-out;
 }
 
 .boss-container.scene-4.boss-exit-complete {
     top: -400px;
+}
+
+.stolen-banana-peel.scene-4.peel-exit-complete {
+    top: -760px;
 }
 
 /* Keep the existing boss animations but make them scene-specific */
@@ -633,6 +638,7 @@ body {
     left: 50%;
     transform: translateX(-50%);
     opacity: 0;
+    z-index: 30;
 }
 
 .peel-stolen.scene-3 {
@@ -647,12 +653,12 @@ body {
         transform: translateX(-50%) rotate(0deg);
     }
     50% {
-        top: -150px;
+        top: -200px;
         left: 45%;
         transform: translateX(-50%) rotate(-180deg);
     }
     100% {
-        top: -280px; /* Position above D'oh's head */
+        top: -360px; /* Position above D'oh's head */
         left: 50%;
         transform: translateX(-50%) rotate(-360deg);
     }
@@ -660,20 +666,17 @@ body {
 
 /* Scene 4 - Peel already above D'oh's head */
 .stolen-banana-peel.scene-4 {
-    top: -280px;
+    position: absolute;
+    top: -360px;
     left: 50%;
     transform: translateX(-50%);
     opacity: 1;
-    animation: peelFloat 2s ease-in-out infinite;
+    z-index: 25;
+    animation: top 1.5s ease-out;
 }
 
-@keyframes peelFloat {
-    0%, 100% { 
-        transform: translateX(-50%) translateY(0) rotate(-5deg); 
-    }
-    50% { 
-        transform: translateX(-50%) translateY(-10px) rotate(5deg); 
-    }
+.stolen-banana-peel.scene-4 {
+    animation: none;
 }
 
 /* Naked Banana Paddle (peeled) */
@@ -697,7 +700,7 @@ body {
             #fff59d 100%);
     border-radius: 15px;
     box-shadow: 0 0 8px rgba(255, 193, 7, 0.6);
-    z-index: 3;
+    z-index: 15;
 }
 
 .banana-shaking {

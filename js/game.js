@@ -184,6 +184,13 @@ const GameState = (function() {
         const breakableBlocks = document.querySelectorAll('.block:not(.unbreakable)');
 
         if (breakableBlocks.length === 0) {
+            const powerups = document.querySelectorAll('.powerup-pill');
+            powerups.forEach(powerup => powerup.remove());
+
+            if (typeof Powerups !== 'undefined' && Powerups.cleanAllPowerups) {
+                Powerups.cleanAllPowerups();
+            }
+
             showWinScreen();
             return true;
         }
@@ -490,14 +497,7 @@ const GameState = (function() {
         // Remove win screen and particles
         const winScreen = document.getElementById('winScreen');
         const particles = document.querySelectorAll('.celebration-particle');
-        const powerups = document.querySelectorAll('.powerup-pill');
         particles.forEach(particle => particle.remove());
-        powerups.forEach(powerup => powerup.remove());
-
-        // Clean up powerups system
-        if (typeof Powerups !== 'undefined' && Powerups.cleanAllPowerups) {
-            Powerups.cleanAllPowerups();
-        }
 
         if (winScreen) winScreen.remove();
         particles.forEach(particle => particle.remove());
