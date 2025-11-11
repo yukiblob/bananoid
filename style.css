@@ -1506,7 +1506,7 @@ body {
     margin: 15px 0;
 }
 
-..game-over-content .title-wrapper {
+.game-over-content .title-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;

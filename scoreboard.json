@@ -1,12 +1,6 @@
 {
   "scores": [
     {
-      "name": "AUG",
-      "score": 6000,
-      "time": 43,
-      "timestamp": 1762886904
-    },
-    {
       "name": "ANON",
       "score": 34450,
       "time": 200,
@@ -29,6 +23,12 @@
       "score": 7250,
       "time": 106,
       "timestamp": 1762874672
+    },
+    {
+      "name": "ANON",
+      "score": 7000,
+      "time": 18,
+      "timestamp": 1762891229
     },
     {
       "name": "ANON",
@@ -110,6 +110,12 @@
     },
     {
       "name": "ANON",
+      "score": 600,
+      "time": 5,
+      "timestamp": 1762891155
+    },
+    {
+      "name": "ANON",
       "score": 500,
       "time": 14,
       "timestamp": 1762806683
@@ -119,6 +125,12 @@
       "score": 450,
       "time": 5,
       "timestamp": 1762890774
+    },
+    {
+      "name": "ANON",
+      "score": 400,
+      "time": 5,
+      "timestamp": 1762891325
     },
     {
       "name": "ANON",
@@ -135,26 +147,8 @@
     {
       "name": "ANON",
       "score": 300,
-      "time": 3,
-      "timestamp": 1762888606
-    },
-    {
-      "name": "ANON",
-      "score": 300,
       "time": 5,
       "timestamp": 1762886057
-    },
-    {
-      "name": "ANON",
-      "score": 300,
-      "time": 5,
-      "timestamp": 1762886047
-    },
-    {
-      "name": "ANON",
-      "score": 300,
-      "time": 4,
-      "timestamp": 1762882660
     },
     {
       "name": "ANON",
@@ -175,6 +169,30 @@
       "timestamp": 1762887368
     },
     {
+      "name": "ANON",
+      "score": 300,
+      "time": 3,
+      "timestamp": 1762888606
+    },
+    {
+      "name": "ANON",
+      "score": 300,
+      "time": 5,
+      "timestamp": 1762886047
+    },
+    {
+      "name": "ANON",
+      "score": 300,
+      "time": 5,
+      "timestamp": 1762891308
+    },
+    {
+      "name": "ANON",
+      "score": 300,
+      "time": 4,
+      "timestamp": 1762882660
+    },
+    {
       "name": "hello",
       "score": 250,
       "time": 5,
@@ -189,48 +207,6 @@
     {
       "name": "ANON",
       "score": 100,
-      "time": 2,
-      "timestamp": 1762887295
-    },
-    {
-      "name": "ANON",
-      "score": 100,
-      "time": 3,
-      "timestamp": 1762886606
-    },
-    {
-      "name": "ANON",
-      "score": 100,
-      "time": 1,
-      "timestamp": 1762889166
-    },
-    {
-      "name": "ANON",
-      "score": 100,
-      "time": 2,
-      "timestamp": 1762888991
-    },
-    {
-      "name": "ANON",
-      "score": 100,
-      "time": 1,
-      "timestamp": 1762889010
-    },
-    {
-      "name": "ANON",
-      "score": 100,
-      "time": 1,
-      "timestamp": 1762886632
-    },
-    {
-      "name": "ANON",
-      "score": 100,
-      "time": 0,
-      "timestamp": 1762889039
-    },
-    {
-      "name": "ANON",
-      "score": 100,
       "time": 24,
       "timestamp": 1762887996
     },
@@ -238,7 +214,7 @@
       "name": "ANON",
       "score": 100,
       "time": 4,
-      "timestamp": 1762888465
+      "timestamp": 1762888529
     },
     {
       "name": "ANON",
@@ -255,8 +231,26 @@
     {
       "name": "ANON",
       "score": 100,
+      "time": 1,
+      "timestamp": 1762889166
+    },
+    {
+      "name": "ANON",
+      "score": 100,
+      "time": 3,
+      "timestamp": 1762886606
+    },
+    {
+      "name": "ANON",
+      "score": 100,
       "time": 4,
-      "timestamp": 1762888529
+      "timestamp": 1762888465
+    },
+    {
+      "name": "ANON",
+      "score": 100,
+      "time": 1,
+      "timestamp": 1762886632
     },
     {
       "name": "ANON",
@@ -275,6 +269,30 @@
       "score": 100,
       "time": 2,
       "timestamp": 1762887400
+    },
+    {
+      "name": "ANON",
+      "score": 100,
+      "time": 2,
+      "timestamp": 1762887295
+    },
+    {
+      "name": "ANON",
+      "score": 100,
+      "time": 2,
+      "timestamp": 1762888991
+    },
+    {
+      "name": "ANON",
+      "score": 100,
+      "time": 1,
+      "timestamp": 1762889010
+    },
+    {
+      "name": "ANON",
+      "score": 100,
+      "time": 0,
+      "timestamp": 1762889039
     }
   ]
 }
