@@ -356,11 +356,20 @@ const GameState = (function() {
         }
     }
 
-    async function loadAndDisplayScoreboard(containerId) {
+    async function loadAndDisplayScoreboard(containerId, page = 1) {
         try {
-            const response = await fetch('/api/scoreboard?page=1&pageSize=5');
+            const response = await fetch(`/api/scoreboard?page=${page}&pageSize=5`);
             if (response.ok) {
                 const data = await response.json();
+
+                // Store page info for navigation
+                if (typeof currentScoreboardPage !== 'undefined') {
+                    currentScoreboardPage = data.page;
+                }
+                if (typeof totalScoreboardPages !== 'undefined') {
+                    totalScoreboardPages = data.totalPages;
+                }
+
                 displayScoreboard(containerId, data);
             }
         } catch (error) {
@@ -425,6 +434,8 @@ const GameState = (function() {
 
         let selectedButtonIndex = 0;
         let winButtons = [];
+        let currentScoreboardPage = 1;
+        let totalScoreboardPages = 1;
 
         function updateButtonSelection() {
             // Remove highlight from all buttons and hide arrows
@@ -459,6 +470,13 @@ const GameState = (function() {
             }
         }
 
+        async function handleScoreboardPageChange(newPage) {
+            if (newPage >= 1 && newPage <= totalScoreboardPages && newPage !== currentScoreboardPage) {
+                currentScoreboardPage = newPage;
+                await loadAndDisplayScoreboard('winScoreboard', currentScoreboardPage);
+            }
+        }
+
         async function handleWinScreenAction(action) {
             switch (action) {
                 case 'nextLevel':
@@ -489,6 +507,21 @@ const GameState = (function() {
                 return;
             }
 
+            // Check if we're trying to navigate scoreboard pages
+            const scoreboardSection = winScreen.querySelector('.scoreboard-section');
+            if (scoreboardSection && scoreboardSection.style.display !== 'none') {
+                if (e.key === 'ArrowLeft') {
+                    handleScoreboardPageChange(currentScoreboardPage - 1);
+                    e.preventDefault();
+                    return;
+                } else if (e.key === 'ArrowRight') {
+                    handleScoreboardPageChange(currentScoreboardPage + 1);
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            // Regular navigation for buttons
             switch (e.key) {
                 case 'ArrowUp':
                     handleWinScreenNavigation('up');

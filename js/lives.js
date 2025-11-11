@@ -179,16 +179,16 @@ const Lives = (function() {
 
         let selectedButtonIndex = 0;
         let gameOverButtons = [];
+        let currentScoreboardPage = 1;
+        let totalScoreboardPages = 1;
 
         function updateButtonSelection() {
-            // Remove highlight from all buttons and hide arrows
             gameOverButtons.forEach(button => {
                 button.classList.remove('selected');
                 const arrow = button.querySelector('.arrow-indicator');
                 if (arrow) arrow.style.visibility = 'hidden';
             });
 
-            // Add highlight to selected button to show arrow
             if (gameOverButtons[selectedButtonIndex]) {
                 gameOverButtons[selectedButtonIndex].classList.add('selected');
                 const arrow = gameOverButtons[selectedButtonIndex].querySelector('.arrow-indicator');
@@ -202,8 +202,16 @@ const Lives = (function() {
             } else if (direction === 'down') {
                 selectedButtonIndex = (selectedButtonIndex + 1) % gameOverButtons.length;
             }
-
             updateButtonSelection();
+        }
+
+        async function handleScoreboardPageChange(newPage) {
+            if (newPage >= 1 && newPage <= totalScoreboardPages && newPage !== currentScoreboardPage) {
+                currentScoreboardPage = newPage;
+                if (typeof GameState !== 'undefined' && GameState.loadAndDisplayScoreboard) {
+                    await GameState.loadAndDisplayScoreboard('gameOverScoreboard', currentScoreboardPage);
+                }
+            }
         }
 
         function activateSelectedButton() {
@@ -214,7 +222,6 @@ const Lives = (function() {
         }
 
         function handleGameOverAction(action) {
-            // Remove game over screen first
             const gameOverScreen = document.getElementById('gameOverScreen');
             if (gameOverScreen) {
                 gameOverScreen.remove();
@@ -250,11 +257,25 @@ const Lives = (function() {
         // Add keyboard event listener for game over screen
         function handleGameOverKeydown(e) {
             if (!document.getElementById('gameOverScreen')) {
-                // Game over screen is gone, remove listener
                 window.removeEventListener('keydown', handleGameOverKeydown);
                 return;
             }
 
+            // Check if we're trying to navigate scoreboard pages
+            const scoreboardSection = gameOverScreen.querySelector('.scoreboard-section');
+            if (scoreboardSection && scoreboardSection.style.display !== 'none') {
+                if (e.key === 'ArrowLeft') {
+                    handleScoreboardPageChange(currentScoreboardPage - 1);
+                    e.preventDefault();
+                    return;
+                } else if (e.key === 'ArrowRight') {
+                    handleScoreboardPageChange(currentScoreboardPage + 1);
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            // Regular navigation for buttons
             switch (e.key) {
                 case 'ArrowUp':
                     handleGameOverNavigation('up');
@@ -270,14 +291,12 @@ const Lives = (function() {
                     e.preventDefault();
                     break;
                 case 'Escape':
-                    // Escape goes to main menu
                     handleGameOverAction('menu');
                     e.preventDefault();
                     break;
             }
         }
 
-        // Add event listener
         window.addEventListener('keydown', handleGameOverKeydown);
     }
 
