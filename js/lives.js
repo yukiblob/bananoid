@@ -88,27 +88,35 @@ const Lives = (function() {
         const finalScore = typeof Score !== 'undefined' ? Score.getScore() : 0;
         const timeElapsed = typeof Timer !== 'undefined' ? Timer.getElapsedTime() : 0;
 
-        // Automatically prompt for score submission on game over
-        let scoreboardData = null;
-        if (typeof gameState !== 'undefined' && gameState.promptAndSubmitScore) {
-            scoreboardData = await gameState.promptAndSubmitScore(finalScore, timeElapsed);
-        }
+        // Automatically submit score with "ANON" name
+        let scoreboardData = await submitScoreAutomatically(finalScore, timeElapsed);
 
         // Show game over message
         const gameOverScreen = document.createElement('div');
         gameOverScreen.id = 'gameOverScreen';
         gameOverScreen.className = 'game-over-screen';
 
+        const minutes = Math.floor(timeElapsed / 60);
+        const seconds = timeElapsed % 60;
+
         gameOverScreen.innerHTML = `
         <div class="game-over-content">
             <div class="title-wrapper">
-                <h1 class="menu-title">YOU DIED</h1>
-                <h2 class="menu-subtitle">Failed to restore your banana form</h2>
+                <h1 class="menu-title">GAME OVER</h1>
+                <h2 class="menu-subtitle">BETTER LUCK NEXT TIME!</h2>
             </div>
+
             <div class="game-over-stats">
-                <p>Final Score: <span class="score-value">${finalScore}</span></p>
-                <p>Time: <span class="time-value">${formatTime(timeElapsed)}</span></p>
+                <p>
+                    <span class="game-over-stats-label">Final Score:</span>
+                    <span class="game-over-stats-value">${finalScore.toLocaleString()}</span>
+                </p>
+                <p>
+                    <span class="game-over-stats-label">Time:</span>
+                    <span class="game-over-stats-value">${minutes}:${seconds.toString().padStart(2, '0')}</span>
+                </p>
             </div>
+
             ${scoreboardData ? `
             <div class="scoreboard-section">
                 <div class="rank-message">
@@ -119,8 +127,9 @@ const Lives = (function() {
                 </div>
             </div>
             ` : ''}
+
             <div class="menu-buttons">
-                <div class="menu-button" data-action="restart"><span class="arrow-indicator">▶</span><span class="button-text">Restart</span></div>
+                <div class="menu-button" data-action="restart"><span class="arrow-indicator">▶</span><span class="button-text">Play Again</span></div>
                 <div class="menu-button" data-action="menu"><span class="arrow-indicator">▶</span><span class="button-text">Main Menu</span></div>
             </div>
         </div>
@@ -136,11 +145,32 @@ const Lives = (function() {
         initGameOverNavigation();
     }
 
-    // Helper function to format time
-    function formatTime(seconds) {
-        const minutes = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    async function submitScoreAutomatically(finalScore, timeElapsed) {
+        const name = 'ANON'; // Default name
+
+        try {
+            const response = await fetch('/api/scoreboard', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    score: finalScore,
+                    time: timeElapsed
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                return result;
+            } else {
+                throw new Error('Failed to submit score');
+            }
+        } catch (error) {
+            console.error('Error submitting score:', error);
+            return { rank: null, percentile: null }; // Return empty data but continue
+        }
     }
 
     function initGameOverNavigation() {
