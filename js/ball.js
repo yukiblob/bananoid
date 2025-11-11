@@ -537,11 +537,22 @@ const Ball = (function() {
                 ballData.x += ballData.speedX;
                 ballData.y += ballData.speedY;
 
-                if (checkWallCollision(ballData)) {
-                    ballsToRemove.push(ballID);
+                if (typeof Boss !== 'undefined' && Boss.isBossActive && Boss.isBossActive()) {
+                    if (Boss.checkBossCollision(ballData)) {
+                        // collision handled in the Boss module
+                    } else if (checkWallCollision(ballData)) {
+                        ballsToRemove.push(ballID);
+                    } else {
+                        checkPaddleCollision(ballData);
+                        checkBlockCollisions(ballData);
+                    }
                 } else {
-                    checkPaddleCollision(ballData);
-                    checkBlockCollisions(ballData);
+                    if (checkWallCollision(ballData)) {
+                        ballsToRemove.push(ballID);
+                    } else {
+                        checkPaddleCollision(ballData);
+                        checkBlockCollisions(ballData);
+                    }
                 }
             }
 

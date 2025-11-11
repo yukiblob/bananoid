@@ -64,6 +64,10 @@ const GameState = (function() {
         // clear old blocks
         gameArea.querySelectorAll(".block").forEach(b => b.remove());
 
+        if (typeof Boss !== 'undefined' && Boss.cleanup) {
+            Boss.cleanup();
+        }
+
         let originalLevels = [];
         let customLevels = [];
 
@@ -104,6 +108,14 @@ const GameState = (function() {
 
         let grid;
         const levelObj = allLevels[state.currentLevel];
+
+        if (levelObj && levelObj.isBossLevel) {
+            console.log('loading boss level');
+            if (typeof Boss !== 'undefined' && Boss.createBoss) {
+                Boss.createBoss();
+            }
+            return;
+        }
 
         console.log('Raw level data:', levelObj); // Debug log
 
@@ -181,6 +193,10 @@ const GameState = (function() {
 
     // Win Condition/screen
     function checkWinCondition() {
+        if (typeof Boss !== 'undefined' && Boss.isBossActive && Boss.isBossActive()) {
+            return false;
+        }
+
         const breakableBlocks = document.querySelectorAll('.block:not(.unbreakable)');
 
         if (breakableBlocks.length === 0) {
@@ -763,6 +779,13 @@ window.addEventListener('load', () => {
 
         if (typeof CutsceneManager !== 'undefined') {
             console.log('Initializing Cutscene Manager...');
+        }
+
+        if (typeof Boss !== 'undefined' && Boss.init) {
+            console.log("Initializing Boss module...");
+            Boss.init(GameState);
+        } else {
+            console.error('Boss module not found or properly defined');
         }
 
         if (typeof Lives !== 'undefined' && Lives.init) {

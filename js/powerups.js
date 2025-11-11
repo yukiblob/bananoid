@@ -30,6 +30,36 @@ const Powerups = (function() {
             }
         },
         {
+            name: 'freeze',
+            duration: 2000,
+            effect: function() {
+                const paddle = document.getElementById('paddle');
+                paddle.classList.add('powerup-freeze');
+
+                if (!paddle.dataset.originalSpeed) {
+                    paddle.dataset.originalSpeed = gameState.getState().maxPaddleSpeed;
+                }
+
+                gameState.setState({ maxPaddleSpeed: 0 });
+                gameState.setState({ paddleSpeed: 0 });
+
+                paddle.style.filter = 'grayscale(100%) brightness(0.5)';
+            },
+            cleanup: function() {
+                const paddle = document.getElementById('paddle');
+                paddle.classList.remove('powerup-freeze');
+
+                if (paddle.dataset.originalSpeed) {
+                    const originalSpeed = parseFloat(paddle.dataset.originalSpeed);
+
+                    gameState.setState({ maxPaddleSpeed: originalSpeed });
+                    delete paddle.dataset.originalSpeed;
+                }
+
+                paddle.style.filter = '';
+            }
+        },
+        {
             name: 'guns',
             duration: 5000,
             effect: function() {
@@ -92,8 +122,9 @@ const Powerups = (function() {
     ];
 
     function getRandomType() {
-        const randomIndex = Math.floor(Math.random() * types.length);
-        return types[randomIndex];
+        const positiveTypes = types.filter(type => type.name !== 'freeze');
+        const randomIndex = Math.floor(Math.random() * positiveTypes.length);
+        return positiveTypes[randomIndex];
     }
 
     function createPill(x, y) {
@@ -106,6 +137,11 @@ const Powerups = (function() {
         pill.style.left = `${x}px`;
         pill.style.top = `${y}px`;
         pill.dataset.type = pillType.name;
+        
+        if (pillType.name === 'freeze') {
+            pill.classList.add('negative');
+        }
+        
         gameArea.appendChild(pill);
 
         // animate the pill fall
@@ -186,13 +222,21 @@ const Powerups = (function() {
         type.effect();
 
         if (typeof SoundManager !== 'undefined') {
-            SoundManager.playPowerup();
+            if (typeName === 'freeze') {
+                SoundManager.playLaugh();
+            } else {
+                SoundManager.playPowerup();
+            }
         }
 
-        if (typeName === 'shortPaddle') {
-            Score.add(1500);
-        } else {
-            Score.add(500);
+        if (typeof Score !== 'undefined') {
+            if (typeName === 'freeze') {
+                Score.add(-200);
+            } else if (typeName === 'shortPaddle') {
+                Score.add(1500);
+            } else {
+                Score.add(500);
+            }
         }
 
         const timeoutId = setTimeout(() => {
@@ -287,6 +331,32 @@ const Powerups = (function() {
         const bulletRect = bullet.getBoundingClientRect();
         const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
 
+        const bulletLeft = bulletRect.left - gameAreaRect.left;
+        const bulletTop = bulletRect.top - gameAreaRect.top;
+        const bulletRight = bulletLeft + bulletRect.width;
+        const bulletBottom = bulletTop + bulletRect.height;
+
+        if (typeof Boss !== 'undefined' && Boss.isBossActive && Boss.isBossActive()) {
+            const bossElement = document.getElementById('boss');
+            if (bossElement) {
+                const bossRect = bossElement.getBoundingClientRect();
+                const bossLeft = bossRect.left - gameAreaRect.left;
+                const bossTop = bossRect.top - gameAreaRect.top;
+                const bossRight = bossLeft + bossRect.width;
+                const bossBottom = bossTop + bossRect.height;
+
+                if (bulletBottom >= bossTop &&
+                    bulletTop <= bossBottom &&
+                    bulletRight >= bossLeft &&
+                    bulletLeft <= bossRight) {
+                    
+                    handleBossBulletHit(bulletLeft, bulletTop);
+                    bullet.remove();
+                    return true;
+                }
+            }
+        }
+            
         for (let block of blocks) {
             const blockRect = block.getBoundingClientRect();
 
@@ -294,11 +364,6 @@ const Powerups = (function() {
             const blockTop = blockRect.top - gameAreaRect.top;
             const blockRight = blockLeft + blockRect.width;
             const blockBottom = blockTop + blockRect.height;
-
-            const bulletLeft = bulletRect.left - gameAreaRect.left;
-            const bulletTop = bulletRect.top - gameAreaRect.top;
-            const bulletRight = bulletLeft + bulletRect.width;
-            const bulletBottom = bulletTop + bulletRect.height;
 
             if (bulletBottom >= blockTop &&
                 bulletTop <= blockBottom &&
@@ -344,6 +409,24 @@ const Powerups = (function() {
         }
         return false;
     }
+
+    function handleBossBulletHit(bulletX, bulletY) {
+    createSparks(bulletX, bulletY);
+    
+    if (typeof SoundManager !== 'undefined' && SoundManager.playBrickHit) {
+        SoundManager.playBrickHit();
+    }
+    
+    if (typeof Score !== 'undefined') {
+        Score.add(100);
+    }
+    
+    if (typeof Boss !== 'undefined') {
+        if (Boss.handleBulletHit) {
+            Boss.handleBulletHit();
+        }
+    }
+}
 
     function animateBullet(bullet) {
         const bulletSpeed = 12;
@@ -432,6 +515,15 @@ const Powerups = (function() {
         update: function() {
             checkPaddleCollision();
         },
-        cleanAllPowerups: cleanAllPowerups
+        cleanAllPowerups: cleanAllPowerups,
+        addPowerupElement: function(pill) {
+            powerupElements.push(pill);
+        },
+        removePowerupElement: function(pill) {
+            powerupElements = powerupElements.filter(p => p !== pill);
+        },
+        getPowerupElements: function() {
+            return powerupElements;
+        }
     };
 })();

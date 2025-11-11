@@ -1,6 +1,12 @@
 {
   "scores": [
     {
+      "name": "AUG",
+      "score": 6000,
+      "time": 43,
+      "timestamp": 1762886904
+    },
+    {
       "name": "ANON",
       "score": 500,
       "time": 14,

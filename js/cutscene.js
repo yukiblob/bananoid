@@ -170,6 +170,10 @@ const CutsceneManager = (function() {
                 </div>
             `,
             onEnter: function() {
+                if (typeof SoundManager !== 'undefined' && SoundManager.playLaugh) {
+                    SoundManager.playLaugh();
+                }
+
                 setTimeout(() => {
                     const boss = document.querySelector('.boss-container.scene-4');
                     const peel = document.querySelector('.stolen-banana-peel.scene-4');

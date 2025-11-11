@@ -258,6 +258,74 @@ const SoundManager = (function() {
         }
     }
 
+    function playLaugh() {
+        if (!canPlaySound()) return;
+
+        try {
+            const osc1 = audioContext.createOscillator();
+            const osc2 = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+
+            osc1.connect(filter);
+            osc2.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            filter.type = 'lowpass';
+            filter.frequency.value = 800;
+            filter.Q.value = 5;
+
+            osc1.type = 'sawtooth';
+            osc1.frequency.setValueAtTime(180, audioContext.currentTime);
+
+            osc2.type = 'square';
+            osc2.frequency.setValueAtTime(90, audioContext.currentTime);
+
+            const now = audioContext.currentTime;
+
+            const laughPattern = [
+                { start: 0.0, end: 0.15 },
+                { start: 0.3, end: 0.45 },
+                { start: 0.6, end: 0.75 }
+            ];
+
+            laughPattern.forEach((timing, index) => {
+                const startTime = now + timing.start;
+                const endTime = now + timing.end;
+
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.03);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, endTime);
+
+                const pitchBend = 180 + (index * 10);
+                osc1.frequency.setValueAtTime(pitchBend, startTime);
+                osc1.frequency.linearRampToValueAtTime(pitchBend - 30, endTime);
+            });
+
+            osc1.start(now);
+            osc2.start(now);
+            osc1.stop(now + 0.9);
+            osc2.stop(now + 0.9);
+
+            const cleanUp = () => {
+                osc1.disconnect();
+                osc2.disconnect();
+                filter.disconnect();
+                gainNode.disconnect();
+            };
+
+            osc1.onended = cleanUp;
+            osc2.onended = cleanUp;
+        } catch (error) {
+            console.warn('Error playing laugh:', error);
+            // Fallback: simple triple beep
+            Beep(180, 0.15, 0.15, 'sawtooth');
+            setTimeout(() => Beep(180, 0.15, 0.15, 'sawtooth'), 300);
+            setTimeout(() => Beep(180, 0.15, 0.15, 'sawtooth'), 600);
+        }
+    }
+
     function playGameStart() {
         Tone(400, 0.1, 0.1);
         setTimeout(() => Tone(500, 0.1, 0.1), 120);
@@ -285,6 +353,7 @@ const SoundManager = (function() {
         playMenuNavigate: playMenuNavigate,
         playMenuSelect: playMenuSelect,
         playBulletFire: playBulletFire,
+        playLaugh: playLaugh,
         setEnabled: function(enabled) {
             isAudioEnabled = enabled;
         },
