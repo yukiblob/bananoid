@@ -1373,7 +1373,7 @@ body {
 }
 
 /* Game Over Screen Styles */
-.game-over-screen {
+.win-screen, .game-over-screen {
     position: absolute;
     top: 0;
     left: 0;
@@ -1390,19 +1390,22 @@ body {
     color: white;
     font-family: 'Press Start 2P', monospace;
     cursor: none;
+    padding: 10px;
 }
 
-.game-over-content {
+.win-content, .game-over-content {
     background: none;
-    padding: 40px;
+    padding: 15px;
     text-align: center;
     color: white;
     animation: slideIn 0.5s ease-out;
     min-width: 400px;
+    max-width: 90%;
     display: flex;
     flex-direction: column;
     align-items: center;
     cursor: none;
+    gap: 8px;
 }
 
 .score-submission {
@@ -1420,101 +1423,7 @@ body {
     margin: 0;
 }
 
-.game-over-stats {
-    margin: 25px 0;
-    font-size: 18px;
-    line-height: 2;
-    text-align: center;
-}
-
-.game-over-stats p {
-    margin: 15px 0;
-}
-
-.game-over-content .title-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 40px;
-}
-
-.game-over-content .menu-title {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 48px;
-    margin-bottom: 50px;
-    text-transform: uppercase;
-    color: #8B0000;
-}
-
-.game-over-content .menu-subtitle {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 22px;
-    color: #ffcc00;
-    text-transform: uppercase;
-    text-shadow: 
-        0 0 5px #ffcc00,
-        0 0 10px #ff6600;
-}
-
-.game-over-content .menu-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    align-items: center;
-    margin-top: 30px;
-}
-
-.game-over-content .menu-button {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 22px;
-    text-transform: uppercase;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    position: relative;
-    justify-content: center;
-    width: 280px;
-    padding: 10px 0;
-}
-
-.game-over-content .menu-button.selected {
-    color: #ffcc00;
-    text-shadow: 0 0 5px #ffcc00, 0 0 10px #ff6600;
-}
-
-.game-over-content .arrow-indicator {
-    position: absolute;
-    left: -30px;
-    font-size: 20px;
-    color: #ffcc00;
-    animation: blink 0.8s infinite;
-    text-shadow: 0 0 5px #ffcc00, 0 0 10px #ff6600;
-    visibility: hidden;
-}
-
-/* Win Screen Styles */
-.win-screen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(rgba(12, 16, 39, 0.85), rgba(12, 16, 39, 0.95)),
-                url('/media/banana-tree-beach.jpg');
-    background-size: cover;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    color: white;
-    font-family: 'Press Start 2P', monospace;
-    cursor: none;
-}
-
-.win-content {
+.win-content , .game-over-content {
     background: none;
     padding: 40px;
     text-align: center;
@@ -1527,91 +1436,102 @@ body {
     cursor: none;
 }
 
-.win-content .title-wrapper {
+.win-content .title-wrapper, .game-over-content .title-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 40px;
+    margin-bottom: 8px;
+    gap: 3px;
 }
 
-.win-content .menu-title {
+.win-content .menu-title, .game-over-content .menu-title {
     font-family: 'Press Start 2P', monospace;
-    font-size: 48px;
-    margin-bottom: 20px;
+    font-size: 28px;
+    margin-bottom: 2px;
     text-transform: uppercase;
     color: white;
     text-shadow:
         2px 2px 0 #ff0000,
         -2px -2px 0 #00bcd4,
-        0 0 10px #ffffff,
-        0 0 20px #00bcd4,
-        0 0 30px #ff0000;
+        0 0 8px #ffffff,
+        0 0 16px #00bcd4,
+        0 0 24px #ff0000;
+    line-height: 1.1;
 }
 
-.win-content .menu-subtitle {
+.win-content .menu-subtitle, .game-over-content .menu-subtitle {
     font-family: 'Press Start 2P', monospace;
-    font-size: 22px;
+    font-size: 12px;
     color: #ffcc00;
     text-transform: uppercase;
-    text-shadow: 
-        0 0 5px #ffcc00,
-        0 0 10px #ff6600;
+    text-shadow:
+        0 0 4px #ffcc00,
+        0 0 8px #ff6600;
+    line-height: 1.1;
 }
 
-.win-stats {
-    margin: 25px 0;
-    font-size: 18px;
-    line-height: 2;
+.win-stats, .game-over-stats {
+    margin: 5px 0;
+    font-size: 10px;
+    line-height: 1.4;
     text-align: center;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+    max-width: 250px;
 }
 
-.win-stats p {
-    margin: 15px 0;
+.win-stats p, .game-over-stats p {
+    margin: 4px 0;
 }
 
 .score-value, .time-value, .lives-value {
     font-weight: bold;
     color: #ffcc00;
-    font-size: 1.2em;
-    text-shadow: 0 0 5px #ffcc00;
+    font-size: 1em;
+    text-shadow: 0 0 3px #ffcc00;
 }
 
-.win-content .menu-buttons {
+.win-content .menu-buttons, .game-over-content .menu-buttons {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 8px;
     align-items: center;
-    margin-top: 30px;
+    margin-top: 10px;
+    width: 100%;
+    max-width: 300px;
 }
 
-.win-content .menu-button {
+.win-content .menu-button, .game-over-content .menu-button {
     background: none;
     border: none;
     color: white;
-    font-size: 22px;
+    font-size: 14px;
     text-transform: uppercase;
     transition: all 0.2s;
     display: flex;
     align-items: center;
     position: relative;
     justify-content: center;
-    width: 280px;
-    padding: 10px 0;
+    width: 100%;
+    padding: 6px 0;
     cursor: none;
 }
 
-.win-content .menu-button.selected {
+.win-content .menu-button.selected, .game-over-content .menu-button.selected {
     color: #ffcc00;
-    text-shadow: 0 0 5px #ffcc00, 0 0 10px #ff6600;
+    text-shadow: 0 0 4px #ffcc00, 0 0 8px #ff6600;
 }
 
-.win-content .arrow-indicator {
+.win-content .arrow-indicator, .game-over-content .arrow-indicator {
     position: absolute;
-    left: -30px;
-    font-size: 20px;
+    left: -20px;
+    font-size: 14px;
     color: #ffcc00;
     animation: blink 0.8s infinite;
-    text-shadow: 0 0 5px #ffcc00, 0 0 10px #ff6600;
+    text-shadow: 0 0 4px #ffcc00, 0 0 8px #ff6600;
     visibility: hidden;
 }
 
@@ -1628,7 +1548,7 @@ body {
 @keyframes slideIn {
     from {
         opacity: 0;
-        transform: scale(0.8) translateY(-50px);
+        transform: scale(0.9) translateY(-20px);
     }
     to {
         opacity: 1;
@@ -1648,6 +1568,8 @@ body {
 }
 
 .celebration-particle {
+    width: 6px;
+    height: 6px;
     pointer-events: none;
     z-index: 999;
 }
@@ -1716,48 +1638,56 @@ body {
 }
 
 .scoreboard-section {
-    margin: 20px 0;
-    padding: 15px;
-    background: rgba(0, 0, 0, 0.6);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 8px 0;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+    max-width: 300px;
 }
 
 .rank-message {
     color: #ffcc00;
-    font-size: 14px;
-    margin-bottom: 15px;
+    font-size: 10px;
+    margin-bottom: 6px;
     text-align: center;
     text-transform: uppercase;
+    line-height: 1.2;
 }
 
 .scoreboard-table {
     width: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
     overflow: hidden;
+    font-size: 9px;
 }
 
 .table-header {
     display: grid;
-    grid-template-columns: 1fr 2fr 2fr 1fr;
-    padding: 12px;
-    background: rgba(255, 204, 0, 0.2);
-    border-bottom: 2px solid #ffcc00;
+    grid-template-columns: 0.8fr 1.5fr 1.2fr 0.8fr;
+    padding: 6px 8px;
+    background: rgba(255, 204, 0, 0.15);
+    border-bottom: 1px solid #ffcc00;
     font-weight: bold;
-    font-size: 12px;
+    gap: 4px;
+}
+
+.win-screen *, .game-over-screen * {
+    box-sizing: border-box;
 }
 
 .table-row {
     display: grid;
-    grid-template-columns: 1fr 2fr 2fr 1fr;
-    padding: 10px 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 11px;
+    grid-template-columns: 0.8fr 1.5fr 1.2fr 0.8fr;
+    padding: 4px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    gap: 4px;
 }
 
 .table-row:nth-child(odd) {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.02);
 }
 
 .game-over-stats {

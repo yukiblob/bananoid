@@ -1,6 +1,36 @@
 {
   "scores": [
     {
+      "name": "kostas",
+      "score": 15700,
+      "time": 152,
+      "timestamp": 1762876237
+    },
+    {
+      "name": "august",
+      "score": 7250,
+      "time": 106,
+      "timestamp": 1762874672
+    },
+    {
+      "name": "ANON",
+      "score": 1800,
+      "time": 6,
+      "timestamp": 1762881702
+    },
+    {
+      "name": "ANON",
+      "score": 1650,
+      "time": 6,
+      "timestamp": 1762881716
+    },
+    {
+      "name": "Etali",
+      "score": 800,
+      "time": 5,
+      "timestamp": 1762882861
+    },
+    {
       "name": "ANON",
       "score": 500,
       "time": 14,
@@ -11,6 +41,18 @@
       "score": 300,
       "time": 5,
       "timestamp": 1762806262
+    },
+    {
+      "name": "ANON",
+      "score": 300,
+      "time": 4,
+      "timestamp": 1762882660
+    },
+    {
+      "name": "hello",
+      "score": 250,
+      "time": 5,
+      "timestamp": 1762882694
     }
   ]
 }
