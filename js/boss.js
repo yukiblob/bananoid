@@ -1,8 +1,8 @@
 const Boss = (function() {
     let gameState;
     let bossElement = null;
-    let bossHealth = 30;
-    let maxBossHealth = 30;
+    let bossHealth = 1;
+    let maxBossHealth = 1;
     let isBossActive = false;
     let bossMovementInterval = null;
     let bossPowerupInterval = null;
@@ -266,17 +266,44 @@ const Boss = (function() {
         if (bossMovementInterval) clearInterval(bossMovementInterval);
         if (bossPowerupInterval) clearInterval(bossPowerupInterval);
 
+        if (typeof GameState !== 'undefined') {
+            GameState.setState({ isPaused: true });
+        }
+
+        const powerups = document.querySelectorAll('.powerup-pill');
+        powerups.forEach(powerup => powerup.remove());
+
+        if (typeof Powerups !== 'undefined' && Powerups.cleanAllPowerups) {
+            Powerups.cleanAllPowerups();
+        }
+
+        if (healthBarElement) {
+            healthBarElement.remove();
+            healthBarElement = null;
+        }
+
         if (typeof SoundManager !== 'undefined' && SoundManager.playGameStart) {
             SoundManager.playGameStart();
         }
 
-        bossElement.style.animation = 'bossDefeat 1s forwards';
+        if (bossElement) {
+            bossElement.style.animation = 'bossDefeat 1s forwards';
+        }
 
         setTimeout(() => {
-            if (typeof GameState !== 'undefined' && GameState.showWinScreen) {
-                GameState.showWinScreen();
+            if (bossElement) {
+                bossElement.remove();
+                bossElement = null;
             }
-        }, 1500);
+
+            if (typeof CutsceneManager !== 'undefined' && CutsceneManager.showVictory) {
+                CutsceneManager.showVictory();
+            } else {
+                if (typeof GameState !== 'undefined' && GameState.showWinScreen) {
+                    GameState.showWinScreen();
+                }
+            }
+        }, 1000);
     }
 
     function cleanup() {

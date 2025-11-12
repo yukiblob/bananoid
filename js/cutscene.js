@@ -3,6 +3,7 @@ const CutsceneManager = (function() {
     let currentSceneIndex = 0;
     let cutsceneElement = null;
     let currentSceneData = null;
+    let currrentKeydownHandler = null;
 
     function createCutsceneElement() {
         const cutscene = document.createElement('div');
@@ -184,9 +185,107 @@ const CutsceneManager = (function() {
         }
     ];
 
+    const victoryCutscene = [
+        {
+            background: 'linear-gradient(to bottom, #0c1027, #1a1f4a)',
+            content: `
+                <div class="cutscene-content">
+                    <div class="victory-scene">
+                        <div class="naked-banana-paddle victory-banana"></div>
+                    </div>
+                    <div class="cutscene-textbox">
+                        <div class="cutscene-text">At last, the villainous D'oh has been defeated...</div>
+                    </div>
+                    <div class="cutscene-prompt">Press SPACE to continue</div>
+                    <div class="cutscene-prompt">or ENTER to skip</div>
+                </div>
+            `,
+            onEnter: null
+        },
+        {
+            background: 'linear-gradient(to bottom, #0c1027, #1a1f4a)',
+            content: `
+                <div class="cutscene-content">
+                    <div class="victory-scene">
+                        <div class="naked-banana-paddle victory-banana"></div>
+                        <div class="banana-peel victory-peel-falling"></div>
+                    </div>
+                    <div class="cutscene-textbox">
+                        <div class="cutscene-text">And with the banana peel recovered...</div>
+                    </div>
+                    <div class="cutscene-prompt">Press SPACE to continue</div>
+                    <div class="cutscene-prompt">or ENTER to skip</div>
+                </div>
+            `,
+            onEnter: function() {
+                setTimeout(() => {
+                    const peel = document.querySelector('.banana-peel.victory-peel-falling');
+                    if (peel) {
+                        peel.classList.add('peel-landed');
+                    }
+                }, 3000);
+            }
+        },
+        {
+            background: 'linear-gradient(to bottom, #0c1027, #1a1f4a)',
+            content: `
+                <div class="cutscene-content">
+                    <div class="party-light"></div>
+                    <div class="light-rays"></div>
+                    <div class="victory-scene">
+                        <div class="banana-peel victory-peel-jumping">
+                        </div>
+                    </div>
+                    <div class="cutscene-textbox">
+                        <div class="cutscene-text">It's time to PAR TAY!></div>
+                    </div>
+                    <div class="cutscene-prompt">PAR TAY!</div>
+                </div>
+            `,
+            onEnter: function() {
+                setTimeout(() => {
+                    startJumpingSound();
+                }, 100);
+            }
+        }
+    ];
+
+    let jumpingInterval = null;
+
+    function startJumpingSound() {
+        if (typeof SoundManager !== 'undefined' && SoundManager.Beep) {
+            SoundManager.Beep(800, 0.1, 0.1, 'square');
+        }
+        let jumpCount = 0;
+        const maxJumps = 20;
+
+        jumpingInterval = setInterval(() => {
+            if (jumpCount >= maxJumps) {
+                clearInterval(jumpingInterval);
+                return;
+            }
+
+            if (typeof SoundManager !== 'undefined' && SoundManager.Beep) {
+                SoundManager.Beep(800, 0.1, 0.1, 'square');
+            }
+            jumpCount++;
+        }, 1600);
+    }
+
+    function stopJumpingSound() {
+        if (jumpingInterval) {
+            clearInterval(jumpingInterval);
+            jumpingInterval = null;
+        }
+    }
+
     function showScene() {
         if (!currentSceneData || currentSceneIndex >= currentSceneData.length) {
-            endCutscene();
+            if (currentCutscene === 'victory') {
+                endVictoryCutscene();
+            } else {
+                endCutscene();
+            }
             return;
         }
 
@@ -204,7 +303,11 @@ const CutsceneManager = (function() {
         if (currentSceneIndex < currentSceneData.length) {
             showScene();
         } else {
-            endCutscene();
+            if (currentCutscene === 'victory') {
+                endVictoryCutscene();
+            } else {
+                endCutscene();
+            }
         }
     }
 
@@ -217,6 +320,8 @@ const CutsceneManager = (function() {
         currentSceneIndex = 0;
         currentSceneData = introCutscene;
 
+        removeCurrentEventListener();
+
         cutsceneElement.style.display = 'block';
         showScene();
 
@@ -226,16 +331,83 @@ const CutsceneManager = (function() {
                 e.preventDefault();
             } else if (e.key === 'Enter') {
                 endCutscene();
-                window.removeEventListener('keydown', handleCutsceneKeydown);
+                removeCurrentEventListener();
                 e.preventDefault();
             }
         }
 
-        window.removeEventListener('keydown', handleCutsceneKeydown);
-        window.addEventListener('keydown', handleCutsceneKeydown);
+        currrentKeydownHandler = handleCutsceneKeydown;
+        window.addEventListener('keydown', currrentKeydownHandler);
+    }
+
+    function showVictoryCutscene() {
+        if (!cutsceneElement) {
+            cutsceneElement = createCutsceneElement();
+        }
+
+        currentCutscene = 'victory';
+        currentSceneIndex = 0;
+        currentSceneData = victoryCutscene;
+
+        if (typeof GameState !== 'undefined') {
+            GameState.setState({ isPaused: true });
+        }
+
+        if (typeof Timer !== 'undefined' && Timer.pause) {
+            Timer.pause();
+        }
+
+        removeCurrentEventListener();
+
+        cutsceneElement.style.display = 'block';
+        showScene();
+
+        function handleVictoryKeydown(e) {
+            if (e.key === ' ') {
+                nextScene();
+                e.preventDefault();
+            } else if (e.key === 'Enter') {
+                if (currentCutscene === 'victory') {
+                    endVictoryCutscene();
+                } else {
+                    endCutscene();
+                }
+                removeCurrentEventListener();
+                e.preventDefault();
+            }
+        }
+
+        currrentKeydownHandler = handleVictoryKeydown;
+        window.addEventListener('keydown', currrentKeydownHandler);
+    }
+
+    function removeCurrentEventListener() {
+        if (currrentKeydownHandler) {
+            window.removeEventListener('keydown', currrentKeydownHandler);
+            currrentKeydownHandler = null;
+        }
+    }
+
+    function endVictoryCutscene() {
+        stopJumpingSound();
+        removeCurrentEventListener();
+
+        if (cutsceneElement) {
+            cutsceneElement.style.display = 'none';
+            cutsceneElement.innerHTML = '';
+        }
+
+        currentCutscene = null;
+        currentSceneIndex = 0;
+        currentSceneData = null;
+
+        if (typeof GameState !== 'undefined' && GameState.showWinScreen) {
+            GameState.showWinScreen();
+        }
     }
 
     function endCutscene() {
+        removeCurrentEventListener();
         
         if (cutsceneElement) {
             cutsceneElement.style.display = 'none';
@@ -261,6 +433,7 @@ const CutsceneManager = (function() {
 
     return {
         showIntro: showIntroCutscene,
+        showVictory: showVictoryCutscene,
         end: endCutscene,
         nextScene: nextScene
     };

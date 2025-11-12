@@ -344,6 +344,7 @@ const SoundManager = (function() {
 
     return {
         init: init,
+        Beep,
         playWallHit: playWallHit,
         playPaddleHit: playPaddleHit,
         playBrickHit: playBrickHit,
