@@ -1,8 +1,8 @@
 const Boss = (function() {
     let gameState;
     let bossElement = null;
-    let bossHealth = 1;
-    let maxBossHealth = 1;
+    let bossHealth = 30;
+    let maxBossHealth = 30;
     let isBossActive = false;
     let bossMovementInterval = null;
     let bossPowerupInterval = null;
