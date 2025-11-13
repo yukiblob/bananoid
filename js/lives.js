@@ -88,10 +88,7 @@ const Lives = (function() {
         const finalScore = typeof Score !== 'undefined' ? Score.getScore() : 0;
         const timeElapsed = typeof Timer !== 'undefined' ? Timer.getElapsedTime() : 0;
 
-        // Automatically submit score with "ANON" name
-        let scoreboardData = await submitScoreAutomatically(finalScore, timeElapsed);
-
-        // Show game over message
+        // Show game over screen
         const gameOverScreen = document.createElement('div');
         gameOverScreen.id = 'gameOverScreen';
         gameOverScreen.className = 'game-over-screen';
@@ -100,49 +97,95 @@ const Lives = (function() {
         const seconds = timeElapsed % 60;
 
         gameOverScreen.innerHTML = `
-        <div class="game-over-content">
-            <div class="title-wrapper">
-                <h1 class="menu-title">GAME OVER</h1>
-                <h2 class="menu-subtitle">BETTER LUCK NEXT TIME!</h2>
-            </div>
-
-            <div class="game-over-stats">
-                <p>
-                    <span class="game-over-stats-label">Final Score:</span>
-                    <span class="game-over-stats-value">${finalScore.toLocaleString()}</span>
-                </p>
-                <p>
-                    <span class="game-over-stats-label">Time:</span>
-                    <span class="game-over-stats-value">${minutes}:${seconds.toString().padStart(2, '0')}</span>
-                </p>
-            </div>
-
-            ${scoreboardData ? `
-            <div class="scoreboard-section">
-                <div class="rank-message">
-                    ${scoreboardData.rank ? `Rank: ${scoreboardData.rank} (Top ${scoreboardData.percentile}%)` : 'Score submitted!'}
-                </div>
-                <div class="scoreboard-table" id="gameOverScoreboard">
-                    <!-- Scoreboard will be loaded here -->
-                </div>
-            </div>
-            ` : ''}
-
-            <div class="menu-buttons">
-                <div class="menu-button" data-action="restart"><span class="arrow-indicator">▶</span><span class="button-text">Play Again</span></div>
-                <div class="menu-button" data-action="menu"><span class="arrow-indicator">▶</span><span class="button-text">Main Menu</span></div>
-            </div>
+    <div class="game-over-content">
+        <div class="title-wrapper">
+            <h1 class="menu-title">GAME OVER</h1>
+            <h2 class="menu-subtitle">BETTER LUCK NEXT TIME!</h2>
         </div>
+
+        <div class="game-over-stats">
+            <p>
+                <span class="game-over-stats-label">Final Score:</span>
+                <span class="game-over-stats-value">${finalScore.toLocaleString()}</span>
+            </p>
+            <p>
+                <span class="game-over-stats-label">Time:</span>
+                <span class="game-over-stats-value">${minutes}:${seconds.toString().padStart(2, '0')}</span>
+            </p>
+        </div>
+
+        <div class="name-input-section">
+            <h3>ENTER YOUR NAME FOR LEADERBOARD</h3>
+            <input type="text" id="playerNameInput" maxlength="10" placeholder="ANON" 
+                   style="font-family: 'Press Start 2P', monospace; padding: 10px; text-align: center; text-transform: uppercase;">
+            <div class="input-hint">Type your name and press ENTER to submit</div>
+            <div id="submitStatus" style="margin-top: 10px; min-height: 20px;"></div>
+        </div>
+
+        <div class="menu-buttons">
+            <div class="menu-button" data-action="restart"><span class="arrow-indicator">▶</span><span class="button-text">Play Again</span></div>
+            <div class="menu-button" data-action="menu"><span class="arrow-indicator">▶</span><span class="button-text">Main Menu</span></div>
+        </div>
+    </div>
     `;
 
         document.getElementById('gameArea').appendChild(gameOverScreen);
 
-        // Load scoreboard if we have scoreboard data
-        if (scoreboardData && typeof gameState !== 'undefined' && gameState.loadAndDisplayScoreboard) {
-            await gameState.loadAndDisplayScoreboard('gameOverScoreboard');
-        }
+        // Auto-focus on input
+        const nameInput = document.getElementById('playerNameInput');
+        const submitStatus = document.getElementById('submitStatus');
+        nameInput.focus();
 
-        initGameOverNavigation();
+        // Remove mouse event listeners from name input section
+        const nameInputSection = document.querySelector('.name-input-section');
+        nameInputSection.style.pointerEvents = 'none'; // Disable mouse interactions
+
+        // But allow focus on the input
+        nameInput.style.pointerEvents = 'auto';
+
+
+        // Keyboard-only submission
+        nameInput.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const name = nameInput.value.trim().substring(0, 10) || 'ANON';
+
+                submitStatus.textContent = 'SUBMITTING...';
+                submitStatus.style.color = '#ffcc00';
+
+                try {
+                    let result;
+
+                    if (typeof Scoreboard !== 'undefined' && typeof Scoreboard.handleExternalScoreSubmission === 'function') {
+                        // Use the new integrated approach
+                        result = await Scoreboard.handleExternalScoreSubmission(name, finalScore, timeElapsed, false);
+                    } else if (typeof Scoreboard !== 'undefined' && typeof Scoreboard.submitScore === 'function') {
+                        result = await Scoreboard.submitScore(name, finalScore, timeElapsed);
+                        if (result) {
+                            // If we only have submitScore, show the custom scoreboard
+                            showGameOverScoreboard(result, name, finalScore, timeElapsed);
+                        }
+                    } else {
+                        result = await submitScoreDirectly(name, finalScore, timeElapsed);
+                        if (result) {
+                            showGameOverScoreboard(result, name, finalScore, timeElapsed);
+                        }
+                    }
+
+                    if (result) {
+                    } else {
+                        throw new Error('Submission returned no result');
+                    }
+                } catch (error) {
+                    console.error('Score submission error:', error);
+                    submitStatus.textContent = `SUBMISSION FAILED: ${error.message} - PRESS ENTER TO RETRY`;
+                    submitStatus.style.color = '#f44336';
+                    nameInput.focus();
+                }
+            }
+        });
     }
 
     async function submitScoreAutomatically(finalScore, timeElapsed) {
@@ -181,6 +224,7 @@ const Lives = (function() {
         let gameOverButtons = [];
         let currentScoreboardPage = 1;
         let totalScoreboardPages = 1;
+        let scoreSubmitted = false;
 
         function updateButtonSelection() {
             gameOverButtons.forEach(button => {
@@ -215,6 +259,17 @@ const Lives = (function() {
         }
 
         function activateSelectedButton() {
+            if (!scoreSubmitted) {
+                const nameInput = document.getElementById('playerNameInput');
+                const submitStatus = document.getElementById('submitStatus');
+                if (nameInput && submitStatus) {
+                    submitStatus.textContent = 'PLEASE SUBMIT SCORE FIRST (PRESS ENTER ON NAME FIELD)';
+                    submitStatus.style.color = '#ffcc00';
+                    nameInput.focus();
+                }
+                return;
+            }
+
             if (gameOverButtons[selectedButtonIndex]) {
                 const action = gameOverButtons[selectedButtonIndex].getAttribute('data-action');
                 handleGameOverAction(action);
@@ -248,6 +303,10 @@ const Lives = (function() {
             }
         }
 
+        window.markScoreSubmitted = function() {
+            scoreSubmitted = true;
+        };
+
         // Get all game over screen buttons
         gameOverButtons = Array.from(gameOverScreen.querySelectorAll('.menu-button'));
 
@@ -261,9 +320,32 @@ const Lives = (function() {
                 return;
             }
 
-            // Check if we're trying to navigate scoreboard pages
+            if (!scoreSubmitted) {
+                const nameInput = document.getElementById('playerNameInput');
+                if (nameInput && e.target !== nameInput) {
+                    // Allow only name input navigation
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        nameInput.focus();
+                        return;
+                    }
+                    // Block arrow keys and Enter for menu navigation
+                    if (['ArrowUp', 'ArrowDown', 'Enter', ' '].includes(e.key)) {
+                        e.preventDefault();
+                        const submitStatus = document.getElementById('submitStatus');
+                        if (submitStatus) {
+                            submitStatus.textContent = 'PLEASE SUBMIT SCORE FIRST (TYPE NAME AND PRESS ENTER)';
+                            submitStatus.style.color = '#ffcc00';
+                        }
+                        nameInput.focus();
+                        return;
+                    }
+                }
+            }
+
+            // Check if we're trying to navigate scoreboard pages (only allow after submission)
             const scoreboardSection = gameOverScreen.querySelector('.scoreboard-section');
-            if (scoreboardSection && scoreboardSection.style.display !== 'none') {
+            if (scoreboardSection && scoreboardSection.style.display !== 'none' && scoreSubmitted) {
                 if (e.key === 'ArrowLeft') {
                     handleScoreboardPageChange(currentScoreboardPage - 1);
                     e.preventDefault();
@@ -275,25 +357,27 @@ const Lives = (function() {
                 }
             }
 
-            // Regular navigation for buttons
-            switch (e.key) {
-                case 'ArrowUp':
-                    handleGameOverNavigation('up');
-                    e.preventDefault();
-                    break;
-                case 'ArrowDown':
-                    handleGameOverNavigation('down');
-                    e.preventDefault();
-                    break;
-                case 'Enter':
-                case ' ':
-                    activateSelectedButton();
-                    e.preventDefault();
-                    break;
-                case 'Escape':
-                    handleGameOverAction('menu');
-                    e.preventDefault();
-                    break;
+            // Regular navigation for buttons (only if score submitted)
+            if (scoreSubmitted) {
+                switch (e.key) {
+                    case 'ArrowUp':
+                        handleGameOverNavigation('up');
+                        e.preventDefault();
+                        break;
+                    case 'ArrowDown':
+                        handleGameOverNavigation('down');
+                        e.preventDefault();
+                        break;
+                    case 'Enter':
+                    case ' ':
+                        activateSelectedButton();
+                        e.preventDefault();
+                        break;
+                    case 'Escape':
+                        handleGameOverAction('menu');
+                        e.preventDefault();
+                        break;
+                }
             }
         }
 

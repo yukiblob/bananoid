@@ -234,12 +234,6 @@ const GameState = (function() {
         // Check if this is the final level
         const isFinalLevel = state.currentLevel >= getOriginalLevelsCount() - 1;
 
-        // For final level, automatically submit score with "ANON" if no name provided
-        let scoreboardData = null;
-        if (isFinalLevel) {
-            scoreboardData = await submitScoreAutomatically(finalScore, timeElapsed);
-        }
-
         // Create win screen
         const winScreen = document.createElement('div');
         winScreen.id = "winScreen";
@@ -252,60 +246,128 @@ const GameState = (function() {
         const showNextLevelButton = state.currentLevel < getOriginalLevelsCount() - 1;
 
         winScreen.innerHTML = `
-        <div class="win-content">
-            <div class="title-wrapper">
-                <h1 class="menu-title">${isFinalLevel ? 'GAME COMPLETED!' : 'LEVEL COMPLETE!'}</h1>
-                <h2 class="menu-subtitle">${isFinalLevel ? 'BANANA FORM RESTORED!' : 'CONGRATULATIONS!'}</h2>
-            </div>
+    <div class="win-content">
+        <div class="title-wrapper">
+            <h1 class="menu-title">${isFinalLevel ? 'GAME COMPLETED!' : 'LEVEL COMPLETE!'}</h1>
+            <h2 class="menu-subtitle">${isFinalLevel ? 'BANANA FORM RESTORED!' : 'CONGRATULATIONS!'}</h2>
+        </div>
 
-            <div class="win-stats">
-                <p>
-                    <span class="win-stats-label">Final Score:</span>
-                    <span class="win-stats-value">${finalScore.toLocaleString()}</span>
-                </p>
-                <p>
-                    <span class="win-stats-label">Time:</span>
-                    <span class="win-stats-value">${minutes}:${seconds.toString().padStart(2, '0')}</span>
-                </p>
-                <p>
-                    <span class="win-stats-label">Lives Remaining:</span>
-                    <span class="win-stats-value">${livesLeft}</span>
-                </p>
-            </div>
+        <div class="win-stats">
+            <p>
+                <span class="win-stats-label">Final Score:</span>
+                <span class="win-stats-value">${finalScore.toLocaleString()}</span>
+            </p>
+            <p>
+                <span class="win-stats-label">Time:</span>
+                <span class="win-stats-value">${minutes}:${seconds.toString().padStart(2, '0')}</span>
+            </p>
+            <p>
+                <span class="win-stats-label">Lives Remaining:</span>
+                <span class="win-stats-value">${livesLeft}</span>
+            </p>
+        </div>
 
-            ${scoreboardData ? `
-            <div class="scoreboard-section">
-                <div class="rank-message">
-                    ${scoreboardData.rank ? `Rank: ${scoreboardData.rank} (Top ${scoreboardData.percentile}%)` : 'Score submitted!'}
-                </div>
-                <div class="scoreboard-table" id="winScoreboard">
-                    <!-- Scoreboard will be loaded here -->
-                </div>
-            </div>
-            ` : ''}
+        ${isFinalLevel ? `
+        <!-- NAME INPUT SECTION - Keyboard Only -->
+        <div class="name-input-section">
+            <h3>ENTER YOUR NAME FOR LEADERBOARD</h3>
+            <input type="text" id="playerNameInput" maxlength="10" placeholder="ANON" 
+                   style="font-family: 'Press Start 2P', monospace; padding: 10px; text-align: center; text-transform: uppercase;">
+            <div class="input-hint">Type your name and press ENTER to submit</div>
+            <div id="submitStatus" style="margin-top: 10px; min-height: 20px; font-size: 10px;"></div>
+        </div>
+        ` : ''}
 
-            <div class="menu-buttons">
-                ${showNextLevelButton ?
+        <div class="menu-buttons">
+            ${showNextLevelButton ?
                 '<div class="menu-button" data-action="nextLevel"><span class="arrow-indicator">▶</span><span class="button-text">Next Level</span></div>' :
                 ''}
-                <div class="menu-button" data-action="restart"><span class="arrow-indicator">▶</span><span class="button-text">Restart Game</span></div>
-                <div class="menu-button" data-action="menu"><span class="arrow-indicator">▶</span><span class="button-text">Main Menu</span></div>
-            </div>
+            <div class="menu-button" data-action="restart"><span class="arrow-indicator">▶</span><span class="button-text">Restart Game</span></div>
+            <div class="menu-button" data-action="menu"><span class="arrow-indicator">▶</span><span class="button-text">Main Menu</span></div>
         </div>
+    </div>
     `;
 
         document.getElementById('gameArea').appendChild(winScreen);
 
-        // Load scoreboard if we have scoreboard data
-        if (scoreboardData) {
-            await loadAndDisplayScoreboard('winScoreboard');
+        // Keyboard-only name input for final level
+        if (isFinalLevel) {
+            const nameInput = document.getElementById('playerNameInput');
+            const submitStatus = document.getElementById('submitStatus');
+
+            // Auto-focus on input
+            nameInput.focus();
+
+            // Remove mouse event listeners from name input section
+            const nameInputSection = document.querySelector('.name-input-section');
+            nameInputSection.style.pointerEvents = 'none'; // Disable mouse interactions
+
+            // But allow focus on the input
+            nameInput.style.pointerEvents = 'auto';
+
+            // Keyboard-only submission
+            nameInput.addEventListener('keydown', async (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const name = nameInput.value.trim().substring(0, 10) || 'ANON';
+
+                    submitStatus.textContent = 'SUBMITTING...';
+                    submitStatus.style.color = '#ffcc00';
+
+                    try {
+                        console.log('Attempting to submit score...'); // DEBUG
+                        console.log('Name:', name, 'Score:', finalScore, 'Time:', timeElapsed); // DEBUG
+                        console.log('scoreboard available:', typeof Scoreboard !== 'undefined'); // DEBUG
+                        console.log('submitScore available:', Scoreboard && typeof Scoreboard.submitScore !== 'undefined'); // DEBUG
+
+                        if (!Scoreboard || typeof Scoreboard.submitScore !== 'function') {
+                            throw new Error('scoreboard.submitScore is not available');
+                        }
+
+                        const result = await Scoreboard.submitScore(name, finalScore, timeElapsed);
+                        console.log('Submission result:', result); // DEBUG
+
+                        if (result) {
+                            submitStatus.textContent = `SUCCESS! Rank: ${result.rank} (Top ${result.percentile}%)`;
+                            submitStatus.style.color = '#4caf50';
+
+                            nameInput.disabled = true;
+                            nameInput.style.background = 'rgba(255,255,255,0.1)';
+
+                            // MARK SCORE AS SUBMITTED
+                            if (window.markScoreSubmitted) window.markScoreSubmitted();
+
+                            setTimeout(() => {
+                                const firstButton = document.querySelector('.menu-button');
+                                if (firstButton) firstButton.focus();
+                            }, 500);
+                        } else {
+                            throw new Error('Submission returned null result');
+                        }
+                    } catch (error) {
+                        console.error('Score submission error:', error); // DEBUG
+                        submitStatus.textContent = `SUBMISSION FAILED: ${error.message} - PRESS ENTER TO RETRY`;
+                        submitStatus.style.color = '#f44336';
+                        nameInput.focus();
+                    }
+                } else if (e.key === 'Tab') {
+                    e.preventDefault();
+                    // Only allow tab navigation AFTER score is submitted
+                    if (window.markScoreSubmitted && typeof window.markScoreSubmitted === 'function') {
+                        // Check if we can call it to verify score was submitted
+                        const firstButton = document.querySelector('.menu-button');
+                        if (firstButton) firstButton.focus();
+                    } else {
+                        // Score not submitted yet, keep focus on input
+                        nameInput.focus();
+                    }
+                }
+            });
+
+            initGameOverNavigation();
         }
-
-        // Initialize win screen navigation
-        initWinScreenNavigation();
-
-        // Add celebration effect
-        createCelebrationEffects();
     }
 
     async function submitScoreAutomatically(finalScore, timeElapsed) {
@@ -505,7 +567,7 @@ const GameState = (function() {
                     returnToMenu();
                     break;
                 case 'submitScore':
-                    await submitScore();
+                    await Scoreboard.submitScore();
                     break;
             }
         }

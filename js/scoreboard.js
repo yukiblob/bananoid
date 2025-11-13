@@ -83,18 +83,19 @@ const Scoreboard = (function() {
         return `${rank}th`;
     }
 
-    async function submitScore() {
-        const finalScore = typeof Score !== 'undefined' ? Score.getScore() : 0;
-        const timeElapsed = typeof Timer !== 'undefined' ? Timer.getElapsedTime() : 0;
+    async function submitScore(playerName = null, score = null, time = null) {
+        const finalScore = score !== null ? score : (typeof Score !== 'undefined' ? Score.getScore() : 0);
+        const timeElapsed = time !== null ? time : (typeof Timer !== 'undefined' ? Timer.getElapsedTime() : 0);
 
-        // Simple alert for name input
-        const playerName = prompt('Enter your name for the leaderboard (max 10 characters):', 'ANON');
+        let name = playerName;
 
-        if (playerName === null) {
-            return; // User cancelled
+        // ONLY show prompt if no name is provided
+        if (name === null || name === '') {
+            name = prompt('Enter your name for the leaderboard (max 10 characters):', 'ANON');
+            if (name === null) return null; // User cancelled
         }
 
-        const name = playerName.trim().substring(0, 10) || 'ANON';
+        name = name.trim().substring(0, 10) || 'ANON';
 
         try {
             const response = await fetch('/api/scoreboard', {
@@ -111,32 +112,35 @@ const Scoreboard = (function() {
 
             if (response.ok) {
                 const result = await response.json();
-                alert(`Score submitted successfully!\nRank: ${result.rank}\nTop ${result.percentile}% of players`);
+                return result;
             } else {
                 throw new Error('Failed to submit score');
             }
         } catch (error) {
             console.error('Error submitting score:', error);
-            alert('Failed to submit score. Please try again.');
+            return null;
         }
     }
 
-    async function showRankAndScoreboard(submissionResult) {
+    async function showRankAndScoreboard(submissionResult, name, isWin = false) {
         const rankMessage = document.getElementById('rankMessage');
         const nameInputSection = document.getElementById('nameInputSection');
         const scoreboardDisplay = document.getElementById('scoreboardDisplay');
         const menuButtons = document.getElementById('menuButtons');
 
+        // Store player name
+        playerName = name;
+
         // Show rank message
         if (submissionResult.percentile !== undefined) {
             rankMessage.innerHTML = `
-            Congrats ${playerName}, you are in the top ${submissionResult.percentile}%, 
-            on the ${formatRank(submissionResult.rank)} position!
-        `;
+        Congrats ${playerName}, you are in the top ${submissionResult.percentile}%, 
+        on the ${formatRank(submissionResult.rank)} position!
+    `;
         } else {
             rankMessage.innerHTML = `
-            Score submitted, ${playerName}! Loading scoreboard...
-        `;
+        Score submitted, ${playerName}! Loading scoreboard...
+    `;
         }
 
         // Hide name input, show scoreboard and menu buttons
@@ -150,10 +154,28 @@ const Scoreboard = (function() {
         // Focus the scoreboard again for keyboard navigation
         document.getElementById('scoreboardScreen').focus();
 
-        // After showing scoreboard for a moment, show the traditional win/lose screen
-        setTimeout(() => {
-            showTraditionalEndScreen(isWin);
-        }, 3000);
+        isScoreSubmitted = true;
+    }
+
+    async function handleExternalScoreSubmission(name, score, time, isWin = false) {
+        try {
+            const result = await submitScore(name, score, time);
+            if (result) {
+                // Show the scoreboard screen
+                showScoreboard(isWin);
+
+                // Wait a bit for DOM to render, then show the rank and scoreboard
+                setTimeout(async () => {
+                    await showRankAndScoreboard(result, name, isWin);
+                }, 100);
+
+                return result;
+            }
+            return null;
+        } catch (error) {
+            console.error('External score submission failed:', error);
+            return null;
+        }
     }
 
     function showTraditionalEndScreen(isWin) {
@@ -191,52 +213,41 @@ const Scoreboard = (function() {
         }
     }
 
-    function displayScoreboard(containerId, data) {
-        const container = document.getElementById(containerId);
+    function displayScoreboard(data) { // Remove containerId parameter
+        const container = document.getElementById('scoreboardBody');
         if (!container) return;
 
-        let html = `
-        <div class="table-header">
-            <span>RANK</span>
-            <span>NAME</span>
-            <span>SCORE</span>
-            <span>TIME</span>
-        </div>
-    `;
+        let html = '';
 
         if (data.scores && data.scores.length > 0) {
             data.scores.forEach((score, index) => {
                 const rank = (data.page - 1) * 5 + index + 1;
                 html += `
-                <div class="table-row">
-                    <span>${formatRank(rank)}</span>
-                    <span>${score.name}</span>
-                    <span>${score.score.toLocaleString()}</span>
-                    <span>${formatTime(score.time)}</span>
-                </div>
-            `;
+            <div class="table-row">
+                <span>${formatRank(rank)}</span>
+                <span>${score.name}</span>
+                <span>${score.score.toLocaleString()}</span>
+                <span>${formatTime(score.time)}</span>
+            </div>
+        `;
             });
         } else {
-            html += `
-            <div class="table-row">
-                <span colspan="4" style="grid-column: 1 / -1; text-align: center; padding: 20px;">
-                    No scores yet! Be the first!
-                </span>
-            </div>
-        `;
-        }
-
-        // Add pagination controls if there are multiple pages
-        if (data.totalPages > 1) {
-            html += `
-            <div class="scoreboard-pagination">
-                <div class="pagination-info">Page ${data.page}/${data.totalPages}</div>
-                <div class="pagination-hint">Use ← → to navigate</div>
-            </div>
-        `;
+            html = `
+        <div class="table-row">
+            <span colspan="4" style="grid-column: 1 / -1; text-align: center; padding: 20px;">
+                No scores yet! Be the first!
+            </span>
+        </div>
+    `;
         }
 
         container.innerHTML = html;
+
+        // Update pagination info
+        const pageInfo = document.getElementById('pageInfo');
+        if (pageInfo) {
+            pageInfo.textContent = `Page ${data.page}/${data.totalPages}`;
+        }
     }
 
     function handleScoreboardKeydown(e) {
@@ -390,6 +401,8 @@ const Scoreboard = (function() {
 
     return {
         showScoreboard,
+        submitScore,
+        handleExternalScoreSubmission,
         init: function() {
         }
     };

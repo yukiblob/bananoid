@@ -1486,18 +1486,21 @@ body {
 }
 
 .score-submission {
+    display: block !important;
     margin: 20px 0;
-    padding: 15px;
+    padding: 20px;
     background: rgba(255, 204, 0, 0.1);
-    border: 1px solid rgba(255, 204, 0, 0.3);
+    border: 2px solid rgba(255, 204, 0, 0.3);
     border-radius: 8px;
     text-align: center;
+    animation: slideIn 0.5s ease-out;
 }
 
 .score-submission p {
     color: #ffcc00;
     font-size: 14px;
-    margin: 0;
+    margin: 0 0 15px 0;
+    text-shadow: 0 0 5px #ffcc00;
 }
 
 .game-over-stats {
@@ -1913,35 +1916,46 @@ body {
 .name-input-section {
     margin: 30px 0;
     padding: 20px;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.8);
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid #ffcc00;
+    text-align: center;
+    display: block;
+    animation: slideIn 0.5s ease-out;
 }
 
 .name-input-section h3 {
     color: #ffcc00;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     font-size: 14px;
+    text-transform: uppercase;
+    text-shadow: 0 0 5px #ffcc00;
 }
 
 #playerNameInput {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.7);
     border: 2px solid #ffcc00;
     border-radius: 4px;
     color: white;
     font-family: 'Press Start 2P', monospace;
     font-size: 16px;
     padding: 12px;
-    margin: 10px 0;
+    margin: 15px 0;
     text-align: center;
-    width: 200px;
+    width: 250px;
     text-transform: uppercase;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
 }
 
 #playerNameInput:focus {
     outline: none;
     border-color: #00bcd4;
-    box-shadow: 0 0 10px rgba(0, 188, 212, 0.5);
+    box-shadow: 0 0 15px rgba(0, 188, 212, 0.7);
+}
+
+#playerNameInput::placeholder {
+    color: #888;
+    font-size: 12px;
 }
 
 #submitScoreBtn {
@@ -1951,14 +1965,22 @@ body {
     color: #000;
     font-family: 'Press Start 2P', monospace;
     font-size: 14px;
-    padding: 10px 20px;
+    padding: 12px 24px;
     margin: 10px;
     cursor: pointer;
     text-transform: uppercase;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
 }
 
 #submitScoreBtn:hover {
     background: linear-gradient(to bottom, #ffdd00, #ffaa00);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.7);
+}
+
+#submitScoreBtn:active {
+    transform: scale(0.95);
 }
 
 .rank-message {
@@ -2002,23 +2024,38 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
-    margin-top: 10px;
-    padding: 8px;
+    gap: 15px;
+    margin-top: 15px;
+    padding: 10px;
     background: rgba(255, 204, 0, 0.1);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.scoreboard-pagination .arrow-indicator {
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: static;
+    font-size: 16px;
+    margin: 0 10px;
 }
 
 .pagination-info {
     color: #ffcc00;
-    font-size: 9px;
+    font-size: 12px;
     font-weight: bold;
 }
 
 .pagination-hint {
     color: #888;
-    font-size: 8px;
+    font-size: 10px;
     text-transform: uppercase;
+    margin-top: 5px;
+}
+
+.scoreboard-screen .menu-button.selected .arrow-indicator {
+    visibility: visible;
+    opacity: 1;
 }
 
 /* Boss Level Styles */
