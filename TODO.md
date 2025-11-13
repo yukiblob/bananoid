@@ -2,7 +2,7 @@
 - powerups need to disappear after game has ended loss/win (bug) ✅
 - level editor doesn't return to main menu (bug) ✅
 - custom_level level editor replaces the levels.js (bug) ✅
-- high scores 1 (it must be a GO API service) (feature)
+- high scores 1 (it must be a GO API service) (feature)✅
 - starting the level from level select doesn't start the timer (bug) ✅
 - powerups 10 ✅
 - pause menu 7 ✅
@@ -20,3 +20,4 @@
 - game pauses when returning to main menu after the game has been paused once (bug) ✅
 - game continues to play in the background when returning to the main menu (bug) ✅
 - yellow arrow is buggy in Level Select (bug) ✅
+- win screen score fix and UI for game over screen also

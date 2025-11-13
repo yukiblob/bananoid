@@ -7,6 +7,11 @@ const Scoreboard = (function() {
     let isScoreSubmitted = false;
 
     function showScoreboard(isWin = true) {
+        const existingScreens = document.querySelectorAll('#gameOverScreen, #winScreen, #scoreboardScreen');
+        existingScreens.forEach(screen => {
+            if (screen) screen.remove();
+        });
+
         // Get final score and time from game state
         const finalScore = typeof Score !== 'undefined' ? Score.getScore() : 0;
         const timeElapsed = typeof Timer !== 'undefined' ? Timer.getElapsedTime() : 0;
@@ -19,49 +24,64 @@ const Scoreboard = (function() {
         const scoreboardScreen = document.createElement('div');
         scoreboardScreen.id = 'scoreboardScreen';
         scoreboardScreen.className = 'scoreboard-screen';
-        scoreboardScreen.tabIndex = 0; // Make it focusable for keyboard events
+        scoreboardScreen.tabIndex = 0;
 
         scoreboardScreen.innerHTML = `
-            <div class="scoreboard-content">
-                <div class="title-wrapper">
-                    <h1 class="menu-title">${isWin ? 'VICTORY!' : 'GAME OVER'}</h1>
-                    <h2 class="menu-subtitle">${isWin ? 'CONGRATULATIONS!' : 'BETTER LUCK NEXT TIME!'}</h2>
+        <div class="scoreboard-content">
+            <div class="title-wrapper">
+                <h1 class="menu-title">${isWin ? 'VICTORY!' : 'GAME OVER'}</h1>
+                <h2 class="menu-subtitle">${isWin ? 'CONGRATULATIONS!' : 'BETTER LUCK NEXT TIME!'}</h2>
+            </div>
+
+            <div class="score-stats">
+                <p>Final Score: <span class="score-value">${finalScore.toLocaleString()}</span></p>
+                <p>Time: <span class="time-value">${formatTime(timeElapsed)}</span></p>
+            </div>
+
+            <div class="name-input-section" id="nameInputSection">
+                <h3>ENTER YOUR NAME (MAX 10 CHARACTERS)</h3>
+                <input type="text" id="playerNameInput" maxlength="10" placeholder="PLAYER" value="ANON">
+                <div class="input-hint">Press ENTER to submit</div>
+            </div>
+
+            <div class="scoreboard-display" id="scoreboardDisplay" style="display: none;">
+                <div class="rank-message" id="rankMessage"></div>
+
+                <div class="game-over-stats">
+                    <p>Your Score: <span class="score-value">${finalScore.toLocaleString()}</span></p>
+                    <p>Your Time: <span class="time-value">${formatTime(timeElapsed)}</span></p>
                 </div>
 
-                <div class="score-stats">
-                    <p>Final Score: <span class="score-value">${finalScore}</span></p>
-                    <p>Time: <span class="time-value">${formatTime(timeElapsed)}</span></p>
-                </div>
-
-                <div class="name-input-section" id="nameInputSection">
-                    <h3>ENTER YOUR NAME (MAX 10 CHARACTERS)</h3>
-                    <input type="text" id="playerNameInput" maxlength="10" placeholder="PLAYER" value="ANON">
-                    <div class="input-hint">Press ENTER to submit</div>
-                </div>
-
-                <div class="scoreboard-display" id="scoreboardDisplay" style="display: none;">
-                    <div class="rank-message" id="rankMessage"></div>
-                    <div class="scoreboard-table">
-                        <div class="table-header">
-                            <span>RANK</span>
-                            <span>NAME</span>
-                            <span>SCORE</span>
-                            <span>TIME</span>
-                        </div>
-                        <div class="table-body" id="scoreboardBody"></div>
+                <div class="scoreboard-table">
+                    <div class="table-header">
+                        <span>RANK</span>
+                        <span>NAME</span>
+                        <span>SCORE</span>
+                        <span>TIME</span>
                     </div>
-                    <div class="pagination">
-                        <div class="pagination-info" id="pageInfo">Page 1/1</div>
-                        <div class="pagination-hint">Use LEFT/RIGHT to navigate pages</div>
-                    </div>
+                    <div class="table-body" id="scoreboardBody"></div>
                 </div>
 
-                <div class="menu-buttons" id="menuButtons" style="display: none;">
-                    <div class="menu-button" data-action="playAgain">PLAY AGAIN</div>
-                    <div class="menu-button" data-action="mainMenu">MAIN MENU</div>
+                <div class="scoreboard-pagination">
+                    <div class="arrow-indicator">←</div>
+                    <div class="pagination-info" id="pageInfo">Page 1/1</div>
+                    <div class="arrow-indicator">→</div>
+                </div>
+                <div class="pagination-hint">Use LEFT/RIGHT to navigate pages</div>
+            </div>
+
+            <div class="menu-buttons" id="menuButtons" style="display: none;">
+                <div class="menu-button" data-action="playAgain">
+                    <span class="arrow-indicator">▶</span>
+                    <span class="button-text">PLAY AGAIN</span>
+                </div>
+                <div class="menu-button" data-action="mainMenu">
+                    <span class="arrow-indicator">▶</span>
+                    <span class="button-text">MAIN MENU</span>
                 </div>
             </div>
-        `;
+        </div>
+    `;
 
         document.getElementById('gameArea').appendChild(scoreboardScreen);
 
@@ -161,6 +181,11 @@ const Scoreboard = (function() {
         try {
             const result = await submitScore(name, score, time);
             if (result) {
+                const existingScreens = document.querySelectorAll('#gameOverScreen, #winScreen, #scoreboardScreen');
+                existingScreens.forEach(screen => {
+                    if (screen) screen.remove();
+                });
+
                 // Show the scoreboard screen
                 showScoreboard(isWin);
 
@@ -175,25 +200,6 @@ const Scoreboard = (function() {
         } catch (error) {
             console.error('External score submission failed:', error);
             return null;
-        }
-    }
-
-    function showTraditionalEndScreen(isWin) {
-        // Remove scoreboard
-        const scoreboardScreen = document.getElementById('scoreboardScreen');
-        if (scoreboardScreen) {
-            scoreboardScreen.remove();
-        }
-
-        // Show traditional win/lose screen
-        if (isWin) {
-            if (typeof GameState !== 'undefined' && GameState.showWinScreen) {
-                GameState.showWinScreen();
-            }
-        } else {
-            if (typeof gameOver !== 'undefined') {
-                gameOver();
-            }
         }
     }
 
@@ -374,16 +380,45 @@ const Scoreboard = (function() {
     }
 
     function handleScoreboardAction(action) {
+        console.log('Scoreboard action triggered:', action);
+
         const scoreboardScreen = document.getElementById('scoreboardScreen');
         if (scoreboardScreen) {
+            console.log('Removing scoreboard screen');
             scoreboardScreen.remove();
         }
 
         // Remove keyboard event listener
-        scoreboardScreen.removeEventListener('keydown', handleScoreboardKeydown);
+        if (scoreboardScreen) {
+            scoreboardScreen.removeEventListener('keydown', handleScoreboardKeydown);
+        }
 
-        // Instead of handling actions directly, show traditional screen first
-        showTraditionalEndScreen(action === 'playAgain');
+        console.log('GameState available:', typeof GameState !== 'undefined');
+        console.log('GameState.restartGame:', GameState && typeof GameState.restartGame);
+        console.log('GameState.returnToMenu:', GameState && typeof GameState.returnToMenu);
+
+        switch (action) {
+            case 'playAgain':
+                console.log('Attempting to restart game...');
+                if (typeof GameState !== 'undefined' && GameState.restartGame) {
+                    GameState.restartGame();
+                } else {
+                    console.log('Fallback: reloading page');
+                    location.reload();
+                }
+                break;
+            case 'mainMenu':
+                console.log('Attempting to return to main menu...');
+                if (typeof GameState !== 'undefined' && GameState.returnToMenu) {
+                    GameState.returnToMenu();
+                } else if (typeof showMainMenu !== 'undefined') {
+                    showMainMenu();
+                } else {
+                    console.log('Fallback: reloading page');
+                    location.reload();
+                }
+                break;
+        }
     }
 
     function showTraditionalEndScreen(isWin) {

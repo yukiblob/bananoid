@@ -1504,10 +1504,13 @@ body {
 }
 
 .game-over-stats {
-    margin: 25px 0;
+    margin: 5px 0;
     font-size: 18px;
     line-height: 2;
     text-align: center;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px;
 }
 
 .game-over-stats p {
@@ -1793,7 +1796,10 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(rgba(12, 16, 39, 0.95), rgba(12, 16, 39, 0.98));
+    background: linear-gradient(rgba(12, 16, 39, 0.85), rgba(12, 16, 39, 0.95)),
+                url('/media/banana-tree-beach.jpg');
+    background-size: cover;
+    background-position: center;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -1801,35 +1807,67 @@ body {
     z-index: 1000;
     color: white;
     font-family: 'Press Start 2P', monospace;
+    cursor: none;
+    overflow: hidden;
 }
 
 .scoreboard-content {
-    background: none;
-    padding: 40px;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 15px;
+    border-radius: 8px;
+    border: 2px solid #ffcc00;
     text-align: center;
-    color: white;
     animation: slideIn 0.5s ease-out;
-    min-width: 600px;
+    width: 85%;
+    max-width: 700px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    box-shadow: 0 0 20px rgba(255, 204, 0, 0.4);
+    overflow: hidden;
+}
+
+.scoreboard-content .title-wrapper {
+    margin-bottom: 15px;
+}
+
+.scoreboard-content .menu-title {
+    font-size: 24px !important;
+    margin-bottom: 5px !important;
+    text-shadow: 
+        2px 2px 0 #ff0000,
+        -2px -2px 0 #00bcd4,
+        0 0 6px #ffffff,
+        0 0 12px #00bcd4,
+        0 0 18px #ff0000;
+    line-height: 1.2;
+}
+
+.scoreboard-content .menu-subtitle {
+    font-size: 12px !important;
+    margin-bottom: 10px !important;
+    line-height: 1.2;
 }
 
 .score-stats {
-    margin: 25px 0;
-    font-size: 18px;
-    line-height: 2;
+    margin: 8px 0;
+    font-size: 12px;
+    line-height: 1.3;
 }
 
 .score-stats p {
-    margin: 15px 0;
+    margin: 5px 0;
 }
 
 .input-hint, .pagination-hint {
     color: #888;
-    font-size: 10px;
-    margin-top: 8px;
+    font-size: 8px;
+    margin-top: 5px;
     text-transform: uppercase;
+}
+
+.scoreboard-display {
+    width: 100%;
 }
 
 .scoreboard-section {
@@ -1844,39 +1882,54 @@ body {
 .rank-message {
     color: #ffcc00;
     font-size: 10px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    padding: 6px;
     text-align: center;
     text-transform: uppercase;
-    line-height: 1.3;
+    line-height: 1.2;
 }
 
 .scoreboard-table {
-    width: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     overflow: hidden;
+    font-size: 9px;
+    margin: 8px 0;
+    overflow-x: auto;
+    max-width: 100%;
 }
 
 .table-header {
     display: grid;
     grid-template-columns: 1fr 2fr 2fr 1fr;
-    padding: 6px;
+    padding: 6px 4px;
     background: rgba(255, 204, 0, 0.2);
     border-bottom: 1px solid #ffcc00;
     font-weight: bold;
     font-size: 8px;
 }
 
+.table-header, .table-row {
+    min-width: 400px; /* Ensure table doesn't get too narrow */
+}
+
 .table-row {
     display: grid;
     grid-template-columns: 1fr 2fr 2fr 1fr;
-    padding: 5px 6px;
+    padding: 4px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 7px;
+    font-size: 8px;
 }
 
 .table-row:nth-child(odd) {
     background: rgba(255, 255, 255, 0.05);
+}
+
+.table-row.player-score {
+    background: rgba(255, 204, 0, 0.3) !important;
+    border: 2px solid #ffcc00;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
 }
 
 .game-over-stats {
@@ -1914,8 +1967,8 @@ body {
 }
 
 .name-input-section {
-    margin: 30px 0;
-    padding: 20px;
+    margin: 10px 0;
+    padding: 10px;
     background: rgba(0, 0, 0, 0.8);
     border-radius: 8px;
     border: 2px solid #ffcc00;
@@ -1926,8 +1979,8 @@ body {
 
 .name-input-section h3 {
     color: #ffcc00;
-    margin-bottom: 15px;
-    font-size: 14px;
+    margin-bottom: 10px;
+    font-size: 10px;
     text-transform: uppercase;
     text-shadow: 0 0 5px #ffcc00;
 }
@@ -1938,11 +1991,11 @@ body {
     border-radius: 4px;
     color: white;
     font-family: 'Press Start 2P', monospace;
-    font-size: 16px;
-    padding: 12px;
+    font-size: 12px;
+    padding: 6px;
     margin: 15px 0;
     text-align: center;
-    width: 250px;
+    width: 180px;
     text-transform: uppercase;
     box-shadow: 0 0 10px rgba(255, 204, 0, 0.3);
 }
@@ -1986,8 +2039,15 @@ body {
 .rank-message {
     color: #ffcc00;
     font-size: 14px;
-    margin: 20px 0;
-    line-height: 1.5;
+    margin-bottom: 20px;
+    text-align: center;
+    text-transform: uppercase;
+    text-shadow: 0 0 5px #ffcc00;
+    line-height: 1.4;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 204, 0, 0.3);
 }
 
 .scoreboard-table {
@@ -2022,19 +2082,19 @@ body {
 /* Scoreboard Pagination Styles */
 .scoreboard-pagination {
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    gap: 15px;
-    margin-top: 15px;
-    padding: 10px;
+    gap: 10px;
+    margin: 5px 0;
+    padding: 4px;
     background: rgba(255, 204, 0, 0.1);
     border-radius: 4px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 20px;
 }
 
 .scoreboard-pagination .arrow-indicator {
     visibility: visible !important;
-    opacity: 1 !important;
     position: static;
     font-size: 16px;
     margin: 0 10px;
@@ -2042,15 +2102,16 @@ body {
 
 .pagination-info {
     color: #ffcc00;
-    font-size: 12px;
+    font-size: 8px !important;
     font-weight: bold;
+    padding: 2px 6px;
 }
 
 .pagination-hint {
     color: #888;
-    font-size: 10px;
+    font-size: 7px !important;
     text-transform: uppercase;
-    margin-top: 5px;
+    margin-top: 2px;
 }
 
 .scoreboard-screen .menu-button.selected .arrow-indicator {
@@ -2161,7 +2222,6 @@ body {
     }
 }
 
-/* Add to your CSS file */
 .victory-scene {
     position: relative;
     top: 0;
