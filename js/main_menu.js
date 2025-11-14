@@ -297,8 +297,6 @@ const Menu = (function() {
 
         const backButton = createMenuButton('Back', 0);
         backButton.onClickFunction = onClickBack;
-        backButton.style.color = '#ffffff';
-        backButton.style.textShadow = '0 0 5px #ffffff';
         backButton.style.marginBottom = '20px';
 
         levelsContainer.appendChild(backButton);
@@ -475,16 +473,192 @@ const Menu = (function() {
         menuElement.appendChild(controlsInfo);
 
         const onClickBack = () => {
-            showMainMenu();
+            showOptions();
         };
 
-        const backButton = createMenuButton('Back', onClickBack, 0);
+        const backButton = createMenuButton('Back', 0);
         backButton.onClickFunction = onClickBack; // Store function reference
 
         menuElement.appendChild(backButton);
         menuButtons = [backButton];
 
         updateButtonSelection();
+    }
+
+    function showOptions() {
+        currentMenu = 'options';
+        selectedButtonIndex = 0;
+
+        while (menuElement.firstChild) {
+            menuElement.removeChild(menuElement.firstChild);
+        }
+
+        const headerContainer = document.createElement('div');
+        headerContainer.className = 'options-header';
+
+        const title = document.createElement('h2');
+        title.textContent = 'OPTIONS';
+        title.className = 'menu-subtitle';
+        headerContainer.appendChild(title);
+
+        menuElement.appendChild(headerContainer);
+
+        const optionsContainer = document.createElement('div');
+        optionsContainer.className = 'options-container';
+
+        menuButtons = [];
+
+        const musicVolumeButton = createVolumeButton('Music Volume', 'music', 0);
+        const soundVolumeButton = createVolumeButton('Sound Volume', 'sound', 1);
+
+        optionsContainer.appendChild(musicVolumeButton);
+        optionsContainer.appendChild(soundVolumeButton);
+        menuButtons.push(musicVolumeButton, soundVolumeButton);
+
+        const onClickControls = () => {
+            showControls();
+        };
+
+        const controlsButton = createMenuButton('Controls', 1);
+        controlsButton.onClickFunction = onClickControls;
+        controlsButton.title = 'View game controls';
+
+        optionsContainer.appendChild(controlsButton);
+        menuButtons.push(controlsButton);
+
+        const onClickBack = () => {
+            showMainMenu();
+        };
+
+        const backButton = createMenuButton('Back', 3);
+        backButton.onClickFunction = onClickBack;
+        backButton.style.marginBottom = '20px';
+
+        optionsContainer.appendChild(backButton);
+        menuButtons.push(backButton);
+
+        menuElement.appendChild(optionsContainer);
+
+        updateButtonSelection();
+    }
+
+    function createVolumeButton(label, type, index) {
+        const button = document.createElement('div');
+        button.className = 'menu-button volume-button';
+        button.dataset.index = index;
+        button.dataset.volumeType = type;
+        button.style.cursor = 'none';
+        button.style.flexDirection = 'column';
+        button.style.gap = '10px';
+        button.style.padding = '12px 0';
+
+        const arrow = document.createElement('span');
+        arrow.className = 'arrow-indicator';
+        arrow.innerHTML = '▶';
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = label;
+        textSpan.className = 'button-text';
+
+        const sliderContainer = document.createElement('div');
+        sliderContainer.className = 'volume-slider-container';
+
+        const slider = document.createElement('div');
+        slider.className = 'volume-slider';
+        slider.dataset.type = type;
+
+        const notchesContainer = document.createElement('div');
+        notchesContainer.className = 'volume-notches';
+
+        const valueDisplay = document.createElement('div');
+        valueDisplay.className = 'volume-value';
+
+        for (let i = 0; i < 10; i++) {
+            const notch = document.createElement('div');
+            notch.className = 'volume-notch';
+            notch.dataset.index = i;
+            notchesContainer.appendChild(notch);
+        }
+
+        slider.appendChild(notchesContainer);
+        sliderContainer.appendChild(slider);
+        sliderContainer.appendChild(valueDisplay);
+
+        let currentVolume;
+        if (type === 'music') {
+            currentVolume = 0.04;
+        } else {
+            currentVolume = 0.1;
+        }
+
+        slider.dataset.currentVolume = currentVolume.toFixed(2);
+        updateVolumeDisplay(slider, valueDisplay, currentVolume);
+
+        const topRow = document.createElement('div');
+        topRow.style.display = 'flex';
+        topRow.style.alignItems = 'center';
+        topRow.style.justifyContent = 'center';
+        topRow.style.position = 'relative';
+        topRow.style.width = '100%';
+
+        topRow.appendChild(arrow);
+        topRow.appendChild(textSpan);
+
+        button.appendChild(topRow);
+        button.appendChild(sliderContainer);
+
+        button.slider = slider;
+        button.valueDisplay = valueDisplay;
+
+        return button;
+    }
+
+    function updateVolumeDisplay(slider, valueDisplay, volume) {
+        const notches = slider.querySelectorAll('.volume-notch');
+        const activeNotches = Math.round(volume * 100);
+        
+        notches.forEach((notch, index) => {
+            if (index < activeNotches) {
+                notch.classList.add('active');
+            } else {
+                notch.classList.remove('active');
+            }
+        });
+
+        valueDisplay.textContent = activeNotches;
+        slider.dataset.currentVolume = volume.toFixed(2);
+    }
+
+    function adjustSelectedVolume(direction) {
+        if (currentMenu !== 'options') return;
+
+        const selectedButton = menuButtons[selectedButtonIndex];
+        if (!selectedButton || !selectedButton.classList.contains('volume-button')) return;
+
+        const type = selectedButton.dataset.volumeType;
+        const slider = selectedButton.slider;
+        const valueDisplay = selectedButton.valueDisplay;
+
+        let currentVolume = parseFloat(slider.dataset.currentVolume);
+        const step = 0.01;
+
+        if (direction === 'increase') {
+            currentVolume = Math.min(0.10, currentVolume + step);
+        } else if (direction === 'decrease') {
+            currentVolume = Math.max(0.00, currentVolume - step);
+        }
+
+        if (type === 'music' && typeof Music !== 'undefined' && Music.setVolume) {
+            Music.setVolume(currentVolume);
+        } else if (type === 'sound' && typeof SoundManager !== 'undefined' && SoundManager.setVolume) {
+            SoundManager.setVolume(currentVolume);
+
+            if (SoundManager.playMenuNavigate) {
+                SoundManager.playMenuNavigate();
+            }
+        }
+
+        updateVolumeDisplay(slider, valueDisplay, currentVolume);
     }
 
     function showMainMenu() {
@@ -553,24 +727,24 @@ const Menu = (function() {
         const levelEditorButton = createMenuButton('Level Editor', onClickLevelEditor, 2);
         levelEditorButton.onClickFunction = onClickLevelEditor;
 
-        const onClickControls = () => {
-            showControls();
+        const onClickOptions = () => {
+            showOptions();
         };
 
-        const controlsButton = createMenuButton('Controls', onClickControls, 3);
-        controlsButton.onClickFunction = onClickControls;
+        const optionsButton = createMenuButton('Options', onClickOptions, 3);
+        optionsButton.onClickFunction = onClickOptions;
 
         // Add buttons to container
         buttonsContainer.appendChild(startButton);
         buttonsContainer.appendChild(levelSelectButton);
         buttonsContainer.appendChild(levelEditorButton);
-        buttonsContainer.appendChild(controlsButton);
+        buttonsContainer.appendChild(optionsButton);
 
         // Add button containers to menu
         menuElement.appendChild(buttonsContainer);
 
         // Store buttons for navigation
-        menuButtons = [startButton, levelSelectButton, levelEditorButton, controlsButton];
+        menuButtons = [startButton, levelSelectButton, levelEditorButton, optionsButton];
 
         // Add Insert Coin message
         const insertCoin = document.createElement('div');
@@ -652,6 +826,8 @@ const Menu = (function() {
             showControls();
         } else if (currentMenu === 'pause') {
             showPauseMenu();
+        } else if (currentMenu === 'options') {
+            showOptions();
         } else {
             showMainMenu();
         }
@@ -749,6 +925,23 @@ const Menu = (function() {
             }
 
             if (!isMenuVisible) return;
+
+            if (currentMenu === 'options') {
+                const selectedButton = menuButtons[selectedButtonIndex];
+
+                if (selectedButton && selectedButton.classList.contains('volume-button')) {
+                    switch (e.key) {
+                        case 'ArrowLeft':
+                            adjustSelectedVolume('decrease');
+                            e.preventDefault();
+                            break;
+                        case 'ArrowRight':
+                            adjustSelectedVolume('increase');
+                            e.preventDefault();
+                            break;
+                    }
+                }
+            }
 
             switch (e.key) {
                 case 'ArrowUp':

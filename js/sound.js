@@ -3,6 +3,7 @@ const SoundManager = (function() {
     let isAudioEnabled = true;
     let isInitialized = false;
     let isAudioResumed = false;
+    let sfxVolume = 0.1;
 
     function init() {
         if (isInitialized) return;
@@ -11,7 +12,7 @@ const SoundManager = (function() {
 
             if (AudioContextClass) {
                 audioContext = new AudioContextClass();
-                console.log('Audio context initialized')
+                console.log('Audio context initialized with volume', sfxVolume);
             } else {
                 console.warn('Web Audio API not supported');
                 isAudioEnabled = false;
@@ -59,11 +60,19 @@ const SoundManager = (function() {
         }
     }
 
-    function canPlaySound() {
-        return audioContext && audioContext.state === 'running';
+    function setVolume(newVolume) {
+        sfxVolume = Math.max(0, Math.min(1, newVolume));
     }
 
-    function Beep(frequency, duration, volume = 0.1, type = 'sine') {
+    function getVolume() {
+        return sfxVolume;
+    }
+
+    function canPlaySound() {
+        return audioContext && (audioContext.state === 'running' || audioContext.state === 'suspended');
+    }
+
+    function Beep(frequency, duration, volumeScale = 1, type = 'sine') {
         if (!canPlaySound()) return;
 
         try {
@@ -78,8 +87,9 @@ const SoundManager = (function() {
 
             const now = audioContext.currentTime;
 
+            const envelopeVolume = sfxVolume * volumeScale;
             gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(volume, now + 0.01);
+            gainNode.gain.linearRampToValueAtTime(envelopeVolume, now + 0.01);
             gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
             oscillator.start(now);
@@ -94,7 +104,7 @@ const SoundManager = (function() {
         }
     }
 
-    function Tone(frequency, duration, volume = 0.1) {
+    function Tone(frequency, duration, volumeScale = 1) {
         if (!canPlaySound()) return;
 
         try {
@@ -113,8 +123,9 @@ const SoundManager = (function() {
 
             const now = audioContext.currentTime;
 
+            const envelopeVolume = sfxVolume * volumeScale;
             gainNode.gain.setValueAtTime(0, now);
-            gainNode.gain.linearRampToValueAtTime(volume, now + 0.02);
+            gainNode.gain.linearRampToValueAtTime(envelopeVolume, now + 0.02);
             gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
             osc1.start(now);
@@ -136,23 +147,23 @@ const SoundManager = (function() {
     }
 
     function playWallHit() {
-        Beep(400, 0.08, 0.08, 'square');
+        Beep(400, 0.08, 0.8, 'square');
     }
 
     function playPaddleHit() {
-        Tone(300, 0.12, 0.1);
+        Tone(300, 0.12, 1.0);
     }
 
     function playBrickHit() {
-        Beep(600, 0.06, 0.1, 'sawtooth');
+        Beep(600, 0.06, 1.0, 'sawtooth');
     }
 
     function playMenuNavigate() {
-        Beep(600, 0.06, 0.08, 'sine');
+        Beep(600, 0.06, 0.8, 'sine');
     }
 
     function playMenuSelect() {
-        Tone(800, 0.1, 0.12);
+        Tone(800, 0.1, 1.2);
     }
 
     function playBulletFire() {
@@ -170,7 +181,7 @@ const SoundManager = (function() {
             oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.08);
 
             gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.01);
+            gainNode.gain.linearRampToValueAtTime(sfxVolume * 1.5, audioContext.currentTime + 0.01);
             gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
 
             oscillator.start();
@@ -182,7 +193,7 @@ const SoundManager = (function() {
             };
         } catch (error) {
             console.warn('Error playing bullet fire sound:', error);
-            Beep(800, 0.05, 0.1, 'square');
+            Beep(800, 0.05, 1.0, 'square');
         }
     }
 
@@ -207,7 +218,7 @@ const SoundManager = (function() {
             osc2.frequency.linearRampToValueAtTime(1200, audioContext.currentTime + 0.3);
 
             gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.15, audioContext.currentTime + 0.05);
+            gainNode.gain.linearRampToValueAtTime(sfxVolume * 1.5, audioContext.currentTime + 0.05);
             gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
 
             osc1.start();
@@ -225,7 +236,7 @@ const SoundManager = (function() {
             osc2.onended = cleanUp;
         } catch (error) {
             console.warn('Error playing powerup sound:', error);
-            Beep(600, 0.2, 0.2, 'sine');
+            Beep(600, 0.2, 2, 'sine');
         }
     }
 
@@ -240,10 +251,10 @@ const SoundManager = (function() {
             gainNode.connect(audioContext.destination);
 
             oscillator.type = 'sawtooth';
-            oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(0.4, audioContext.currentTime);
             oscillator.frequency.linearRampToValueAtTime(100, audioContext.currentTime + 0.5);
 
-            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(sfxVolume, audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
 
             oscillator.start();
@@ -295,7 +306,7 @@ const SoundManager = (function() {
                 const endTime = now + timing.end;
 
                 gainNode.gain.setValueAtTime(0, startTime);
-                gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.03);
+                gainNode.gain.linearRampToValueAtTime(sfxVolume * 2, startTime + 0.03);
                 gainNode.gain.exponentialRampToValueAtTime(0.001, endTime);
 
                 const pitchBend = 180 + (index * 10);
@@ -320,16 +331,16 @@ const SoundManager = (function() {
         } catch (error) {
             console.warn('Error playing laugh:', error);
             // Fallback: simple triple beep
-            Beep(180, 0.15, 0.15, 'sawtooth');
-            setTimeout(() => Beep(180, 0.15, 0.15, 'sawtooth'), 300);
-            setTimeout(() => Beep(180, 0.15, 0.15, 'sawtooth'), 600);
+            Beep(180, 0.15, 1.5, 'sawtooth');
+            setTimeout(() => Beep(180, 0.15, 1.5, 'sawtooth'), 300);
+            setTimeout(() => Beep(180, 0.15, 1.5, 'sawtooth'), 600);
         }
     }
 
     function playGameStart() {
-        Tone(400, 0.1, 0.1);
-        setTimeout(() => Tone(500, 0.1, 0.1), 120);
-        setTimeout(() => Tone(600, 0.2, 0.1), 240);
+        Tone(400, 0.1, 1.0);
+        setTimeout(() => Tone(500, 0.1, 1.0), 120);
+        setTimeout(() => Tone(600, 0.2, 1.0), 240);
     }
 
     function forceResume() {
@@ -345,6 +356,9 @@ const SoundManager = (function() {
     return {
         init: init,
         Beep,
+        Tone,
+        getVolume,
+        setVolume,
         playWallHit: playWallHit,
         playPaddleHit: playPaddleHit,
         playBrickHit: playBrickHit,

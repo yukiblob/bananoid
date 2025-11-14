@@ -3,9 +3,9 @@ const Music = (function() {
     let isPlaying = false;
     let currentSequence = null;
     let masterGain = null;
-    let volume = 0.035;
+    let volume = 0.04;
     let isPaused = false;
-    let pauseVolume = 0.022;
+    let pauseVolume = 0.02;
     let activeLayers = new Set();
 
     let scheduledTimeouts = new Set();
