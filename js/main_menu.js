@@ -113,15 +113,11 @@ const Menu = (function() {
         // Remove highlight from all buttons and hide arrows
         menuButtons.forEach(button => {
             button.classList.remove('selected');
-            const arrow = button.querySelector('.arrow-indicator');
-            if (arrow) arrow.style.visibility = 'hidden';
         });
 
         // Add highlight to selected button and show arrow
         if (menuButtons[selectedButtonIndex]) {
             menuButtons[selectedButtonIndex].classList.add('selected');
-            const arrow = menuButtons[selectedButtonIndex].querySelector('.arrow-indicator');
-            if (arrow) arrow.style.visibility = 'visible';
         }
     }
 
@@ -616,7 +612,7 @@ const Menu = (function() {
     function updateVolumeDisplay(slider, valueDisplay, volume) {
         const notches = slider.querySelectorAll('.volume-notch');
         const activeNotches = Math.round(volume * 100);
-        
+
         notches.forEach((notch, index) => {
             if (index < activeNotches) {
                 notch.classList.add('active');
@@ -695,7 +691,7 @@ const Menu = (function() {
             hideMenu();
 
             playGameStartSound();
-            
+
             setTimeout(() => {
                 if (typeof CutsceneManager !== 'undefined' && CutsceneManager.showIntro) {
                     CutsceneManager.showIntro();

@@ -335,14 +335,10 @@ const Scoreboard = (function() {
     function updateMenuButtonSelection() {
         menuButtons.forEach(button => {
             button.classList.remove('selected');
-            const arrow = button.querySelector('.arrow-indicator');
-            if (arrow) arrow.style.visibility = 'hidden';
         });
 
         if (menuButtons[selectedMenuButtonIndex]) {
             menuButtons[selectedMenuButtonIndex].classList.add('selected');
-            const arrow = menuButtons[selectedMenuButtonIndex].querySelector('.arrow-indicator');
-            if (arrow) arrow.style.visibility = 'visible';
         }
     }
 
@@ -362,7 +358,7 @@ const Scoreboard = (function() {
         // Focus the name input initially
         const nameInput = document.getElementById('playerNameInput');
         nameInput.focus();
-        nameInput.select(); // Select all text for easy replacement
+        nameInput.select();
 
         // Add arrow indicators to menu buttons when they're created
         setTimeout(() => {
@@ -371,7 +367,6 @@ const Scoreboard = (function() {
                 const arrow = document.createElement('span');
                 arrow.className = 'arrow-indicator';
                 arrow.innerHTML = '▶';
-                arrow.style.visibility = 'hidden';
                 button.insertBefore(arrow, button.firstChild);
             });
             selectedMenuButtonIndex = 0;

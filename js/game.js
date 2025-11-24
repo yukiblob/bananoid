@@ -276,8 +276,8 @@ const GameState = (function() {
             <div class="input-hint">Type your name and press ENTER to submit</div>
             <div id="submitStatus" style="margin-top: 10px; min-height: 20px; font-size: 10px;"></div>
         </div>
-        ` : ''}
-
+        ` : `
+        <!-- For non-final levels, show menu buttons since there's no name submission -->
         <div class="menu-buttons">
             ${showNextLevelButton ?
                 '<div class="menu-button" data-action="nextLevel"><span class="arrow-indicator">▶</span><span class="button-text">Next Level</span></div>' :
@@ -285,8 +285,10 @@ const GameState = (function() {
             <div class="menu-button" data-action="restart"><span class="arrow-indicator">▶</span><span class="button-text">Restart Game</span></div>
             <div class="menu-button" data-action="menu"><span class="arrow-indicator">▶</span><span class="button-text">Main Menu</span></div>
         </div>
+        `}
     </div>
     `;
+
 
         document.getElementById('gameArea').appendChild(winScreen);
 
@@ -300,9 +302,7 @@ const GameState = (function() {
 
             // Remove mouse event listeners from name input section
             const nameInputSection = document.querySelector('.name-input-section');
-            nameInputSection.style.pointerEvents = 'none'; // Disable mouse interactions
-
-            // But allow focus on the input
+            nameInputSection.style.pointerEvents = 'none';
             nameInput.style.pointerEvents = 'auto';
 
             // Keyboard-only submission
@@ -317,84 +317,222 @@ const GameState = (function() {
                     submitStatus.style.color = '#ffcc00';
 
                     try {
-                        console.log('Attempting to submit score...'); // DEBUG
-                        console.log('Name:', name, 'Score:', finalScore, 'Time:', timeElapsed); // DEBUG
-                        console.log('scoreboard available:', typeof Scoreboard !== 'undefined'); // DEBUG
-                        console.log('submitScore available:', Scoreboard && typeof Scoreboard.submitScore !== 'undefined'); // DEBUG
+                        let result;
 
-                        if (!Scoreboard || typeof Scoreboard.submitScore !== 'function') {
-                            throw new Error('scoreboard.submitScore is not available');
+                        if (typeof Scoreboard !== 'undefined' && typeof Scoreboard.handleExternalScoreSubmission === 'function') {
+                            // Remove the current win screen immediately
+                            const winScreen = document.getElementById('winScreen');
+                            if (winScreen) {
+                                winScreen.remove();
+                            }
+
+                            // Use the integrated approach for win screen
+                            result = await Scoreboard.handleExternalScoreSubmission(name, finalScore, timeElapsed, true);
+                        } else if (typeof Scoreboard !== 'undefined' && typeof Scoreboard.submitScore === 'function') {
+                            result = await Scoreboard.submitScore(name, finalScore, timeElapsed);
+                            if (result) {
+                                // Remove current screen first
+                                const winScreen = document.getElementById('winScreen');
+                                if (winScreen) {
+                                    winScreen.remove();
+                                }
+                                // Show custom scoreboard for win
+                                showWinScoreboard(result, name, finalScore, timeElapsed, livesLeft);
+                            }
+                        } else {
+                            result = await submitScoreDirectly(name, finalScore, timeElapsed);
+                            if (result) {
+                                // Remove current screen first
+                                const winScreen = document.getElementById('winScreen');
+                                if (winScreen) {
+                                    winScreen.remove();
+                                }
+                                showWinScoreboard(result, name, finalScore, timeElapsed, livesLeft);
+                            }
                         }
-
-                        const result = await Scoreboard.submitScore(name, finalScore, timeElapsed);
-                        console.log('Submission result:', result); // DEBUG
 
                         if (result) {
-                            submitStatus.textContent = `SUCCESS! Rank: ${result.rank} (Top ${result.percentile}%)`;
-                            submitStatus.style.color = '#4caf50';
-
-                            nameInput.disabled = true;
-                            nameInput.style.background = 'rgba(255,255,255,0.1)';
-
-                            // MARK SCORE AS SUBMITTED
-                            if (window.markScoreSubmitted) window.markScoreSubmitted();
-
-                            setTimeout(() => {
-                                const firstButton = document.querySelector('.menu-button');
-                                if (firstButton) firstButton.focus();
-                            }, 500);
+                            // Success - the screen will be replaced by the scoreboard
                         } else {
-                            throw new Error('Submission returned null result');
+                            throw new Error('Submission returned no result');
                         }
                     } catch (error) {
-                        console.error('Score submission error:', error); // DEBUG
+                        console.error('Score submission error:', error);
                         submitStatus.textContent = `SUBMISSION FAILED: ${error.message} - PRESS ENTER TO RETRY`;
                         submitStatus.style.color = '#f44336';
-                        nameInput.focus();
-                    }
-                } else if (e.key === 'Tab') {
-                    e.preventDefault();
-                    // Only allow tab navigation AFTER score is submitted
-                    if (window.markScoreSubmitted && typeof window.markScoreSubmitted === 'function') {
-                        // Check if we can call it to verify score was submitted
-                        const firstButton = document.querySelector('.menu-button');
-                        if (firstButton) firstButton.focus();
-                    } else {
-                        // Score not submitted yet, keep focus on input
                         nameInput.focus();
                     }
                 }
             });
 
-            initGameOverNavigation();
+            if (!isFinalLevel) {
+                initWinScreenNavigation();
+            }
+
+            // Tab navigation
+            nameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const firstButton = document.querySelector('.menu-button');
+                    if (firstButton) firstButton.focus();
+                }
+            });
+        }
+
+        // Initialize win screen navigation
+        initWinScreenNavigation();
+
+        // Add celebration effect
+        createCelebrationEffects();
+    }
+
+    function showWinScoreboard(submissionResult, playerName, finalScore, timeElapsed, livesLeft) {
+        // Remove the current win screen
+        const winScreen = document.getElementById('winScreen');
+        if (winScreen) {
+            winScreen.remove();
+        }
+
+        // Create scoreboard screen for win
+        const scoreboardScreen = document.createElement('div');
+        scoreboardScreen.id = 'scoreboardScreen';
+        scoreboardScreen.className = 'scoreboard-screen';
+
+        const minutes = Math.floor(timeElapsed / 60);
+        const seconds = timeElapsed % 60;
+
+        scoreboardScreen.innerHTML = `
+        <div class="scoreboard-content">
+            <div class="title-wrapper">
+                <h1 class="menu-title">GAME COMPLETED!</h1>
+                <h2 class="menu-subtitle">BANANA FORM RESTORED!</h2>
+            </div>
+
+            <div class="scoreboard-section">
+                <div class="rank-message">
+                    ${submissionResult.rank ?
+                `Congrats ${playerName}, you are in the top ${submissionResult.percentile}%, on the ${formatRank(submissionResult.rank)} position!` :
+                'Score submitted successfully!'}
+                </div>
+
+                <div class="win-stats">
+                    <p>
+                        <span class="win-stats-label">Your Score:</span>
+                        <span class="win-stats-value">${finalScore.toLocaleString()}</span>
+                    </p>
+                    <p>
+                        <span class="win-stats-label">Your Time:</span>
+                        <span class="win-stats-value">${minutes}:${seconds.toString().padStart(2, '0')}</span>
+                    </p>
+                    <p>
+                        <span class="win-stats-label">Lives Remaining:</span>
+                        <span class="win-stats-value">${livesLeft}</span>
+                    </p>
+                </div>
+
+                <div class="scoreboard-table" id="winScoreboard">
+                    <!-- Scoreboard will be loaded here -->
+                </div>
+
+                <div class="scoreboard-pagination">
+                    <div class="arrow-indicator">←</div>
+                    <div class="pagination-info">Page 1/1</div>
+                    <div class="arrow-indicator">→</div>
+                </div>
+                <div class="pagination-hint">Use arrows to navigate pages</div>
+            </div>
+
+            <div class="menu-buttons">
+                <div class="menu-button" data-action="restart">
+                    <span class="arrow-indicator">▶</span>
+                    <span class="button-text">Play Again</span>
+                </div>
+                <div class="menu-button" data-action="menu">
+                    <span class="arrow-indicator">▶</span>
+                    <span class="button-text">Main Menu</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+        document.getElementById('gameArea').appendChild(scoreboardScreen);
+
+        // Load the scoreboard data
+        loadWinScoreboard(submissionResult.rank || 0);
+
+        // Initialize navigation for the new screen
+        initScoreboardNavigation();
+    }
+
+    // Helper function for win screen scoreboard loading
+    async function loadWinScoreboard(playerRank) {
+        try {
+            const response = await fetch('/api/scoreboard?page=1&pageSize=10');
+            if (response.ok) {
+                const data = await response.json();
+                displayWinScoreboard(data, playerRank);
+            } else {
+                throw new Error('Failed to load scoreboard');
+            }
+        } catch (error) {
+            console.error('Error loading scoreboard:', error);
+            const scoreboardTable = document.getElementById('winScoreboard');
+            if (scoreboardTable) {
+                scoreboardTable.innerHTML = `
+                <div class="table-row">
+                    <span colspan="4" style="grid-column: 1 / -1; text-align: center; padding: 20px;">
+                        Failed to load scoreboard
+                    </span>
+                </div>
+            `;
+            }
         }
     }
 
-    async function submitScoreAutomatically(finalScore, timeElapsed) {
-        const name = 'ANON'; // Default name
+    function displayWinScoreboard(data, playerRank) {
+        const container = document.getElementById('winScoreboard');
+        if (!container) return;
 
-        try {
-            const response = await fetch('/api/scoreboard', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: name,
-                    score: finalScore,
-                    time: timeElapsed
-                })
+        let html = `
+        <div class="table-header">
+            <span>RANK</span>
+            <span>NAME</span>
+            <span>SCORE</span>
+            <span>TIME</span>
+        </div>
+    `;
+
+        if (data.scores && data.scores.length > 0) {
+            data.scores.forEach((score, index) => {
+                const rank = (data.page - 1) * 10 + index + 1;
+                const isPlayerScore = rank === playerRank;
+
+                html += `
+                <div class="table-row ${isPlayerScore ? 'player-score' : ''}" 
+                     style="${isPlayerScore ? 'background: rgba(255, 204, 0, 0.2); border: 1px solid #ffcc00;' : ''}">
+                    <span>${formatRank(rank)}</span>
+                    <span>${score.name}</span>
+                    <span>${score.score.toLocaleString()}</span>
+                    <span>${formatTime(score.time)}</span>
+                </div>
+            `;
             });
+        } else {
+            html += `
+            <div class="table-row">
+                <span colspan="4" style="grid-column: 1 / -1; text-align: center; padding: 20px;">
+                    No scores yet! Be the first!
+                </span>
+            </div>
+        `;
+        }
 
-            if (response.ok) {
-                const result = await response.json();
-                return result;
-            } else {
-                throw new Error('Failed to submit score');
-            }
-        } catch (error) {
-            console.error('Error submitting score:', error);
-            return { rank: null, percentile: null }; // Return empty data but continue
+        container.innerHTML = html;
+
+        // Update pagination info
+        const pageInfo = document.querySelector('.pagination-info');
+        if (pageInfo && data.totalPages) {
+            pageInfo.textContent = `Page ${data.page}/${data.totalPages}`;
         }
     }
 
@@ -511,117 +649,73 @@ const GameState = (function() {
         if (!winScreen) return;
 
         let selectedButtonIndex = 0;
-        let winButtons = [];
-        let currentScoreboardPage = 1;
-        let totalScoreboardPages = 1;
+        const buttons = Array.from(winScreen.querySelectorAll('.menu-button'));
 
-        function updateButtonSelection() {
-            // Remove highlight from all buttons and hide arrows
-            winButtons.forEach(button => {
+        // If no buttons (shouldn't happen for non-final levels), return
+        if (buttons.length === 0) return;
+
+        function updateSelection() {
+            buttons.forEach((button, index) => {
                 button.classList.remove('selected');
-                const arrow = button.querySelector('.arrow-indicator');
-                if (arrow) arrow.style.visibility = 'hidden';
             });
-
-            // Add highlight to selected button and show arrow
-            if (winButtons[selectedButtonIndex]) {
-                winButtons[selectedButtonIndex].classList.add('selected');
-                const arrow = winButtons[selectedButtonIndex].querySelector('.arrow-indicator');
-                if (arrow) arrow.style.visibility = 'visible';
+            if (buttons[selectedButtonIndex]) {
+                buttons[selectedButtonIndex].classList.add('selected');
             }
         }
 
-        function handleWinScreenNavigation(direction) {
-            if (direction === 'up') {
-                selectedButtonIndex = (selectedButtonIndex - 1 + winButtons.length) % winButtons.length;
-            } else if (direction === 'down') {
-                selectedButtonIndex = (selectedButtonIndex + 1) % winButtons.length;
-            }
-
-            updateButtonSelection();
-        }
-
-        async function activateSelectedButton() {
-            if (winButtons[selectedButtonIndex]) {
-                const action = winButtons[selectedButtonIndex].getAttribute('data-action');
-                await handleWinScreenAction(action);
-            }
-        }
-
-        async function handleScoreboardPageChange(newPage) {
-            if (newPage >= 1 && newPage <= totalScoreboardPages && newPage !== currentScoreboardPage) {
-                currentScoreboardPage = newPage;
-                await loadAndDisplayScoreboard('winScoreboard', currentScoreboardPage);
-            }
-        }
-
-        async function handleWinScreenAction(action) {
-            switch (action) {
-                case 'nextLevel':
-                    nextLevel();
-                    break;
-                case 'restart':
-                    restartGame();
-                    break;
-                case 'menu':
-                    returnToMenu();
-                    break;
-                case 'submitScore':
-                    await Scoreboard.submitScore();
-                    break;
-            }
-        }
-
-        // Get all win screen buttons
-        winButtons = Array.from(winScreen.querySelectorAll('.menu-button'));
-
-        // Set up initial selection
-        updateButtonSelection();
-
-        // Add keyboard event listener for win screen
-        function handleWinScreenKeydown(e) {
-            if (!document.getElementById('winScreen')) {
-                window.removeEventListener('keydown', handleWinScreenKeydown);
-                return;
-            }
-
-            // Check if we're trying to navigate scoreboard pages
-            const scoreboardSection = winScreen.querySelector('.scoreboard-section');
-            if (scoreboardSection && scoreboardSection.style.display !== 'none') {
-                if (e.key === 'ArrowLeft') {
-                    handleScoreboardPageChange(currentScoreboardPage - 1);
-                    e.preventDefault();
-                    return;
-                } else if (e.key === 'ArrowRight') {
-                    handleScoreboardPageChange(currentScoreboardPage + 1);
-                    e.preventDefault();
-                    return;
-                }
-            }
-
-            // Regular navigation for buttons
+        function handleKeydown(e) {
             switch (e.key) {
                 case 'ArrowUp':
-                    handleWinScreenNavigation('up');
                     e.preventDefault();
+                    selectedButtonIndex = (selectedButtonIndex - 1 + buttons.length) % buttons.length;
+                    updateSelection();
                     break;
                 case 'ArrowDown':
-                    handleWinScreenNavigation('down');
                     e.preventDefault();
+                    selectedButtonIndex = (selectedButtonIndex + 1) % buttons.length;
+                    updateSelection();
                     break;
                 case 'Enter':
-                case ' ':
-                    activateSelectedButton();
                     e.preventDefault();
-                    break;
-                case 'Escape':
-                    returnToMenu();
-                    e.preventDefault();
+                    if (buttons[selectedButtonIndex]) {
+                        const action = buttons[selectedButtonIndex].getAttribute('data-action');
+                        handleWinScreenAction(action);
+                    }
                     break;
             }
         }
 
-        window.addEventListener('keydown', handleWinScreenKeydown);
+        function handleWinScreenAction(action) {
+            winScreen.remove();
+
+            switch (action) {
+                case 'nextLevel':
+                    // Next level logic
+                    if (typeof GameState !== 'undefined' && GameState.nextLevel) {
+                        GameState.nextLevel();
+                    }
+                    break;
+                case 'restart':
+                    // Restart game logic
+                    if (typeof GameState !== 'undefined' && GameState.restartGame) {
+                        GameState.restartGame();
+                    }
+                    break;
+                case 'menu':
+                    // Main menu logic
+                    if (typeof GameState !== 'undefined' && GameState.returnToMenu) {
+                        GameState.returnToMenu();
+                    }
+                    break;
+            }
+        }
+
+        // Initial setup
+        updateSelection();
+        winScreen.addEventListener('keydown', handleKeydown);
+
+        // Focus the screen for keyboard events
+        winScreen.focus();
     }
 
     function createCelebrationEffects() {
