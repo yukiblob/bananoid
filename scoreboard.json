@@ -1,6 +1,12 @@
 {
   "scores": [
     {
+      "name": "www",
+      "score": 9100,
+      "time": 70,
+      "timestamp": 1764088144
+    },
+    {
       "name": "aug",
       "score": 350,
       "time": 6,

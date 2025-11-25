@@ -420,6 +420,52 @@ body {
     border-left: 2px solid #3e2723;
 }
 
+/* Banana Skin Paddle */
+#paddle.banana-skin-paddle {
+    background: 
+        radial-gradient(circle at 15% 40%, rgba(156, 153, 56, 0.6) 3px, transparent 3px),
+        radial-gradient(circle at 35% 60%, rgba(156, 153, 56, 0.7) 2px, transparent 2px),
+        radial-gradient(circle at 55% 30%, rgba(156, 153, 56, 0.6) 3px, transparent 3px),
+        radial-gradient(circle at 75% 50%, rgba(156, 153, 56, 0.7) 2px, transparent 2px),
+        radial-gradient(circle at 90% 70%, rgba(156, 153, 56, 0.6) 3px, transparent 3px),
+        radial-gradient(circle at 25% 20%, rgba(156, 153, 56, 0.5) 2px, transparent 2px),
+        radial-gradient(circle at 65% 80%, rgba(156, 153, 56, 0.5) 2px, transparent 2px),
+        linear-gradient(45deg, 
+            #ffeb3b 0%, 
+            #ffd54f 50%, 
+            #ffb74d 100%) !important;
+    border-radius: 15px !important;
+    box-shadow: 0 0 10px rgba(255, 152, 0, 0.7) !important;
+}
+
+#paddle.banana-skin-paddle::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: -10px !important;
+    transform: translateY(-50%) !important;
+    width: 14px !important;
+    height: 20px !important;
+    background: #5d4037 !important;
+    border-radius: 6px 0 0 6px !important;
+    box-shadow: inset -3px 0 4px rgba(0, 0, 0, 0.6) !important;
+    border-right: 2px solid #3e2723 !important;
+}
+
+#paddle.banana-skin-paddle::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    right: -8px !important;
+    transform: translateY(-50%) !important;
+    width: 12px !important;
+    height: 18px !important;
+    background: #5d4037 !important;
+    border-radius: 0 6px 6px 0 !important;
+    box-shadow: inset 3px 0 4px rgba(0, 0, 0, 0.6) !important;
+    border-left: 2px solid #3e2723 !important;
+}
+
 /* Sun */
 .sun {
     position: absolute;
@@ -2600,7 +2646,7 @@ body {
 
 /* Make options buttons consistent width */
 .options-container .menu-button {
-    width: 280px;
+    width: 400px;
     min-width: 280px;
 }
 

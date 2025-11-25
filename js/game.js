@@ -10,7 +10,9 @@ const GameState = (function() {
         frameCount: 0,
         lastFPSUpdate: 0,
         currentLevel: 0,
-        totalLevels: 1
+        totalLevels: 1,
+        bananaUnlocked: false,
+        bananaEnabled: false
     };
 
     // Create background grid
@@ -978,7 +980,42 @@ const GameState = (function() {
         },
         loadLevel,
         createBlock,
-        createGrid
+        createGrid,
+        isBananaUnlocked: function() {
+             return state.bananaUnlocked;
+        },
+        setBananaUnlocked: function(unlocked) {
+            state.bananaUnlocked = unlocked;
+        },
+        isBananaEnabled: function() { 
+            return state.bananaEnabled;
+        },
+        setBananaEnabled: function(enabled) {
+            state.bananaEnabled = enabled;
+        },
+        updatePaddleSkin: function() {
+            const paddle = document.getElementById('paddle');
+            if (!paddle) return;
+
+            paddle.classList.remove('banana-skin-paddle');
+
+            // remove and reapply powerups just in case they conflict
+            const powerupClasses = ['powerup-long', 'powerup-short', 'powerup-guns', 'powerup-sticky', 'powerup-freeze'];
+            powerupClasses.forEach(cls => paddle.classList.remove(cls));
+            
+            if (state.bananaEnabled && state.bananaUnlocked) {
+                paddle.classList.add('banana-skin-paddle');
+                
+                if (typeof Powerups !== 'undefined' && Powerups.getActivePowerups) {
+                    const activePowerups = Powerups.getActivePowerups();
+                    activePowerups.forEach(powerup => {
+                        if (powerup.className) {
+                            paddle.classList.add(powerup.className);
+                        }
+                    });
+                }
+            }
+        }
     };
 })();
 
@@ -1076,6 +1113,10 @@ window.addEventListener('load', () => {
             Scoreboard.init();
         } else {
             console.error('Scoreboard module not found');
+        }
+
+        if (typeof GameState !== 'undefined' && GameState.updatePaddleSkin) {
+            GameState.updatePaddleSkin();
         }
 
         GameState.startGameLoop();

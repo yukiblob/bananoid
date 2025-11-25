@@ -270,6 +270,10 @@ const Boss = (function() {
             GameState.setState({ isPaused: true });
         }
 
+        if (typeof GameState !== 'undefined' && GameState.setBananaUnlocked) {
+            GameState.setBananaUnlocked(true);
+        }
+
         const powerups = document.querySelectorAll('.powerup-pill');
         powerups.forEach(powerup => powerup.remove());
 

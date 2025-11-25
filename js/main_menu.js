@@ -511,11 +511,15 @@ const Menu = (function() {
         optionsContainer.appendChild(soundVolumeButton);
         menuButtons.push(musicVolumeButton, soundVolumeButton);
 
+        const bananaButton = createBananaButton(2);
+        optionsContainer.appendChild(bananaButton);
+        menuButtons.push(bananaButton);
+
         const onClickControls = () => {
             showControls();
         };
 
-        const controlsButton = createMenuButton('Controls', 1);
+        const controlsButton = createMenuButton('Controls', 3);
         controlsButton.onClickFunction = onClickControls;
         controlsButton.title = 'View game controls';
 
@@ -526,7 +530,7 @@ const Menu = (function() {
             showMainMenu();
         };
 
-        const backButton = createMenuButton('Back', 3);
+        const backButton = createMenuButton('Back', 4);
         backButton.onClickFunction = onClickBack;
         backButton.style.marginBottom = '20px';
 
@@ -655,6 +659,65 @@ const Menu = (function() {
         }
 
         updateVolumeDisplay(slider, valueDisplay, currentVolume);
+    }
+
+    function createBananaButton(index) {
+        const button = document.createElement('div');
+        button.className = 'menu-button banana-skin-button';
+        button.dataset.index = index;
+        button.style.cursor = 'none';
+        button.style.flexDirection = 'column';
+        button.style.gap = '10px';
+        button.style.padding = '12px 0';
+
+        const arrow = document.createElement('span');
+        arrow.className = 'arrow-indicator';
+        arrow.innerHTML = '▶';
+
+        const textSpan = document.createElement('span');
+
+        const isUnlocked = gameState && gameState.isBananaUnlocked ? gameState.isBananaUnlocked() : false;
+        if (isUnlocked) {
+            const isEnabled = gameState && gameState.isBananaEnabled ? gameState.isBananaEnabled() : false;
+            textSpan.innerHTML = `Banana Skin: <span style="color: ${isEnabled ? '#4caf50' : '#f44336'}">${isEnabled ? 'ON' : 'OFF'}</span>`;
+        } else {
+            textSpan.innerHTML = `Banana Skin: <span style="color: #f44336; text-shadow: 0 0 5px #f44336;">STOLEN!</span>`;
+        }
+
+        button.appendChild(arrow);
+        button.appendChild(textSpan);
+
+        button.isUnlocked = isUnlocked;
+        button.updateDisplay = function() {
+            if (this.isUnlocked) {
+            const isEnabled = gameState && gameState.isBananaEnabled ? gameState.isBananaEnabled() : false;
+            textSpan.innerHTML = `Banana Skin: <span style="color: ${isEnabled ? '#4caf50' : '#f44336'}">${isEnabled ? 'ON' : 'OFF'}</span>`;
+            } else {
+                textSpan.innerHTML = `Banana Skin: <span style="color: #f44336; text-shadow: 0 0 5px #f44336;">STOLEN!</span>`;
+            }
+        };
+
+        return button;
+    }
+
+    function toggleBananaSkin() {
+        if (!gameState || !gameState.isBananaUnlocked()) return;
+
+        const currentState = gameState.isBananaEnabled();
+        gameState.setBananaEnabled(!currentState);
+
+        if (gameState.updatePaddleSkin) {
+            gameState.updatePaddleSkin();
+        }
+
+        const selectedButton = menuButtons[selectedButtonIndex];
+        if (selectedButton && selectedButton.updateDisplay) {
+            selectedButton.updateDisplay();
+        }
+
+        if (typeof SoundManager !== 'undefined' && SoundManager.playMenuNavigate) {
+            SoundManager.playMenuNavigate();
+        }
     }
 
     function showMainMenu() {
@@ -935,6 +998,18 @@ const Menu = (function() {
                             adjustSelectedVolume('increase');
                             e.preventDefault();
                             break;
+                    }
+                }
+
+                if (selectedButton && selectedButton.classList.contains('banana-skin-button')) {
+                    if (selectedButton.isUnlocked) {
+                        switch (e.key) {
+                            case 'ArrowLeft':
+                            case 'ArrowRight':
+                                toggleBananaSkin();
+                                e.preventDefault();
+                                break;
+                        }
                     }
                 }
             }
