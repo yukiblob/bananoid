@@ -225,7 +225,6 @@ const GameState = (function() {
     }
 
     async function showWinScreen() {
-        // Pause the game
         state.isPaused = true;
 
         // Calculate final score
@@ -236,10 +235,14 @@ const GameState = (function() {
         // Check if this is the final level
         const isFinalLevel = state.currentLevel >= getOriginalLevelsCount() - 1;
 
+        console.log('Creating win screen...'); // DEBUG
+
         // Create win screen
         const winScreen = document.createElement('div');
         winScreen.id = "winScreen";
         winScreen.className = 'win-screen';
+        winScreen.tabIndex = -1; // MAKE IT FOCUSABLE
+        winScreen.style.outline = 'none'; // Remove focus outline
 
         const minutes = Math.floor(timeElapsed / 60);
         const seconds = timeElapsed % 60;
@@ -291,8 +294,16 @@ const GameState = (function() {
     </div>
     `;
 
-
         document.getElementById('gameArea').appendChild(winScreen);
+
+        // DEBUG: Check what buttons exist
+        setTimeout(() => {
+            const buttons = document.querySelectorAll('#winScreen .menu-button');
+            console.log('Win screen buttons found:', buttons.length);
+            buttons.forEach((btn, i) => {
+                console.log(`Button ${i}:`, btn.textContent, 'action:', btn.getAttribute('data-action'));
+            });
+        }, 100);
 
         // Keyboard-only name input for final level
         if (isFinalLevel) {
@@ -367,10 +378,6 @@ const GameState = (function() {
                 }
             });
 
-            if (!isFinalLevel) {
-                initWinScreenNavigation();
-            }
-
             // Tab navigation
             nameInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Tab') {
@@ -379,10 +386,17 @@ const GameState = (function() {
                     if (firstButton) firstButton.focus();
                 }
             });
-        }
+        } else {
+            // FOR NON-FINAL LEVELS: Initialize navigation and focus the screen
+            console.log('Initializing win screen navigation for non-final level');
+            initWinScreenNavigation();
 
-        // Initialize win screen navigation
-        initWinScreenNavigation();
+            // Force focus on the win screen
+            setTimeout(() => {
+                winScreen.focus();
+                console.log('Win screen focused, should now respond to keyboard');
+            }, 100);
+        }
 
         // Add celebration effect
         createCelebrationEffects();
@@ -647,66 +661,106 @@ const GameState = (function() {
     }
 
     function initWinScreenNavigation() {
+        console.log('initWinScreenNavigation called'); // DEBUG
         const winScreen = document.getElementById('winScreen');
         if (!winScreen) return;
 
         let selectedButtonIndex = 0;
         const buttons = Array.from(winScreen.querySelectorAll('.menu-button'));
 
-        // If no buttons (shouldn't happen for non-final levels), return
-        if (buttons.length === 0) return;
+        console.log('Win screen buttons:', buttons.length); // DEBUG
+        if (buttons.length === 0) {
+            console.warn('No menu buttons found in win screen');
+            return;
+        }
 
         function updateSelection() {
+            console.log('Updating win screen selection, index:', selectedButtonIndex); // DEBUG
+
             buttons.forEach((button, index) => {
                 button.classList.remove('selected');
             });
+
             if (buttons[selectedButtonIndex]) {
                 buttons[selectedButtonIndex].classList.add('selected');
+                console.log(`Selected: ${buttons[selectedButtonIndex].textContent}`); // DEBUG
             }
         }
 
         function handleKeydown(e) {
+            console.log('Win screen key pressed:', e.key); // DEBUG
+
+            // Check if win screen still exists
+            if (!document.getElementById('winScreen')) {
+                console.log('Win screen removed, cleaning up listener');
+                window.removeEventListener('keydown', handleKeydown);
+                return;
+            }
+
             switch (e.key) {
                 case 'ArrowUp':
+                    console.log('ArrowUp - navigating up');
                     e.preventDefault();
                     selectedButtonIndex = (selectedButtonIndex - 1 + buttons.length) % buttons.length;
                     updateSelection();
                     break;
                 case 'ArrowDown':
+                    console.log('ArrowDown - navigating down');
                     e.preventDefault();
                     selectedButtonIndex = (selectedButtonIndex + 1) % buttons.length;
                     updateSelection();
                     break;
                 case 'Enter':
+                case ' ':
+                    console.log('Enter/Space - activating button');
                     e.preventDefault();
                     if (buttons[selectedButtonIndex]) {
                         const action = buttons[selectedButtonIndex].getAttribute('data-action');
+                        console.log('Activating action:', action);
                         handleWinScreenAction(action);
                     }
+                    break;
+                case 'Escape':
+                    console.log('Escape - going to menu');
+                    e.preventDefault();
+                    handleWinScreenAction('menu');
                     break;
             }
         }
 
         function handleWinScreenAction(action) {
-            winScreen.remove();
+            console.log('Handling win screen action:', action); // DEBUG
 
+            // Remove the win screen
+            const winScreen = document.getElementById('winScreen');
+            if (winScreen) {
+                winScreen.remove();
+            }
+
+            // Handle the action
             switch (action) {
                 case 'nextLevel':
-                    // Next level logic
+                    console.log('Next level action triggered');
                     if (typeof GameState !== 'undefined' && GameState.nextLevel) {
                         GameState.nextLevel();
+                    } else if (typeof nextLevel !== 'undefined') {
+                        nextLevel();
                     }
                     break;
                 case 'restart':
-                    // Restart game logic
+                    console.log('Restart action triggered');
                     if (typeof GameState !== 'undefined' && GameState.restartGame) {
                         GameState.restartGame();
+                    } else if (typeof restartGame !== 'undefined') {
+                        restartGame();
                     }
                     break;
                 case 'menu':
-                    // Main menu logic
+                    console.log('Menu action triggered');
                     if (typeof GameState !== 'undefined' && GameState.returnToMenu) {
                         GameState.returnToMenu();
+                    } else if (typeof showMainMenu !== 'undefined') {
+                        showMainMenu();
                     }
                     break;
             }
@@ -714,10 +768,15 @@ const GameState = (function() {
 
         // Initial setup
         updateSelection();
-        winScreen.addEventListener('keydown', handleKeydown);
 
-        // Focus the screen for keyboard events
+        // Add event listener to the window instead of winScreen to ensure we capture events
+        window.addEventListener('keydown', handleKeydown);
+
+        // Force focus on the win screen
         winScreen.focus();
+        console.log('Win screen focused and navigation ready');
+
+        console.log('Win screen navigation initialized with', buttons.length, 'buttons');
     }
 
     function createCelebrationEffects() {
