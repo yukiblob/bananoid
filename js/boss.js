@@ -11,6 +11,13 @@ const Boss = (function() {
     function createBoss() {
         const gameArea = document.getElementById('gameArea');
 
+        if (typeof Music !== 'undefined' && Music.playMoaiMenace) {
+            Music.stop();
+            setTimeout(() => {
+                Music.playMoaiMenace();
+            }, 100);
+        }
+
         bossElement = document.createElement('div');
         bossElement.id = 'boss';
         bossElement.className = 'boss-entity';

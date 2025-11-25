@@ -10,7 +10,6 @@ const Music = (function() {
 
     let scheduledTimeouts = new Set();
     let activeOscillators = new Set();
-    let nextScheduledTime = 0;
 
     const chordProgressions = {
         tropical: [
@@ -56,6 +55,67 @@ const Music = (function() {
             { note: 73.42, duration: 2 }, // D2  
             { note: 82.41, duration: 2 }, // E2
             { note: 98.00, duration: 2 }  // G2
+        ]
+    };
+
+    const bossMusic = {
+        chords: [
+            { notes: [130.81, 164.81, 196.00], duration: 2 }, // Cm (C3, E♭3, G3)
+            { notes: [146.83, 174.61, 220.00], duration: 2 }, // Dm (D3, F3, A3)
+            { notes: [98.00, 130.81, 155.56], duration: 2 },  // Gm (G2, B♭2, D3)
+            { notes: [110.00, 130.81, 164.81], duration: 2 }  // Am (A2, C3, E♭3)
+        ],
+
+        bass: [
+            { note: 65.41, duration: 0.5 }, // C2
+            { note: 65.41, duration: 0.5 }, // C2
+            { note: 73.42, duration: 0.5 }, // D2
+            { note: 73.42, duration: 0.5 }, // D2
+            { note: 61.74, duration: 0.5 }, // G1
+            { note: 61.74, duration: 0.5 }, // G1
+            { note: 65.41, duration: 0.5 }, // C2
+            { note: 73.42, duration: 0.5 }  // D2
+        ],
+
+        melody: [
+            { note: 261.63, duration: 0.25 }, // C4
+            { note: 261.63, duration: 0.25 }, // C4
+            { note: 293.66, duration: 0.25 }, // D4
+            { note: 293.66, duration: 0.25 }, // D4
+            { note: 233.08, duration: 0.5 },  // B♭3
+            { note: 220.00, duration: 0.25 }, // A3
+            { note: 196.00, duration: 0.25 }, // G3
+            { note: 174.61, duration: 0.5 },  // F3
+            { note: 196.00, duration: 0.25 }, // G3
+            { note: 220.00, duration: 0.25 }, // A3
+            { note: 233.08, duration: 0.5 },  // B♭3
+            { note: 261.63, duration: 1.0 }   // C4
+        ],
+
+        drums: [
+            { time: 0.0, type: 'kick' },
+            { time: 0.25, type: 'hihat' },
+            { time: 0.5, type: 'snare' },
+            { time: 0.75, type: 'hihat' },
+            { time: 1.0, type: 'kick' },
+            { time: 1.25, type: 'hihat' },
+            { time: 1.5, type: 'snare' },
+            { time: 1.75, type: 'hihat' },
+            { time: 2.0, type: 'kick' },
+            { time: 2.25, type: 'hihat' },
+            { time: 2.5, type: 'snare' },
+            { time: 2.75, type: 'hihat' },
+            { time: 3.0, type: 'kick' },
+            { time: 3.25, type: 'hihat' },
+            { time: 3.5, type: 'snare' },
+            { time: 3.75, type: 'hihat' }
+        ],
+
+        pads: [
+            { notes: [65.41, 98.00, 130.81], duration: 4 }, // C2, G2, C3
+            { notes: [73.42, 110.00, 146.83], duration: 4 }, // D2, A2, D3
+            { notes: [61.74, 92.50, 123.47], duration: 4 }, // G1, D2, G2
+            { notes: [65.41, 87.31, 130.81], duration: 4 }  // C2, F2, C3
         ]
     };
 
@@ -179,6 +239,221 @@ const Music = (function() {
 
         osc1.onended = cleanup;
         return { osc1, osc2, osc3, gainNode, filter };
+    }
+
+    function createDistortedBass(note, duration, distortion = 0.8, volumeScale = 1) {
+        if (!audioContext) return null;
+
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        const filter = audioContext.createBiquadFilter();
+        const waveshaper = audioContext.createWaveShaper();
+
+        const curve = new Float32Array(65536);
+        for (let i = 0; i < 65536; i++) {
+            const x = (i - 32768) / 32768;
+            curve[i] = (Math.PI + distortion) * x / (Math.PI + distortion * Math.abs(x));
+        }
+        waveshaper.curve = curve;
+
+        oscillator.connect(waveshaper);
+        waveshaper.connect(filter);
+        filter.connect(gainNode);
+        gainNode.connect(masterGain);
+
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.value = note;
+
+        filter.type = 'lowpass';
+        filter.frequency.value = 400;
+        filter.Q.value = 1.0;
+
+        const now = audioContext.currentTime;
+
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(0.6 * volumeScale, now + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        oscillator.start(now);
+        oscillator.stop(now + duration);
+
+        activeOscillators.add(oscillator);
+
+        oscillator.onended = () => {
+            activeOscillators.delete(oscillator);
+            try {
+                oscillator.disconnect();
+                gainNode.disconnect();
+                filter.disconnect();
+                waveshaper.disconnect();
+            } catch (e) {
+                // ignore
+            }
+        };
+
+        return oscillator;
+    }
+
+    function createBossPad(notes, duration) {
+        if (!audioContext) return;
+
+        notes.forEach(note => {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+            const lfo = audioContext.createOscillator();
+            const lfoGain = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(filter);
+            filter.connect(masterGain);
+
+            lfo.connect(lfoGain);
+            lfoGain.connect(oscillator.frequency);
+
+            oscillator.type = 'sine';
+            oscillator.frequency.value = note;
+
+            lfo.type = 'sine';
+            lfo.frequency.value = 0.1 + Math.random() * 0.2;
+            lfoGain.gain.value = 0.5 + Math.random() * 1;
+
+            filter.type = 'lowpass';
+            filter.frequency.value = 300 + (note * 0.3);
+            filter.Q.value = 0.7;
+
+            const now = audioContext.currentTime;
+
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.08, now + 1);
+            gainNode.gain.setValueAtTime(0.08, now + duration - 1);
+            gainNode.gain.linearRampToValueAtTime(0, now + duration);
+
+            oscillator.start(now);
+            lfo.start(now);
+            oscillator.stop(now + duration);
+            lfo.stop(now + duration);
+
+            activeOscillators.add(oscillator);
+            activeOscillators.add(lfo);
+
+            const cleanup = () => {
+                activeOscillators.delete(oscillator);
+                activeOscillators.delete(lfo);
+                try {
+                    oscillator.disconnect();
+                    gainNode.disconnect();
+                    filter.disconnect();
+                    lfo.disconnect();
+                    lfoGain.disconnect();
+                } catch (e) {
+                    // ignore
+                }
+            };
+            oscillator.onended = cleanup;
+        });
+    }
+
+    function playMoaiMenace() {
+        if (!audioContext) {
+            console.warn('Music: No audio context available');
+            return;
+        }
+
+        if (isPlaying) {
+            stop();
+        }
+
+        console.log('Music: Starting Moai Menace');
+        isPlaying = true;
+
+        if (masterGain) {
+            const now = audioContext.currentTime;
+            masterGain.gain.cancelScheduledValues(now);
+            masterGain.gain.setValueAtTime(volume, now);
+        }
+
+        if (audioContext.state === 'suspended') {
+            audioContext.resume().then(() => {
+                startBossMusicLoop();
+            }).catch(error => {
+                console.warn(error);
+                isPlaying = false;
+            });
+        } else {
+            startBossMusicLoop();
+        }
+    }
+
+    function startBossMusicLoop() {
+        if (!audioContext || !isPlaying) return;
+
+        let nextScheduleTime = audioContext.currentTime;
+        const loopDuration = 4.5;
+
+        function scheduleBossLoop() {
+            if (!isPlaying || !audioContext) return;
+
+            const startTime = nextScheduleTime;
+
+            bossMusic.chords.forEach((chord, index) => {
+                const chordTime = startTime + (index * 2);
+                const timeoutId = setTimeout(() => {
+                    scheduledTimeouts.delete(timeoutId);
+                    if (isPlaying) {
+                        createBossPad(chord.notes, chord.duration);
+                    }
+                }, (chordTime - audioContext.currentTime) * 1000);
+                scheduledTimeouts.add(timeoutId);
+            });
+
+            let bassTime = startTime;
+            bossMusic.bass.forEach(bassNote => {
+                const timeoutId = setTimeout(() => {
+                    scheduledTimeouts.delete(timeoutId);
+                    if (isPlaying) {
+                        createDistortedBass(bassNote.note, bassNote.duration, 0.7, volume);
+                    }
+                }, (bassTime - audioContext.currentTime) * 1000);
+                bassTime += bassNote.duration;
+                scheduledTimeouts.add(timeoutId);
+            });
+
+            let melodyTime = startTime;
+            bossMusic.melody.forEach(melodyNote => {
+                const timeoutId = setTimeout(() => {
+                    scheduledTimeouts.delete(timeoutId);
+                    if (isPlaying) {
+                        playArcadeMelody(melodyNote.note, melodyNote.duration, 'boss');
+                    }
+                }, (melodyTime - audioContext.currentTime) * 1000);
+                melodyTime += melodyNote.duration;
+                scheduledTimeouts.add(timeoutId);
+            });
+
+            bossMusic.drums.forEach(drum => {
+                const drumTime = startTime + drum.time;
+                const timeoutId = setTimeout(() => {
+                    if (isPlaying && audioContext) {
+                        createDrumSound(drum.type, drumTime - audioContext.currentTime);
+                    }
+                }, (drumTime - audioContext.currentTime) * 1000);
+                scheduledTimeouts.add(timeoutId);
+            });
+
+            nextScheduleTime = startTime + loopDuration;
+            const timeUntilNext = (nextScheduleTime - audioContext.currentTime) * 1000;
+
+            if (timeUntilNext > 10) {
+                currentSequence = setTimeout(scheduleBossLoop, timeUntilNext - 10);
+                scheduledTimeouts.add(currentSequence);
+            } else {
+                currentSequence = setTimeout(scheduleBossLoop, timeUntilNext - 10);
+                scheduledTimeouts.add(currentSequence);
+            }
+        }
+        scheduleBossLoop();
+        console.log('Music: Boss loop started');
     }
 
     function playArcadeMelody(note, duration, type = 'arcade') {
@@ -1025,6 +1300,7 @@ const Music = (function() {
         init: init,
         playTropicalTheme: playTropicalTheme,
         playCrystalHammer: playCrystalHammer,
+        playMoaiMenace: playMoaiMenace,
         stop: stop,
         fadeStop: fadeStop,
         setVolume: setVolume,

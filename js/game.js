@@ -113,6 +113,13 @@ const GameState = (function() {
 
         if (levelObj && levelObj.isBossLevel) {
             console.log('loading boss level');
+            if (typeof Music !== 'undefined' && Music.playMoaiMenace) {
+                Music.stop();
+                setTimeout(() => {
+                    Music.playMoaiMenace();
+                }, 100);
+            }
+            
             if (typeof Boss !== 'undefined' && Boss.createBoss) {
                 Boss.createBoss();
             }

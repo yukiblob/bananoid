@@ -285,6 +285,8 @@ const Menu = (function() {
             console.warn('Could not load custom levels from API:', error);
         }
 
+        const allLevels = [...originalLevels, ...customLevels];
+
         menuButtons = [];
 
         const onClickBack = () => {
@@ -333,9 +335,16 @@ const Menu = (function() {
                         if (Timer.start) Timer.start();
                     }
 
+                    const levelObj = allLevels[i];
                     setTimeout(() => {
-                        if (typeof Music !== 'undefined' && Music.playCrystalHammer) {
-                            Music.playCrystalHammer();
+                        if (levelObj && levelObj.isBossLevel) {
+                            if (typeof Music !== 'undefined' && Music.playMoaiMenace) {
+                                Music.playMoaiMenace();
+                            }
+                        } else {
+                            if (typeof Music !== 'undefined' && Music.playCrystalHammer) {
+                                Music.playCrystalHammer();
+                            }
                         }
                     }, 50);
                 }, 10);
