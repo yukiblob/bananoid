@@ -3,6 +3,25 @@
 # Simple Toolbox setup for Bananoid game
 echo "🐋 Setting up Toolbox container for Bananoid..."
 
+# Check if toolbox is installed, install if missing
+if ! command -v toolbox &> /dev/null; then
+    echo "📦 Toolbox not found. Installing..."
+    
+    # Check the distribution (assuming Fedora-based since your script uses dnf)
+    if command -v dnf &> /dev/null; then
+        echo "🔧 Installing toolbox via dnf..."
+        sudo dnf install -y toolbox
+    elif command -v apt &> /dev/null; then
+        echo "🔧 Installing toolbox via apt..."
+        sudo apt update
+        sudo apt install -y toolbox
+    else
+        echo "❌ Unsupported package manager. Please install toolbox manually."
+        echo "   See: https://github.com/containers/toolbox"
+        exit 1
+    fi
+fi
+
 # Define container name
 CONTAINER_NAME="bananoid-dev"
 

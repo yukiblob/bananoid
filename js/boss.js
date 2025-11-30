@@ -42,6 +42,9 @@ const Boss = (function() {
         startBossBehavior();
 
         isBossActive = true;
+
+        bossHealth = maxBossHealth;
+        updateHealthBar();
     }
 
     function createHealthbar() {
@@ -78,6 +81,14 @@ const Boss = (function() {
             fillElement.style.background = 'linear-gradient(to right, #ffff00, #ffcc00)';
         } else {
             fillElement.style.background = 'linear-gradient(to right, #ff0000, #cc0000)';
+        }
+
+        updateMusicPhase(healthPercent);
+    }
+
+    function updateMusicPhase(healthPercent) {
+        if (typeof Music !== 'undefined' && Music.getBossHealth) {
+            Music.getBossHealth(healthPercent);
         }
     }
 
@@ -252,6 +263,24 @@ const Boss = (function() {
         }
     }
 
+    function handleBulletHit() {
+        if (!isBossActive) return;
+
+        bossHealth--;
+        updateHealthBar();
+
+        if (bossElement) {
+            bossElement.style.filter = 'brightness(1.5)';
+            setTimeout(() => {
+                if (bossElement) bossElement.style.filter = '';
+            }, 100);
+        }
+
+        if (bossHealth <= 0) {
+            defeatBoss();
+        }
+    }
+
     function dropRandomPowerup() {
         const bossRect = bossElement.getBoundingClientRect();
         const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
@@ -272,7 +301,7 @@ const Boss = (function() {
 
         if (bossMovementInterval) clearInterval(bossMovementInterval);
         if (bossPowerupInterval) clearInterval(bossPowerupInterval);
-
+        
         if (typeof GameState !== 'undefined') {
             GameState.setState({ isPaused: true });
         }
@@ -295,6 +324,13 @@ const Boss = (function() {
 
         if (typeof SoundManager !== 'undefined' && SoundManager.playGameStart) {
             SoundManager.playGameStart();
+        }
+
+        if (typeof Music !== 'undefined') {
+            Music.stop();
+            setTimeout(() => {
+                Music.playCrystalHammer();
+            }, 100);
         }
 
         if (bossElement) {
@@ -346,22 +382,8 @@ const Boss = (function() {
         cleanup: cleanup,
         isBossActive: function() { return isBossActive; },
 
-        handleBulletHit: function() {
-            if (!isBossActive) return;
-
-            bossHealth--;
-            updateHealthBar();
-
-            if (bossElement) {
-                bossElement.style.filter = 'brightness(1.5)';
-                setTimeout(() => {
-                    if (bossElement) bossElement.style.filter = '';
-                }, 100);
-            }
-
-            if (bossHealth <= 0) {
-                defeatBoss();
-            }
-        }
+        handleBulletHit: handleBulletHit,
+        getBossHealth: function() { return bossHealth; },
+        getBossHealthPercent: function() { return (bossHealth/maxBossHealth) * 100; }
     };
 })();

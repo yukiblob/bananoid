@@ -7,6 +7,8 @@ const Music = (function() {
     let isPaused = false;
     let pauseVolume = 0.02;
     let activeLayers = new Set();
+    let bossActiveLayers = new Set();
+    let bossPhase = 1;
 
     let scheduledTimeouts = new Set();
     let activeOscillators = new Set();
@@ -59,64 +61,195 @@ const Music = (function() {
     };
 
     const bossMusic = {
-        chords: [
-            { notes: [130.81, 164.81, 196.00], duration: 2 }, // Cm (C3, E♭3, G3)
-            { notes: [146.83, 174.61, 220.00], duration: 2 }, // Dm (D3, F3, A3)
-            { notes: [98.00, 130.81, 155.56], duration: 2 },  // Gm (G2, B♭2, D3)
-            { notes: [110.00, 130.81, 164.81], duration: 2 }  // Am (A2, C3, E♭3)
-        ],
+        // Phase 1: Ominous buildup
+        phase1: {
+            chords: [
+                { notes: [65.41, 87.31, 98.00], duration: 2 },    // Cm lower (C2, F2, G2)
+                { notes: [73.42, 87.31, 110.00], duration: 2 },   // Dm lower (D2, F2, A2)  
+                { notes: [49.00, 65.41, 73.42], duration: 2 },    // Gm lower (G1, C2, D2)
+                { notes: [55.00, 65.41, 87.31], duration: 2 }     // Am lower (A1, C2, F2)
+            ],
+            bass: [
+                { note: 32.70, duration: 1.0 }, // C1 - deeper sub bass
+                { note: 36.71, duration: 1.0 }, // D1
+                { note: 24.50, duration: 1.0 }, // G0 - very low
+                { note: 32.70, duration: 1.0 }  // C1
+            ],
+            melody: [
+                { note: 130.81, duration: 0.5 }, // C3 - lower melody
+                { note: 130.81, duration: 0.5 }, // C3
+                { note: 146.83, duration: 0.5 }, // D3
+                { note: 146.83, duration: 0.5 }, // D3
+                { note: 116.54, duration: 1.0 }, // B♭2 - lower
+                { note: 110.00, duration: 0.5 }, // A2
+                { note: 98.00, duration: 0.5 },  // G2
+                { note: 87.31, duration: 1.0 }   // F2 - much lower
+            ],
+            drums: [
+                { time: 0.0, type: 'kick' },
+                { time: 1.0, type: 'kick' },
+                { time: 2.0, type: 'kick' },
+                { time: 3.0, type: 'kick' },
+                { time: 0.5, type: 'snare' },
+                { time: 1.5, type: 'snare' },
+                { time: 2.5, type: 'snare' },
+                { time: 3.5, type: 'snare' }
+            ],
+            pads: [
+                { notes: [32.70, 49.00, 65.41], duration: 4 }, // C1, G1, C2 - deeper
+                { notes: [36.71, 55.00, 73.42], duration: 4 }, // D1, A1, D2
+                { notes: [24.50, 36.71, 49.00], duration: 4 }, // G0, D1, G1
+                { notes: [32.70, 43.65, 65.41], duration: 4 }  // C1, F1, C2
+            ]
+        },
 
-        bass: [
-            { note: 65.41, duration: 0.5 }, // C2
-            { note: 65.41, duration: 0.5 }, // C2
-            { note: 73.42, duration: 0.5 }, // D2
-            { note: 73.42, duration: 0.5 }, // D2
-            { note: 61.74, duration: 0.5 }, // G1
-            { note: 61.74, duration: 0.5 }, // G1
-            { note: 65.41, duration: 0.5 }, // C2
-            { note: 73.42, duration: 0.5 }  // D2
-        ],
+        // Phase 2: Intense battle (70%)
+        phase2: {
+            chords: [
+                { notes: [65.41, 87.31, 98.00, 116.54], duration: 1.5 }, // Cm7 lower
+                { notes: [73.42, 87.31, 110.00, 130.81], duration: 1.5 }, // Dm7 lower
+                { notes: [49.00, 65.41, 73.42, 87.31], duration: 1.5 },   // Gm7 lower
+                { notes: [55.00, 65.41, 87.31, 98.00], duration: 1.5 }    // Am7 lower
+            ],
+            bass: [
+                { note: 32.70, duration: 0.5 }, // C1
+                { note: 32.70, duration: 0.5 }, // C1
+                { note: 36.71, duration: 0.5 }, // D1
+                { note: 36.71, duration: 0.5 }, // D1
+                { note: 24.50, duration: 0.5 }, // G0
+                { note: 24.50, duration: 0.5 }, // G0
+                { note: 32.70, duration: 0.5 }, // C1
+                { note: 36.71, duration: 0.5 }  // D1
+            ],
+            melody: [
+                { note: 130.81, duration: 0.25 }, // C3
+                { note: 116.54, duration: 0.25 }, // B♭2
+                { note: 130.81, duration: 0.25 }, // C3
+                { note: 146.83, duration: 0.25 }, // D3
+                { note: 164.81, duration: 0.5 },  // E3
+                { note: 146.83, duration: 0.25 }, // D3
+                { note: 130.81, duration: 0.25 }, // C3
+                { note: 116.54, duration: 0.5 },  // B♭2
+                { note: 110.00, duration: 0.25 }, // A2
+                { note: 116.54, duration: 0.25 }, // B♭2
+                { note: 130.81, duration: 0.5 },  // C3
+                { note: 146.83, duration: 0.25 }, // D3
+                { note: 164.81, duration: 0.25 }, // E3
+                { note: 174.61, duration: 0.5 },  // F3
+                { note: 164.81, duration: 0.25 }, // E3
+                { note: 146.83, duration: 0.25 }  // D3
+            ],
+            drums: [
+                { time: 0.0, type: 'kick' },
+                { time: 0.5, type: 'snare' },
+                { time: 1.0, type: 'kick' },
+                { time: 1.5, type: 'snare' },
+                { time: 2.0, type: 'kick' },
+                { time: 2.5, type: 'snare' },
+                { time: 3.0, type: 'kick' },
+                { time: 3.5, type: 'snare' },
+                { time: 0.25, type: 'hihat' },
+                { time: 0.75, type: 'hihat' },
+                { time: 1.25, type: 'hihat' },
+                { time: 1.75, type: 'hihat' },
+                { time: 2.25, type: 'hihat' },
+                { time: 2.75, type: 'hihat' },
+                { time: 3.25, type: 'hihat' },
+                { time: 3.75, type: 'hihat' }
+            ],
+            arpeggio: [
+                { note: 130.81, duration: 0.25 }, // C3
+                { note: 164.81, duration: 0.25 }, // E3
+                { note: 196.00, duration: 0.25 }, // G3
+                { note: 246.94, duration: 0.25 }, // B3
+                { note: 196.00, duration: 0.25 }, // G3
+                { note: 164.81, duration: 0.25 }, // E3
+                { note: 130.81, duration: 0.25 }, // C3
+                { note: 98.00, duration: 0.25 }   // G2
+            ]
+        },
 
-        melody: [
-            { note: 261.63, duration: 0.25 }, // C4
-            { note: 261.63, duration: 0.25 }, // C4
-            { note: 293.66, duration: 0.25 }, // D4
-            { note: 293.66, duration: 0.25 }, // D4
-            { note: 233.08, duration: 0.5 },  // B♭3
-            { note: 220.00, duration: 0.25 }, // A3
-            { note: 196.00, duration: 0.25 }, // G3
-            { note: 174.61, duration: 0.5 },  // F3
-            { note: 196.00, duration: 0.25 }, // G3
-            { note: 220.00, duration: 0.25 }, // A3
-            { note: 233.08, duration: 0.5 },  // B♭3
-            { note: 261.63, duration: 1.0 }   // C4
-        ],
-
-        drums: [
-            { time: 0.0, type: 'kick' },
-            { time: 0.25, type: 'hihat' },
-            { time: 0.5, type: 'snare' },
-            { time: 0.75, type: 'hihat' },
-            { time: 1.0, type: 'kick' },
-            { time: 1.25, type: 'hihat' },
-            { time: 1.5, type: 'snare' },
-            { time: 1.75, type: 'hihat' },
-            { time: 2.0, type: 'kick' },
-            { time: 2.25, type: 'hihat' },
-            { time: 2.5, type: 'snare' },
-            { time: 2.75, type: 'hihat' },
-            { time: 3.0, type: 'kick' },
-            { time: 3.25, type: 'hihat' },
-            { time: 3.5, type: 'snare' },
-            { time: 3.75, type: 'hihat' }
-        ],
-
-        pads: [
-            { notes: [65.41, 98.00, 130.81], duration: 4 }, // C2, G2, C3
-            { notes: [73.42, 110.00, 146.83], duration: 4 }, // D2, A2, D3
-            { notes: [61.74, 92.50, 123.47], duration: 4 }, // G1, D2, G2
-            { notes: [65.41, 87.31, 130.81], duration: 4 }  // C2, F2, C3
-        ]
+        // Phase 3: Final showdown (30%)
+        phase3: {
+            chords: [
+                { notes: [65.41, 87.31, 98.00, 116.54, 130.81], duration: 1 }, // Cm9 lower
+                { notes: [73.42, 87.31, 110.00, 130.81, 146.83], duration: 1 }, // Dm9 lower
+                { notes: [87.31, 103.83, 116.54, 138.59, 155.56], duration: 1 }, // Fm9 lower
+                { notes: [98.00, 116.54, 130.81, 155.56, 174.61], duration: 1 }  // G♭9 lower
+            ],
+            bass: [
+                { note: 32.70, duration: 0.25 }, // C1
+                { note: 43.65, duration: 0.25 }, // F1
+                { note: 32.70, duration: 0.25 }, // C1
+                { note: 36.71, duration: 0.25 }, // D1
+                { note: 32.70, duration: 0.25 }, // C1
+                { note: 24.50, duration: 0.25 }, // G0
+                { note: 32.70, duration: 0.25 }, // C1
+                { note: 36.71, duration: 0.25 }, // D1
+                { note: 41.20, duration: 0.25 }, // E1
+                { note: 43.65, duration: 0.25 }, // F1
+                { note: 46.25, duration: 0.25 }, // F#1
+                { note: 49.00, duration: 0.25 }, // G1
+                { note: 43.65, duration: 0.25 }, // F1
+                { note: 36.71, duration: 0.25 }, // D1
+                { note: 32.70, duration: 0.25 }, // C1
+                { note: 27.50, duration: 0.25 }  // A0 - super low!
+            ],
+            melody: [
+                { note: 164.81, duration: 0.25 }, // E3
+                { note: 174.61, duration: 0.25 }, // F3
+                { note: 196.00, duration: 0.25 }, // G3
+                { note: 220.00, duration: 0.25 }, // A3
+                { note: 246.94, duration: 0.5 },  // B3
+                { note: 220.00, duration: 0.25 }, // A3
+                { note: 196.00, duration: 0.25 }, // G3
+                { note: 174.61, duration: 0.5 },  // F3
+                { note: 164.81, duration: 0.25 }, // E3
+                { note: 146.83, duration: 0.25 }, // D3
+                { note: 130.81, duration: 0.5 },  // C3
+                { note: 146.83, duration: 0.25 }, // D3
+                { note: 164.81, duration: 0.25 }, // E3
+                { note: 174.61, duration: 0.25 }, // F3
+                { note: 196.00, duration: 0.5 },  // G3
+                { note: 164.81, duration: 0.25 }  // E3
+            ],
+            drums: [
+                { time: 0.0, type: 'kick' },
+                { time: 0.25, type: 'hihat' },
+                { time: 0.5, type: 'snare' },
+                { time: 0.75, type: 'hihat' },
+                { time: 1.0, type: 'kick' },
+                { time: 1.25, type: 'hihat' },
+                { time: 1.5, type: 'snare' },
+                { time: 1.75, type: 'hihat' },
+                { time: 2.0, type: 'kick' },
+                { time: 2.25, type: 'hihat' },
+                { time: 2.5, type: 'snare' },
+                { time: 2.75, type: 'hihat' },
+                { time: 3.0, type: 'kick' },
+                { time: 3.25, type: 'hihat' },
+                { time: 3.5, type: 'snare' },
+                { time: 3.75, type: 'hihat' }
+            ],
+            arpeggio: [
+                { note: 130.81, duration: 0.125 }, // C3
+                { note: 164.81, duration: 0.125 }, // E3
+                { note: 196.00, duration: 0.125 }, // G3
+                { note: 246.94, duration: 0.125 }, // B3
+                { note: 261.63, duration: 0.125 }, // C4
+                { note: 246.94, duration: 0.125 }, // B3
+                { note: 196.00, duration: 0.125 }, // G3
+                { note: 164.81, duration: 0.125 }, // E3
+                { note: 130.81, duration: 0.125 }, // C3
+                { note: 98.00, duration: 0.125 },  // G2
+                { note: 130.81, duration: 0.125 }, // C3
+                { note: 164.81, duration: 0.125 }, // E3
+                { note: 196.00, duration: 0.125 }, // G3
+                { note: 246.94, duration: 0.125 }, // B3
+                { note: 293.66, duration: 0.125 }, // D4
+                { note: 329.63, duration: 0.125 }  // E4
+            ]
+        }
     };
 
     function init() {
@@ -252,7 +385,7 @@ const Music = (function() {
         const curve = new Float32Array(65536);
         for (let i = 0; i < 65536; i++) {
             const x = (i - 32768) / 32768;
-            curve[i] = (Math.PI + distortion) * x / (Math.PI + distortion * Math.abs(x));
+            curve[i] = (Math.PI + distortion * 1.5) * x / (Math.PI + distortion * 1.5 * Math.abs(x));
         }
         waveshaper.curve = curve;
 
@@ -265,13 +398,13 @@ const Music = (function() {
         oscillator.frequency.value = note;
 
         filter.type = 'lowpass';
-        filter.frequency.value = 400;
-        filter.Q.value = 1.0;
+        filter.frequency.value = 200 + (bossPhase * 50);
+        filter.Q.value = 1.2;
 
         const now = audioContext.currentTime;
 
         gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(0.6 * volumeScale, now + 0.05);
+        gainNode.gain.linearRampToValueAtTime(0.8 * volumeScale, now + 0.05);
         gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
 
         oscillator.start(now);
@@ -366,6 +499,8 @@ const Music = (function() {
 
         console.log('Music: Starting Moai Menace');
         isPlaying = true;
+        bossPhase = 1;
+        bossActiveLayers = new Set(['foundation']);
 
         if (masterGain) {
             const now = audioContext.currentTime;
@@ -389,57 +524,82 @@ const Music = (function() {
         if (!audioContext || !isPlaying) return;
 
         let nextScheduleTime = audioContext.currentTime;
-        const loopDuration = 4.5;
+        const getCurrentPhase = () => bossMusic[`phase${bossPhase}`];
+        const getLoopDuration = () => bossPhase === 1 ? 4.5 : bossPhase === 2 ? 3 : 2;
 
         function scheduleBossLoop() {
             if (!isPlaying || !audioContext) return;
 
+            const currentPhase = getCurrentPhase();
+            const loopDuration = getLoopDuration();
             const startTime = nextScheduleTime;
 
-            bossMusic.chords.forEach((chord, index) => {
-                const chordTime = startTime + (index * 2);
-                const timeoutId = setTimeout(() => {
-                    scheduledTimeouts.delete(timeoutId);
-                    if (isPlaying) {
-                        createBossPad(chord.notes, chord.duration);
-                    }
-                }, (chordTime - audioContext.currentTime) * 1000);
-                scheduledTimeouts.add(timeoutId);
-            });
+            // Schedule elements based on active layers
+            if (bossActiveLayers.has('foundation')) {
+                // Chords
+                currentPhase.chords.forEach((chord, index) => {
+                    const chordTime = startTime + (index * (loopDuration / currentPhase.chords.length));
+                    const timeoutId = setTimeout(() => {
+                        scheduledTimeouts.delete(timeoutId);
+                        if (isPlaying) {
+                            createBossPad(chord.notes, chord.duration);
+                        }
+                    }, (chordTime - audioContext.currentTime) * 1000);
+                    scheduledTimeouts.add(timeoutId);
+                });
 
-            let bassTime = startTime;
-            bossMusic.bass.forEach(bassNote => {
-                const timeoutId = setTimeout(() => {
-                    scheduledTimeouts.delete(timeoutId);
-                    if (isPlaying) {
-                        createDistortedBass(bassNote.note, bassNote.duration, 0.7, volume);
-                    }
-                }, (bassTime - audioContext.currentTime) * 1000);
-                bassTime += bassNote.duration;
-                scheduledTimeouts.add(timeoutId);
-            });
+                // Bass
+                let bassTime = startTime;
+                currentPhase.bass.forEach(bassNote => {
+                    const timeoutId = setTimeout(() => {
+                        scheduledTimeouts.delete(timeoutId);
+                        if (isPlaying) {
+                            createDistortedBass(bassNote.note, bassNote.duration, 0.7 + (bossPhase * 0.1), volume);
+                        }
+                    }, (bassTime - audioContext.currentTime) * 1000);
+                    bassTime += bassNote.duration;
+                    scheduledTimeouts.add(timeoutId);
+                });
 
-            let melodyTime = startTime;
-            bossMusic.melody.forEach(melodyNote => {
-                const timeoutId = setTimeout(() => {
-                    scheduledTimeouts.delete(timeoutId);
-                    if (isPlaying) {
-                        playArcadeMelody(melodyNote.note, melodyNote.duration, 'boss');
-                    }
-                }, (melodyTime - audioContext.currentTime) * 1000);
-                melodyTime += melodyNote.duration;
-                scheduledTimeouts.add(timeoutId);
-            });
+                // Drums
+                currentPhase.drums.forEach(drum => {
+                    const drumTime = startTime + drum.time;
+                    const timeoutId = setTimeout(() => {
+                        if (isPlaying && audioContext) {
+                            createDrumSound(drum.type, drumTime - audioContext.currentTime);
+                        }
+                    }, (drumTime - audioContext.currentTime) * 1000);
+                    scheduledTimeouts.add(timeoutId);
+                });
+            }
 
-            bossMusic.drums.forEach(drum => {
-                const drumTime = startTime + drum.time;
-                const timeoutId = setTimeout(() => {
-                    if (isPlaying && audioContext) {
-                        createDrumSound(drum.type, drumTime - audioContext.currentTime);
-                    }
-                }, (drumTime - audioContext.currentTime) * 1000);
-                scheduledTimeouts.add(timeoutId);
-            });
+            if (bossActiveLayers.has('arpeggio') && currentPhase.arpeggio) {
+                let arpTime = startTime;
+                currentPhase.arpeggio.forEach(arpNote => {
+                    const timeoutId = setTimeout(() => {
+                        scheduledTimeouts.delete(timeoutId);
+                        if (isPlaying) {
+                            playArcadeMelody(arpNote.note, arpNote.duration, 'boss');
+                        }
+                    }, (arpTime - audioContext.currentTime) * 1000);
+                    arpTime += arpNote.duration;
+                    scheduledTimeouts.add(timeoutId);
+                });
+            }
+
+            if (bossActiveLayers.has('lead') && currentPhase.melody) {
+                let melodyTime = startTime;
+                currentPhase.melody.forEach(melodyNote => {
+                    const timeoutId = setTimeout(() => {
+                        scheduledTimeouts.delete(timeoutId);
+                        if (isPlaying) {
+                            playArcadeMelody(melodyNote.note, melodyNote.duration, 'boss');
+                        }
+                    }, (melodyTime - audioContext.currentTime) * 1000);
+                    melodyTime += melodyNote.duration;
+                    scheduledTimeouts.add(timeoutId);
+                });
+            }
 
             nextScheduleTime = startTime + loopDuration;
             const timeUntilNext = (nextScheduleTime - audioContext.currentTime) * 1000;
@@ -448,12 +608,36 @@ const Music = (function() {
                 currentSequence = setTimeout(scheduleBossLoop, timeUntilNext - 10);
                 scheduledTimeouts.add(currentSequence);
             } else {
-                currentSequence = setTimeout(scheduleBossLoop, timeUntilNext - 10);
+                currentSequence = setTimeout(scheduleBossLoop, timeUntilNext);
                 scheduledTimeouts.add(currentSequence);
             }
         }
         scheduleBossLoop();
         console.log('Music: Boss loop started');
+    }
+
+    function transitionToPhase(newPhase) {
+        console.log(`Music: Transitioning to boss phase ${newPhase}`);
+        bossPhase = newPhase;
+
+        const layerProgession = {
+            1: ['foundation'],
+            2: ['foundation', 'bass', 'arpeggio'],
+            3: ['foundation', 'bass', 'arpeggio', 'lead', 'fx']
+        };
+
+        bossActiveLayers = new Set(layerProgession[newPhase]);
+    }
+
+    function getBossHealth(health) {
+        console.log(`Music: Boss health update - ${health}%, current phase: ${bossPhase}`);
+        
+        if (health <= 30 && bossPhase < 3) {
+            transitionToPhase(3);
+        } 
+        else if (health <= 70 && bossPhase < 2) {
+            transitionToPhase(2);
+        }
     }
 
     function playArcadeMelody(note, duration, type = 'arcade') {
@@ -1306,6 +1490,8 @@ const Music = (function() {
         setVolume: setVolume,
         setPaused: setPaused,
         resume: resume,
+        getBossHealth: getBossHealth,
+        getVolume: function() { return volume; },
         isPlaying: function() { return isPlaying; },
         setLayers: function(layers) {
             activeLayers = new Set(layers);

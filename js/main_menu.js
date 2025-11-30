@@ -595,9 +595,9 @@ const Menu = (function() {
 
         let currentVolume;
         if (type === 'music') {
-            currentVolume = 0.04;
+            currentVolume = (typeof Music !== 'undefined' && Music.getVolume) ? Music.getVolume() : 0.04;
         } else {
-            currentVolume = 0.1;
+            currentVolume = (typeof SoundManager !== 'undefined' && SoundManager.getVolume) ? SoundManager.getVolume() : 0.1;
         }
 
         slider.dataset.currentVolume = currentVolume.toFixed(2);
