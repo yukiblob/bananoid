@@ -47,7 +47,7 @@ Open <http://localhost:8080> in a browser.
 | Layer     | Tech                                | Location                     |
 | --------- | ----------------------------------- | ---------------------------- |
 | Backend   | Node.js (`http`, `fs`, no deps)     | `server.js`                  |
-| Frontend  | Vanilla JS (IIFE modules) + CSS     | `js/`, `style.css`           |
+| Frontend  | Vanilla JS (IIFE modules) + CSS     | `js/`, `css/style.css`        |
 | Levels    | JSON-in-JS (14×11 grid)             | `js/levels.js`               |
 | Custom    | Persisted by the server             | `js/custom_levels.js` (auto) |
 
