@@ -1,21 +1,21 @@
 # Bananoid
 
-A retro brick-breaker game with a browser frontend and a small Go backend.
-No frameworks, no build step — vanilla JavaScript, CSS, and the Go standard
-library.
+A retro brick-breaker game with a browser frontend and a small Node.js
+backend. No frameworks, no build step, no dependencies — vanilla JavaScript,
+CSS, and Node's standard library.
 
 Break every brick to clear a level, dodge hazards, collect power-ups, and
 defeat the final boss to restore your banana form.
 
 ## Run it
 
-Requires [Go 1.25+](https://go.dev/dl/). The single Go server serves the
+Requires [Node.js](https://nodejs.org/). The single Node server serves the
 entire game (HTML, JS, CSS, and the scoreboard/custom-level API).
 
 ```bash
 ./run.sh
 # or
-go run .
+npm start
 ```
 
 Open <http://localhost:8080> in a browser.
@@ -37,19 +37,19 @@ Open <http://localhost:8080> in a browser.
 - Lives and a per-level timer
 - Original chiptune-style music and sound effects (Web Audio API, no audio
   files)
-- Scoreboard persisted by a Go backend (`GET`/`POST /api/scoreboard`)
+- Scoreboard persisted by the Node backend (`GET`/`POST /api/scoreboard`)
 - Built-in **level editor** — design levels and save them via the backend;
   custom levels appear in Level Select
 - Intro cutscene, pause menu, and win/loss screens
 
 ## How it's built
 
-| Layer     | Tech                                   | Location                     |
-| --------- | -------------------------------------- | ---------------------------- |
-| Backend   | Go (`net/http`, `encoding/json`)       | `main.go`, `scoreboard.go`   |
-| Frontend  | Vanilla JS (IIFE modules) + CSS        | `js/`, `style.css`           |
-| Levels    | JSON-in-JS (14×11 grid)                | `js/levels.js`               |
-| Custom    | Persisted by the Go server             | `js/custom_levels.js` (auto) |
+| Layer     | Tech                                | Location                     |
+| --------- | ----------------------------------- | ---------------------------- |
+| Backend   | Node.js (`http`, `fs`, no deps)     | `server.js`                  |
+| Frontend  | Vanilla JS (IIFE modules) + CSS     | `js/`, `style.css`           |
+| Levels    | JSON-in-JS (14×11 grid)             | `js/levels.js`               |
+| Custom    | Persisted by the server             | `js/custom_levels.js` (auto) |
 
 ### Backend API
 

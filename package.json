@@ -1,0 +1,9 @@
+{
+  "name": "bananoid",
+  "version": "1.0.0",
+  "description": "A retro brick-breaker game with a browser frontend and a Node.js backend.",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  }
+}
